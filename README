@@ -1,0 +1,47 @@
+Agrh, argparse!
+===============
+
+Did you ever say "argh" trying to remember the details of optparse or argparse
+API? If yes, this package may be useful for you. It provides a very simple
+wrapper for argparse with support for hierarchical commands that can be bound
+to modules or classes. Argparse can do it; argh makes it easy.
+
+Installation
+------------
+
+    $  pip install argh
+
+Documentation
+-------------
+
+See the `complete documentation`_ for details. If it's not complete enough,
+feel free to ask your questions or submit bugs.
+
+.. _complete documentation: http://packages.python.org/argh
+
+Author
+------
+
+Originally written by Andrey Mikhaylenko in 2010.
+
+See the file AUTHORS for a complete authors list of this application.
+
+Please feel free to submit patches, report bugs or request features:
+
+    http://bitbucket.org/neithere/argh/issues/
+
+Licensing
+---------
+
+Argh is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Argh is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Argh.  If not, see <http://gnu.org/licenses/>.
