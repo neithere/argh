@@ -67,9 +67,9 @@ See what's happening here?
 The statement ``make_parser(bar, quux)`` builds an ArgumentParser with two
 commands: `bar` and `quux`.
 
-The statement ``make_parser(foo=make_parser(bar, quux))`` produces a command
-hierarchy for the command-line expressions ``foo bar`` and ``foo quux``. It is
-roughly equivalent to this generic argparse code::
+The statement ``make_parser(foo=(bar, quux))`` produces a command hierarchy for
+the command-line expressions ``foo bar`` and ``foo quux``. It is roughly
+equivalent to this generic argparse code::
 
     import sys
     from argparse import ArgumentParser
@@ -91,26 +91,43 @@ The `help` command is always added automatically and displays the docstring:
     * ``help shell``
     * ``help web serve``
 
-API
----
+API reference
+-------------
+
 """
-__all__ = ['arg', 'make_parser']
+__all__ = ['arg', 'make_parser', 'plain_signature', 'dispatch']
 __version__ = '0.1.0'
 
 from functools import wraps
 import argparse
 
 
-def arg(func):
+def plain_signature(func):
+    """Marks that given function expects ordinary positional and named
+    arguments instead of a single positional argument (a
+    :class:`argparse.Namespace` object). Useful for existing functions that you
+    don't want to alter nor write wrappers by hand.
+    """
+    func.argh_no_namespace = True
+    return func
+
+def arg(*args, **kwargs):
     """Declares an argument for given function. Does not register the function
     anywhere, not does it modify the function in any way.
     """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(func):
         func.argh_args = getattr(func, 'argh_args', [])
         func.argh_args.append((args, kwargs))
         return func
     return wrapper
+
+def _func_to_parser(func, parser=None):
+    parser = parser or argparse.ArgumentParser()
+    for argument in getattr(func, 'argh_args', []):
+        positional, named = argument
+        parser.add_argument(*positional, **named)
+    parser.set_defaults(function=func)
+    return parser
 
 def make_parser(*commands, **subcommands):
     """Returns an ArgumentParser instance that can handle given commands and
@@ -134,24 +151,78 @@ def make_parser(*commands, **subcommands):
         def quux(args): pass
             print 'I am baz/quux'
         # register commands: "foo", "bar", "baz quux"
-        p = make_parser(*top_level_cmds, baz=quux)
+        p = make_parser(*top_level_cmds, baz=[quux])
         p.parse_args(sys.argv[1:])
 
     """
-    raise NotImplementedError
+    parser = argparse.ArgumentParser()
+    for func in commands:
+        print func
+        sps = parser.add_subparsers()
+        sps.choices[func.__name__] = _func_to_parser(func)
+    for name, funcs in subcommands.iteritems():
+        print name, funcs
+        assert isinstance(funcs, (list,tuple)), (
+            'expected a list of functions for {0}, got {1}'.format(name, funcs))
+        sps = parser.add_subparsers()
+        for func in funcs:
+            spsp = sps.add_parser(name)
+            spsp = _func_to_parser(func, spsp)
+            print spsp
+    return parser
 
-def dispatch(args):
-    raise NotImplementedError
+
+def dispatch(parser, argv=None, unwrap_namespace=False, print_result=True):
+    """Parses given list of arguments using given parser, calls the relevant
+    function passing the Namespace object to it and prints the result.
+
+    :param print_result:
+        If `True`, the result is printed and returned to the caller. If
+        `False`, it is only returned and not printed. Default is `True`.
+
+    """
+    args = parser.parse_args(argv or sys.argv[1:])
+    if getattr(args.function, 'argh_no_namespace', False):
+        kwargs = dict(args._get_kwargs())
+        kwargs.pop('function')
+        result = args.function(*args._get_args(), **kwargs)
+    else:
+        result = args.function(args)
+    if print_result:
+        print(result)
+    return result
 
 if __name__=='__main__':
+    # TODO: move to tests
     import sys
+    def bar(args):
+        return 'I am foobar!'
+
+    @arg('-w', '--who', default='world')
+    @plain_signature
+    def hello(who=None):
+        return 'Hello {0}!'.format(who)
+
+    """
+    print 'XXX    TESTING PLAIN ARGPARSE'
     p = argparse.ArgumentParser()
     subparsers = p.add_subparsers()
     foo_parser = subparsers.add_parser('foo')
     foo_subparsers = foo_parser.add_subparsers()
     foo_bar_parser = foo_subparsers.add_parser('bar')
-    def bar(args):
-        return 'I am foobar!'
     foo_bar_parser.set_defaults(function=bar)
     args = p.parse_args(sys.argv[1:])
     print args.function(args)
+    """
+
+
+    print 'XXX    TESTING ARGH'
+    p = make_parser(foo=[bar, hello])
+    #p = make_parser(foo=[hello])
+    args = p.parse_args(sys.argv[1:])
+    print args.function(args)
+    print dispatch(p, ['foo'])
+
+    assert dispatch(p, ['foo', '--who=world']) != 'Hello world!'
+    assert dispatch(p, ['foo', 'hello', '--who=world']) == 'Hello world!'
+
