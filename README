@@ -6,10 +6,44 @@ API? If yes, this package may be useful for you. It provides a very simple
 wrapper for argparse with support for hierarchical commands that can be bound
 to modules or classes. Argparse can do it; argh makes it easy.
 
+In a nutshell
+-------------
+
+Here's a list of features that `argh` adds to `argparse`:
+
+* mark a function as a CLI command and specify its arguments before the parser
+  is instantiated;
+* nesed commands made easy: no messing with subparsers (though they are of
+  course used under the hood);
+* infer agrument type from the default value;
+* infer command name from function name;
+* add an alias root command ``help`` for the ``--help`` argument;
+* enable passing unwrapped arguments to certain functions instead of a
+  :class:`argparse.Namespace` object.
+
+`Argh` is fully compatible with `argparse`. You can mix `argh`-agnostic and
+`argh`-aware code. Just keep in mind that :func:`argh.dispatch` does some extra
+work that a custom dispatcher may not do.
+
 Installation
 ------------
 
     $  pip install argh
+
+Example
+-------
+
+A very simple application with one command::
+
+    @arg('text')  # signature is same as ArgumentParser.add_argument
+    def echo(args):
+        print args.text
+    
+    parser = ArghParser()
+    parser.add_commands([echo])
+
+    if __name__ == '__main__':
+        parser.dispatch()
 
 Documentation
 -------------
@@ -24,7 +58,7 @@ Author
 
 Originally written by Andrey Mikhaylenko in 2010.
 
-See the file AUTHORS for a complete authors list of this application.
+See :file:`AUTHORS` for a complete authors list of this application.
 
 Please feel free to submit patches, report bugs or request features:
 

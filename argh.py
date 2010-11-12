@@ -1,103 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Agrh, argparse!
-===============
-
-Did you ever say "argh" trying to remember the details of optparse or argparse
-API? If yes, this package may be useful for you. It provides a very simple
-wrapper for argparse with support for hierarchical commands that can be bound
-to modules or classes. Argparse can do it; argh makes it easy.
-
-Usage
------
-
-Here's an example::
-
-    from argh import arg, dispatch
-
-    # define a couple of non-web commands
-
-    def shell(args):
-        "Runs the interactive shell."    # <- the command documentation
-        run_the_interactive_shell(...)
-
-    @arg('file', description='fixture to load')  # <- a command argument
-    def load(args):
-        "Loads a JSON fixture from given file."
-        print json.load(args.file)
-
-    # define a pair of web server commands with a handful of arguments
-
-    @arg('host', default='127.0.0.1', description='The host')
-    @arg('port', default=6060, description='The port')
-    @arg('noreload', default=False, description='Do not use autoreloader')
-    def serve(args):
-        "Runs a simple webserver."
-        do_something(host=args.host, ...)
-
-    def serve_rest(args):
-        "Run some REST service... whatever."
-        do_something()
-
-    # instantiate an ArgumentParser for the web-related commands
-    # so they are grouped; this parser is standalone and can be used right away
-
-    web_commands = make_parser(serve)
-
-    # now assemble all the commands — web-related and miscellaneous — within a
-    # single argument parser
-
-    parser = make_parser(shell, load, web=web_commands)
-
-    if __name__=='__main__':
-        dispatch(parser)
-
-The example above defines four commands: `shell`, `load`, `serve` and `rest`.
-Note how they are assembled together in the last :func:`make_parser` call: two
-commands as arguments and two as a keyword argument `web`. This is the
-resulting command-line interface:
-
-    * ``shell``
-    * ``load prancing_ponies.json``
-    * ``web serve_rest``
-    * ``web serve -p 6060 --noreload``
-
-See what's happening here?
-
-The statement ``make_parser(bar, quux)`` builds an ArgumentParser with two
-commands: `bar` and `quux`.
-
-The statement ``make_parser(foo=(bar, quux))`` produces a command hierarchy for
-the command-line expressions ``foo bar`` and ``foo quux``. It is roughly
-equivalent to this generic argparse code::
-
-    import sys
-    from argparse import ArgumentParser
-
-    def bar(args):
-        return 'I am foobar!'
-
-    p = argparse.ArgumentParser()
-    subparsers = p.add_subparsers()
-    foo_parser = subparsers.add_parser('foo')
-    foo_subparsers = foo_parser.add_subparsers()
-    foo_bar_parser = foo_subparsers.add_parser('bar')
-    foo_bar_parser.set_defaults(function=bar)
-    args = p.parse_args(sys.argv[1:])
-    print args.function(args)
-
-The `help` command is always added automatically and displays the docstring:
-
-    * ``help shell``
-    * ``help web serve``
-
 API reference
--------------
+=============
 
 """
-__all__ = ['arg', 'make_parser', 'plain_signature', 'dispatch']
+__all__ = ['ArghParser', 'arg', 'plain_signature', 'add_commands', 'dispatch']
 __version__ = '0.1.0'
 
+import sys
 from functools import wraps
 import argparse
 
@@ -115,114 +25,158 @@ def arg(*args, **kwargs):
     """Declares an argument for given function. Does not register the function
     anywhere, not does it modify the function in any way.
     """
+    kwargs = kwargs.copy()
+    if 'type' not in kwargs and kwargs.get('default') is not None:
+        kwargs['type'] = type(kwargs['default'])
     def wrapper(func):
         func.argh_args = getattr(func, 'argh_args', [])
         func.argh_args.append((args, kwargs))
         return func
     return wrapper
 
-def _func_to_parser(func, parser=None):
-    parser = parser or argparse.ArgumentParser()
-    for argument in getattr(func, 'argh_args', []):
-        positional, named = argument
-        parser.add_argument(*positional, **named)
-    parser.set_defaults(function=func)
-    return parser
+def _get_subparsers(parser):
+    """Returns the :class:`argparse._SupParsersAction` instance for given
+    :class:`ArgumentParser` instance as would have been returned by
+    :meth:`ArgumentParser.add_subparsers`. The problem with the latter is that
+    it only works once and raises an exception on the second attempt, and the
+    public API seems to lack a method to get *existing* subparsers.
+    """
+    # note that ArgumentParser._subparsers is *not* what is returned by
+    # ArgumentParser.add_subparsers().
+    if parser._subparsers:
+        actions = [a for a in parser._actions
+                   if isinstance(a, argparse._SubParsersAction)]
+        assert len(actions) == 1
+        return actions[0]
+    else:
+        return parser.add_subparsers()
 
-def make_parser(*commands, **subcommands):
-    """Returns an ArgumentParser instance that can handle given commands and
-    subcommands.
+def add_commands(parser, functions, namespace=None, title=None,
+                 description=None, extra_help=None):
+    """Adds given functions as commands to given parser.
 
-    :param commands:
-        A list of functions. Each function *must* accept only one argument: the
-        Namespace instance as returned by ArgumentParser. Any extra arguments
-        must be defined by wrapping the function into :func:`arg`. The function
-        names will be translated to command names.
-    :param subcommands:
-        A dictionary where names are
+    :param parser:
+        an :class:`argparse.ArgumentParser` instance.
+    :param functions:
+        A list of functions. If the function is decorated with :func:`arg`
+        The underscores are replaced with hyphens, i.e. function name "foo_bar"
+        becomes command name "foo-bar".
+    :param namespace:
+        an optional string representing the group of commands. For example, if
+        a command named "hello" is added without the namespace, it will be
+        available as "prog.py hello"; if the namespace if specified as "greet",
+        then the command will be accessible as "prog.py greet hello". The
+        namespace itself is not callable, so "prog.py greet" will fail and only
+        display a help message.
 
-    Usage::
+    Help message for a namespace can be also tuned with these params (provided
+    that you specify the `namespace`):
 
-        def foo(args):
-            print 'I am foo'
-        def bar(args): pass
-            print 'I am bar'
-        top_level_cmds = foo, bar
-        def quux(args): pass
-            print 'I am baz/quux'
-        # register commands: "foo", "bar", "baz quux"
-        p = make_parser(*top_level_cmds, baz=[quux])
-        p.parse_args(sys.argv[1:])
+    :param title:
+        passed to :meth:`argsparse.ArgumentParser.add_subparsers` as `title`.
+    :param description:
+        passed to :meth:`argsparse.ArgumentParser.add_subparsers` as
+        `description`.
+    :param extra_help:
+        passed to :meth:`argsparse.ArgumentParser.add_subparsers` as `help`.
+
+    .. note::
+
+        This function modifies the parser object. Generally side effects are
+        bad practice but we don't seem to have any choice as ArgumentParser is
+        pretty opaque. You may prefer :class:`ArghParser.add_commands` for a
+        bit more predictable API.
+
+    .. admonition:: Design flaw
+
+        This function peeks into the parser object using its internal API.
+        Unfortunately the public API does not allow to *get* the subparsers, it
+        only lets you *add* them, and do that *once*. So you'd have to toss the
+        subparsers object around to add something later.
 
     """
-    parser = argparse.ArgumentParser()
-    for func in commands:
-        print func
-        sps = parser.add_subparsers()
-        sps.choices[func.__name__] = _func_to_parser(func)
-    for name, funcs in subcommands.iteritems():
-        print name, funcs
-        assert isinstance(funcs, (list,tuple)), (
-            'expected a list of functions for {0}, got {1}'.format(name, funcs))
-        sps = parser.add_subparsers()
-        for func in funcs:
-            spsp = sps.add_parser(name)
-            spsp = _func_to_parser(func, spsp)
-            print spsp
-    return parser
+    subparsers = _get_subparsers(parser)
 
+    if namespace:
+        # make a namespace placeholder and register the commands within it
+        assert isinstance(namespace, str)
+        subsubparser = subparsers.add_parser(namespace)
+        subparsers = subsubparser.add_subparsers(title=title,
+                                                description=description,
+                                                help=extra_help)
+    else:
+        assert not any([title, description, extra_help]), (
+            'Arguments "title", "description" or "extra_help" only make sense '
+            'if provided along with a namespace.')
 
-def dispatch(parser, argv=None, unwrap_namespace=False, print_result=True):
+    for func in functions:
+        name = func.__name__.replace('_','-')
+        help = func.__doc__
+        command_parser = subparsers.add_parser(name, help=help)
+        for a_args, a_kwargs in getattr(func, 'argh_args', []):
+            command_parser.add_argument(*a_args, **a_kwargs)
+        command_parser.set_defaults(function=func, help=func.__doc__)
+
+def dispatch(parser, argv=None, print_result=True, add_help_command=True):
     """Parses given list of arguments using given parser, calls the relevant
-    function passing the Namespace object to it and prints the result.
+    function passing the :class:`argparse.Namespace` object to it and prints
+    the result.
 
+    The target function should expect one positional argument: the
+    :class:`argparse.Namespace` object. However, if the function is decorated with
+    :func:`plain_signature`, the positional and named arguments from the
+    namespace object are passed to the function instead of the object itself.
+
+    :param parser:
+        the ArgumentParser instance.
+    :param argv:
+        a list of strings representing the arguments. If `None`, ``sys.argv``
+        is used instead. Default is `None`.
     :param print_result:
-        If `True`, the result is printed and returned to the caller. If
+        if `True`, the result is printed and returned to the caller. If
         `False`, it is only returned and not printed. Default is `True`.
+    :param add_help_command:
+        if `True`, converts first positional argument "help" to a keyword
+        argument so that ``help foo`` becomes ``foo --help`` and displays usage
+        information for "foo". Default is `True`.
 
     """
-    args = parser.parse_args(argv or sys.argv[1:])
+    if argv is None:
+        argv = sys.argv[1:]
+    if add_help_command:
+        if argv and argv[0] == 'help':
+            argv.pop(0)
+            argv.append('--help')
+    # this will raise SystemExit if parsing fails
+    args = parser.parse_args(argv)
     if getattr(args.function, 'argh_no_namespace', False):
-        kwargs = dict(args._get_kwargs())
-        kwargs.pop('function')
-        result = args.function(*args._get_args(), **kwargs)
+        # filter the namespace variables so that only those expected by the
+        # actual function will pass
+        f = args.function
+        expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
+        ok_args = [x for x in args._get_args() if x in expected_args]
+        ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
+                         if k in expected_args)
+        result = args.function(*ok_args, **ok_kwargs)
     else:
         result = args.function(args)
     if print_result:
         print(result)
     return result
 
-if __name__=='__main__':
-    # TODO: move to tests
-    import sys
-    def bar(args):
-        return 'I am foobar!'
 
-    @arg('-w', '--who', default='world')
-    @plain_signature
-    def hello(who=None):
-        return 'Hello {0}!'.format(who)
+class ArghParser(argparse.ArgumentParser):
+    """An :class:`ArgumentParser` suclass which adds a couple of convenience
+    methods.
 
+    There is actually no need to subclass the parser. The methods are but
+    wrappers for stand-alone functions :func:`add_commands` and
+    :func:`dispatch`.
     """
-    print 'XXX    TESTING PLAIN ARGPARSE'
-    p = argparse.ArgumentParser()
-    subparsers = p.add_subparsers()
-    foo_parser = subparsers.add_parser('foo')
-    foo_subparsers = foo_parser.add_subparsers()
-    foo_bar_parser = foo_subparsers.add_parser('bar')
-    foo_bar_parser.set_defaults(function=bar)
-    args = p.parse_args(sys.argv[1:])
-    print args.function(args)
-    """
+    def add_commands(self, *args, **kwargs):
+        "Wrapper for :func:`add_commands`."
+        return add_commands(self, *args, **kwargs)
 
-
-    print 'XXX    TESTING ARGH'
-    p = make_parser(foo=[bar, hello])
-    #p = make_parser(foo=[hello])
-    args = p.parse_args(sys.argv[1:])
-    print args.function(args)
-    print dispatch(p, ['foo'])
-
-    assert dispatch(p, ['foo', '--who=world']) != 'Hello world!'
-    assert dispatch(p, ['foo', 'hello', '--who=world']) == 'Hello world!'
-
+    def dispatch(self, *args, **kwargs):
+        "Wrapper for :func:`dispatch`."
+        return dispatch(self, *args, **kwargs)

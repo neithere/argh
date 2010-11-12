@@ -22,10 +22,10 @@
 
 import os
 from setuptools import setup
-import argh
+#import argh
 
 
-version = argh.__version__
+version = '0.1.0'
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
 
 setup(
@@ -52,7 +52,7 @@ setup(
     # categorization
     keywords     = ('cli command line argparse optparse argument option'),
     classifiers  = [
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',

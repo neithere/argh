@@ -3,16 +3,94 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to argh's documentation!
-================================
+Agrh, argparse!
+===============
 
-Contents:
+Did you ever say "argh" trying to remember the details of `optparse` or
+`argparse` API? If yes, this package may be useful for you.
+
+`Argh` provides a very simple wrapper for `argparse`. `Argparse` is a very
+powerful tool; `argh` just makes it easy to use.
+
+In a nutshell
+-------------
+
+Here's a list of features that `argh` adds to `argparse`:
+
+* mark a function as a CLI command and specify its arguments before the parser
+  is instantiated;
+* nesed commands made easy: no messing with subparsers (though they are of
+  course used under the hood);
+* infer agrument type from the default value;
+* infer command name from function name;
+* add an alias root command ``help`` for the ``--help`` argument;
+* enable passing unwrapped arguments to certain functions instead of a
+  :class:`argparse.Namespace` object.
+
+`Argh` is fully compatible with `argparse`. You can mix `argh`-agnostic and
+`argh`-aware code. Just keep in mind that :func:`argh.dispatch` does some extra
+work that a custom dispatcher may not do.
+
+Details
+-------
 
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: argh
-   :members:
+   tutorial
+   reference
+
+Stability
+---------
+
+`Argh` is well-tested (100% test coverage).
+
+The API may change in the future but there are no such plans yet.
+
+Similar projects
+----------------
+
+* argdeclare_ requires additional classes and lacks support for nested
+  commands.
+* argparse-cli_ requires additional classes.
+* django-boss_ seems to lack support for nested commands and is strictly
+  Django-specific.
+* entrypoint_ is lightweight but involves a lot of magic and seems to lack
+  support for nested commands.
+* opster_ and finaloption_ support nested commands but are based on the
+  outdated `optparse` library and therefore reimplement some features available
+  in `argparse`. They also introduce decorators that don't just decorate
+  functions but change their behaviour, which is bad practice.
+* simpleopt_ has an odd API and is rather a simple replacement for standard
+  libraries than an extension.
+* opterator_ is based on the outdated `optparse` and does not support nested
+  commands.
+* clap_ ships with its own parser and therefore is incompatible with
+  `clap`-agnostic code.
+* plac_ is a very powerful alternative to `argparse`. I'm not sure if it's
+  worth migrating but it is surely very flexible and easy to use.
+
+.. _argdeclare: http://code.activestate.com/recipes/576935-argdeclare-declarative-interface-to-argparse/
+.. _argparse-cli: http://code.google.com/p/argparse-cli/
+.. _django-boss: https://github.com/zacharyvoase/django-boss/tree/master/src/
+.. _entrypoint: http://pypi.python.org/pypi/entrypoint/
+.. _opster: http://pypi.python.org/pypi/opster/
+.. _finaloption: http://pypi.python.org/pypi/finaloption/
+.. _simpleopt: http://pypi.python.org/pypi/simpleopt/
+.. _opterator: https://github.com/buchuki/opterator/
+.. _clap: http://pypi.python.org/pypi/Clap/
+.. _plac: http://micheles.googlecode.com/hg/plac/doc/plac.html
+
+Author
+------
+
+Originally written by Andrey Mikhaylenko in 2010.
+
+See :file:`AUTHORS` for a complete authors list of this application.
+
+Please feel free to submit patches, report bugs or request features:
+
+    http://bitbucket.org/neithere/argh/issues/
 
 Indices and tables
 ==================
