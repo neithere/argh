@@ -25,7 +25,7 @@ from setuptools import setup
 #import argh
 
 
-version = '0.1.0'
+version = '0.1.1'
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
 
 setup(
@@ -36,7 +36,7 @@ setup(
 
     # technical info
     version  = version,
-    packages = [],
+    packages = ['argh'],
     requires = ['python (>= 2.6)', 'argparse (>=1.1)'],
     provides = ['argh'],
 
