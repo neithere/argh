@@ -15,24 +15,67 @@ def plain_signature(func):
     """Marks that given function expects ordinary positional and named
     arguments instead of a single positional argument (a
     :class:`argparse.Namespace` object). Useful for existing functions that you
-    don't want to alter nor write wrappers by hand.
+    don't want to alter nor write wrappers by hand. Usage::
+
+        @arg('filename')
+        @plain_signature
+        def load(filename):
+            print json.load(filename)
+
+    ...is equivalent to::
+
+        @argh('filename')
+        def load(args):
+            print json.load(args.filename)
+
+    Whether to use the decorator is mostly a matter of taste. Without it the
+    function declaration is more :term:`DRY`. However, it's a pure time saver
+    when it comes to exposing a whole lot of existing :term:`CLI`-agnostic code
+    as a set of commands. You don't need to rename each and every agrument all
+    over the place; instead, you just stick this and some :func:`arg`
+    decorators on top of every function and that's it.
     """
     func.argh_no_namespace = True
     return func
 
 def arg(*args, **kwargs):
     """Declares an argument for given function. Does not register the function
-    anywhere, not does it modify the function in any way.
+    anywhere, not does it modify the function in any way. The signature is
+    exactly the same as that of :meth:`argparse.ArgumentParser.add_argument`,
+    only some keywords are not required if they can be easily guessed.
+
+    Usage::
+
+        @arg('path')
+        @arg('--format', choices=['yaml','json'], default='json')
+        @arg('--dry-run', default=False)
+        @arg('-v', '--verbosity', choices=range(0,3), default=1)
+        def load(args):
+            loaders = {'json': json.load, 'yaml': yaml.load}
+            loader = loaders[args.format]
+            data = loader(args.path)
+            if not args.dry_run:
+                if 1 < verbosity:
+                    print('saving to the database')
+                put_to_database(data)
+
+    Note that:
+
+    * you didn't have to specify ``action="store_true"`` for ``--dry-run``;
+    * you didn't have to specify ``type=int`` for ``--verbosity``.
+
     """
     kwargs = kwargs.copy()
 
     # try guessing some stuff
+    if kwargs.get('choices') and not 'type' in kwargs:
+        kwargs['type'] = type(kwargs['choices'][0])
     if 'default' in kwargs and not 'action' in kwargs:
-        value = kwargs.get('default')
+        value = kwargs['default']
         if isinstance(value, bool):
             # infer action from default value
             kwargs['action'] = 'store_true' if value else 'store_false'
-        elif 'type' not in kwargs:
+        elif 'type' not in kwargs and value is not None:
             # infer type from default value
             kwargs['type'] = type(value)
 
@@ -60,16 +103,25 @@ def _get_subparsers(parser):
         return parser.add_subparsers()
 
 def add_commands(parser, functions, namespace=None, title=None,
-                 description=None, extra_help=None):
+                 description=None, help=None):
     """Adds given functions as commands to given parser.
 
     :param parser:
+
         an :class:`argparse.ArgumentParser` instance.
+
     :param functions:
-        A list of functions. If the function is decorated with :func:`arg`
-        The underscores are replaced with hyphens, i.e. function name "foo_bar"
-        becomes command name "foo-bar".
+
+        a list of functions. A subparser is created for each of them. If the
+        function is decorated with :func:`arg`, the arguments are passed to
+        the :class:`~argparse.ArgumentParser.add_argument` method of the
+        parser. See also :func:`dispatch` for requirements concerning function
+        signatures. The command name is inferred from the function name. Note
+        that the underscores in the name are replaced with hyphens, i.e.
+        function name "foo_bar" becomes command name "foo-bar".
+
     :param namespace:
+
         an optional string representing the group of commands. For example, if
         a command named "hello" is added without the namespace, it will be
         available as "prog.py hello"; if the namespace if specified as "greet",
@@ -81,11 +133,16 @@ def add_commands(parser, functions, namespace=None, title=None,
     that you specify the `namespace`):
 
     :param title:
+
         passed to :meth:`argsparse.ArgumentParser.add_subparsers` as `title`.
+
     :param description:
+
         passed to :meth:`argsparse.ArgumentParser.add_subparsers` as
         `description`.
-    :param extra_help:
+
+    :param help:
+
         passed to :meth:`argsparse.ArgumentParser.add_subparsers` as `help`.
 
     .. note::
@@ -99,8 +156,11 @@ def add_commands(parser, functions, namespace=None, title=None,
 
         This function peeks into the parser object using its internal API.
         Unfortunately the public API does not allow to *get* the subparsers, it
-        only lets you *add* them, and do that *once*. So you'd have to toss the
-        subparsers object around to add something later.
+        only lets you *add* them, and do that *once*. So you would have to toss
+        the subparsers object around to add something later. That said, I doubt
+        that argparse will change a lot in the future as it's already pretty
+        stable. If some implementation details would change and break `argh`,
+        we'll simply add a workaround a keep it compatibile.
 
     """
     subparsers = _get_subparsers(parser)
@@ -111,24 +171,23 @@ def add_commands(parser, functions, namespace=None, title=None,
         subsubparser = subparsers.add_parser(namespace)
         subparsers = subsubparser.add_subparsers(title=title,
                                                 description=description,
-                                                help=extra_help)
+                                                help=help)
     else:
-        assert not any([title, description, extra_help]), (
+        assert not any([title, description, help]), (
             'Arguments "title", "description" or "extra_help" only make sense '
             'if provided along with a namespace.')
 
     for func in functions:
-        name = func.__name__.replace('_','-')
-        help = func.__doc__
-        command_parser = subparsers.add_parser(name, help=help)
+        cmd_name = func.__name__.replace('_','-')
+        cmd_help = func.__doc__
+        command_parser = subparsers.add_parser(cmd_name, help=cmd_help)
         for a_args, a_kwargs in getattr(func, 'argh_args', []):
             command_parser.add_argument(*a_args, **a_kwargs)
-        command_parser.set_defaults(function=func, help=func.__doc__)
+        command_parser.set_defaults(function=func)
 
 def dispatch(parser, argv=None, print_result=True, add_help_command=True):
     """Parses given list of arguments using given parser, calls the relevant
-    function passing the :class:`argparse.Namespace` object to it and prints
-    the result.
+    function and prints the result.
 
     The target function should expect one positional argument: the
     :class:`argparse.Namespace` object. However, if the function is decorated with

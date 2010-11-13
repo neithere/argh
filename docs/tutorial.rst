@@ -24,7 +24,7 @@ Here's an example::
     @arg('--noreload', default=False, help='Do not use autoreloader')
     def serve(args):
         "Runs a simple webserver."
-        do_something(host=args.host)
+        do_something(host=args.host, port=args.port, noreload=args.noreload)
 
     def serve_rest(args):
         "Run some REST service... whatever."
@@ -60,7 +60,7 @@ Now consider this expression::
 
     parser = ArghParser()
     parser.add_commands([bar, quux], namespace='foo')
-    parser.dispatch()
+    parser.dispatch() 
 
 It produces a command hierarchy for the command-line expressions ``foo bar``
 and ``foo quux``. It is equivalent to this generic argparse code::
@@ -68,8 +68,8 @@ and ``foo quux``. It is equivalent to this generic argparse code::
     import sys
     import argparse
 
-    p = argparse.ArgumentParser()
-    subparsers = p.add_subparsers()
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
 
     foo_parser = subparsers.add_parser('foo')
     foo_subparsers = foo_parser.add_subparsers()
@@ -80,7 +80,7 @@ and ``foo quux``. It is equivalent to this generic argparse code::
     foo_quux_parser = foo_subparsers.add_parser('quux')
     foo_quux_parser.set_defaults(function=quux)
 
-    args = p.parse_args(sys.argv[1:])
+    args = parser.parse_args()
     print args.function(args)
 
 The `help` command is always added automatically and displays the docstring:

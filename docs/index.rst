@@ -19,10 +19,11 @@ Here's a list of features that `argh` adds to `argparse`:
 
 * mark a function as a CLI command and specify its arguments before the parser
   is instantiated;
-* nesed commands made easy: no messing with subparsers (though they are of
+* nested commands made easy: no messing with subparsers (though they are of
   course used under the hood);
-* infer agrument type from the default value;
 * infer command name from function name;
+* infer agrument type from the default value;
+* infer argument action from the default value (for booleans);
 * add an alias root command ``help`` for the ``--help`` argument;
 * enable passing unwrapped arguments to certain functions instead of a
   :class:`argparse.Namespace` object.
@@ -91,6 +92,20 @@ See :file:`AUTHORS` for a complete authors list of this application.
 Please feel free to submit patches, report bugs or request features:
 
     http://bitbucket.org/neithere/argh/issues/
+
+Glossary
+--------
+
+.. glossary::
+
+    CLI
+        `Command-line interface`_. You should know what that is if you are
+        here, right? :)
+    DRY
+        The `don't repeat yourself`_ principle.
+
+.. _Command-line interface: http://en.wikipedia.org/wiki/Command-line_interface
+.. _Don't repeat yourself: http://en.wikipedia.org/wiki/Don't_repeat_yourself
 
 Indices and tables
 ==================
