@@ -5,7 +5,6 @@ API reference
 
 """
 __all__ = ['ArghParser', 'arg', 'plain_signature', 'add_commands', 'dispatch']
-__version__ = '0.1.0'
 
 import sys
 from functools import wraps
@@ -26,8 +25,17 @@ def arg(*args, **kwargs):
     anywhere, not does it modify the function in any way.
     """
     kwargs = kwargs.copy()
-    if 'type' not in kwargs and kwargs.get('default') is not None:
-        kwargs['type'] = type(kwargs['default'])
+
+    # try guessing some stuff
+    if 'default' in kwargs and not 'action' in kwargs:
+        value = kwargs.get('default')
+        if isinstance(value, bool):
+            # infer action from default value
+            kwargs['action'] = 'store_true' if value else 'store_false'
+        elif 'type' not in kwargs:
+            # infer type from default value
+            kwargs['type'] = type(value)
+
     def wrapper(func):
         func.argh_args = getattr(func, 'argh_args', [])
         func.argh_args.append((args, kwargs))
