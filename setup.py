@@ -22,10 +22,9 @@
 
 import os
 from setuptools import setup
-#import argh
+from _version import version
 
 
-version = '0.2.0'
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
 
 setup(
