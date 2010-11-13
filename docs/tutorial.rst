@@ -42,9 +42,9 @@ Here's an example::
         parser.dispatch()
 
 The example above defines four commands: `shell`, `load`, `serve` and `serve-rest`.
-Note how they are assembled together in the last :func:`make_parser` call: two
-commands as arguments and two as a keyword argument `web`. This is the
-resulting command-line interface:
+Note how they are assembled together by :meth:`argh.ArghParser.add_commands`:
+two at root level and two within a namespace "www". This is the resulting
+command-line interface:
 
     * ``./prog.py shell``
     * ``./prog.py load prancing_ponies.json``
@@ -63,17 +63,23 @@ Now consider this expression::
     parser.dispatch()
 
 It produces a command hierarchy for the command-line expressions ``foo bar``
-and ``foo quux``. It is roughly equivalent to this generic argparse code::
+and ``foo quux``. It is equivalent to this generic argparse code::
 
     import sys
-    from argparse import ArgumentParser
+    import argparse
 
     p = argparse.ArgumentParser()
     subparsers = p.add_subparsers()
+
     foo_parser = subparsers.add_parser('foo')
     foo_subparsers = foo_parser.add_subparsers()
+
     foo_bar_parser = foo_subparsers.add_parser('bar')
     foo_bar_parser.set_defaults(function=bar)
+
+    foo_quux_parser = foo_subparsers.add_parser('quux')
+    foo_quux_parser.set_defaults(function=quux)
+
     args = p.parse_args(sys.argv[1:])
     print args.function(args)
 
@@ -84,8 +90,7 @@ The `help` command is always added automatically and displays the docstring:
 
 .. note::
 
-    You don't have to use :class:`ArghParser`; the standard
+    You don't have to use :class:`argh.ArghParser`; the standard
     :class:`argparse.ArgumentParser` will do. You will just need to call
-    stand-alone functions :func:`add_commands` and :func:`dispatch` instead of
-    :class:`ArghParser` methods.
-
+    stand-alone functions :func:`argh.add_commands` and :func:`argh.dispatch`
+    instead of :class:`argh.ArghParser` methods.
