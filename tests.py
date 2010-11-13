@@ -89,7 +89,7 @@ class ArghTestCase(unittest.TestCase):
         self.assert_cmd_returns('plain-echo bar', 'you said bar')
 
     def test_bare_namespace(self):
-        "A command can be resolved to a function, to a namespace."
+        "A command can be resolved to a function, not a namespace."
         self.assert_cmd_fails('greet', 'too few arguments')
         self.assert_cmd_fails('greet --name=world', 'too few arguments')
 
