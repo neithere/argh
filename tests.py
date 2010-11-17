@@ -17,8 +17,10 @@ class DebugArghParser(ArghParser):
 
 
 @arg('text')
+@arg('--twice', default=False, help='repeat twice')
 def echo(args):
-    return u'you said {0}'.format(args.text)
+    repeat = 2 if args.twice else 1
+    return u'you said {0}'.format(args.text) * repeat
 
 @arg('text')
 @plain_signature
@@ -83,6 +85,10 @@ class ArghTestCase(unittest.TestCase):
     def test_echo(self):
         "A simple command is resolved to a function."
         self.assert_cmd_returns('echo foo', 'you said foo')
+
+    def test_bool_action(self):
+        "Action `store_true`/`store_false` is inferred from default value."
+        self.assert_cmd_returns('echo --twice foo', 'you said fooyou said foo')
 
     def test_plain_signature(self):
         "Arguments can be passed to the function without a Namespace instance."

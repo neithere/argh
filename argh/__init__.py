@@ -74,7 +74,7 @@ def arg(*args, **kwargs):
         value = kwargs['default']
         if isinstance(value, bool):
             # infer action from default value
-            kwargs['action'] = 'store_true' if value else 'store_false'
+            kwargs['action'] = 'store_false' if value else 'store_true'
         elif 'type' not in kwargs and value is not None:
             # infer type from default value
             kwargs['type'] = type(value)
@@ -185,7 +185,7 @@ def add_commands(parser, functions, namespace=None, title=None,
             command_parser.add_argument(*a_args, **a_kwargs)
         command_parser.set_defaults(function=func)
 
-def dispatch(parser, argv=None, print_result=True, add_help_command=True):
+def dispatch(parser, argv=None, add_help_command=True):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -199,9 +199,6 @@ def dispatch(parser, argv=None, print_result=True, add_help_command=True):
     :param argv:
         a list of strings representing the arguments. If `None`, ``sys.argv``
         is used instead. Default is `None`.
-    :param print_result:
-        if `True`, the result is printed and returned to the caller. If
-        `False`, it is only returned and not printed. Default is `True`.
     :param add_help_command:
         if `True`, converts first positional argument "help" to a keyword
         argument so that ``help foo`` becomes ``foo --help`` and displays usage
@@ -227,8 +224,6 @@ def dispatch(parser, argv=None, print_result=True, add_help_command=True):
         result = args.function(*ok_args, **ok_kwargs)
     else:
         result = args.function(args)
-    if print_result:
-        print(result)
     return result
 
 
