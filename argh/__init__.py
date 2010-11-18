@@ -6,10 +6,37 @@ API reference
 """
 __all__ = ['ArghParser', 'arg', 'plain_signature', 'add_commands', 'dispatch']
 
+import locale
 import sys
 from functools import wraps
 import argparse
 
+
+def alias(name):
+    """Defines the command name for given function. The alias will be used for
+    the command instead of the original function name.
+
+    .. note::
+
+        Currently `argparse` does not support (multiple) aliases so this
+        decorator actually *renames* the command. However, in the future it may
+        accept multiple names for the same command.
+
+    """
+    def wrapper(func):
+        func.argh_alias = name
+        return func
+    return wrapper
+
+def generator(func):
+    """Marks given function as a generator. Such function will be called by
+    :func:`dispatch <dispatcher>` and the yielded strings printed one by one.
+    The encoding is automatically adapted.
+
+    Functions without this decorator are expected to simply print their output.
+    """
+    func.argh_generator = True
+    return func
 
 def plain_signature(func):
     """Marks that given function expects ordinary positional and named
@@ -178,14 +205,16 @@ def add_commands(parser, functions, namespace=None, title=None,
             'if provided along with a namespace.')
 
     for func in functions:
-        cmd_name = func.__name__.replace('_','-')
+        # XXX we could add multiple aliases here but it's a bit of a hack
+        cmd_name = getattr(func, 'argh_alias', func.__name__.replace('_','-'))
         cmd_help = func.__doc__
         command_parser = subparsers.add_parser(cmd_name, help=cmd_help)
         for a_args, a_kwargs in getattr(func, 'argh_args', []):
             command_parser.add_argument(*a_args, **a_kwargs)
         command_parser.set_defaults(function=func)
 
-def dispatch(parser, argv=None, add_help_command=True):
+def dispatch(parser, argv=None, add_help_command=True, encoding=None,
+             intercept=False):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -224,7 +253,21 @@ def dispatch(parser, argv=None, add_help_command=True):
         result = args.function(*ok_args, **ok_kwargs)
     else:
         result = args.function(args)
-    return result
+    if getattr(args.function, 'argh_generator', False):
+        # handle iterable results (function marked with @generator decorator)
+        if not encoding:
+            # choose between terminal's and system's preferred encodings
+            if sys.stdout.isatty():
+                encoding = sys.stdout.encoding
+            else:
+                encoding = locale.getpreferredencoding()
+        encoded = '\n'.join([line.encode(encoding) for line in result])
+        if intercept:
+            return encoded
+        else:
+            print(encoded)
+    else:
+        return result
 
 
 class ArghParser(argparse.ArgumentParser):
