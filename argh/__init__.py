@@ -32,9 +32,26 @@ def alias(name):
 def generator(func):
     """Marks given function as a generator. Such function will be called by
     :func:`dispatch <dispatcher>` and the yielded strings printed one by one.
-    The encoding is automatically adapted.
+
+    Encoding of the output is automatically adapted to the terminal or a pipe.
 
     Functions without this decorator are expected to simply print their output.
+
+    These three commands produce equal results::
+
+        def foo(args):
+            print('hello')
+            print('world')
+
+        @generator
+        def bar(args):
+            return ['hello', 'world']
+
+        @generator
+        def quux(args):
+            yield('hello')
+            yield('world')
+
     """
     func.argh_generator = True
     return func
