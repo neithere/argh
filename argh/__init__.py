@@ -4,13 +4,39 @@ API reference
 =============
 
 """
-__all__ = ['add_commands', 'alias', 'arg', 'ArghParser', 'dispatch',
-           'generator', 'plain_signature']
+__all__ = (
+    'add_commands', 'alias', 'arg', 'ArghParser', 'CommandError', 'confirm',
+    'dispatch', 'generator', 'plain_signature'
+)
 
 import locale
 import sys
 from functools import wraps
 import argparse
+
+
+class CommandError(Exception):
+    """The only exception that is wrapped by the dispatcher. Useful for
+    print-and-exit tasks. The following examples are equal::
+
+        @arg('key')
+        def foo(args):
+            try:
+                db[args.key]
+            except KeyError as e:
+                print(u'Could not fetch item: {0}'.format(e))
+                return
+
+        @arg('key')
+         def bar(args):
+            try:
+                db[args.key]
+            except KeyError as e:
+                raise CommandError(u'Could not fetch item: {0}'.format(e))
+
+    This exception can be safely used in both printing and :func:`generator
+    <generating>` commands.
+    """
 
 
 def alias(name):
@@ -251,6 +277,9 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         argument so that ``help foo`` becomes ``foo --help`` and displays usage
         information for "foo". Default is `True`.
 
+    Exceptions are not wrapped and will propagate. The only exception among the
+    exceptions is :class:`CommandError` which is interpreted as an expected
+    event so the traceback is hidden.
     """
     if argv is None:
         argv = sys.argv[1:]
@@ -258,34 +287,47 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         if argv and argv[0] == 'help':
             argv.pop(0)
             argv.append('--help')
+
     # this will raise SystemExit if parsing fails
     args = parser.parse_args(argv)
-    if getattr(args.function, 'argh_no_namespace', False):
-        # filter the namespace variables so that only those expected by the
-        # actual function will pass
-        f = args.function
-        expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
-        ok_args = [x for x in args._get_args() if x in expected_args]
-        ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
-                         if k in expected_args)
-        result = args.function(*ok_args, **ok_kwargs)
-    else:
-        result = args.function(args)
-    if getattr(args.function, 'argh_generator', False):
-        # handle iterable results (function marked with @generator decorator)
-        if not encoding:
-            # choose between terminal's and system's preferred encodings
-            if sys.stdout.isatty():
-                encoding = sys.stdout.encoding
-            else:
-                encoding = locale.getpreferredencoding()
-        encoded = '\n'.join([line.encode(encoding) for line in result])
-        if intercept:
-            return encoded
+
+    # try different ways of calling the command; if meanwhile it raises
+    # CommandError, return the string representation of that error
+    try:
+        if getattr(args.function, 'argh_no_namespace', False):
+            # filter the namespace variables so that only those expected by the
+            # actual function will pass
+            f = args.function
+            expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
+            ok_args = [x for x in args._get_args() if x in expected_args]
+            ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
+                             if k in expected_args)
+            result = args.function(*ok_args, **ok_kwargs)
         else:
-            print(encoded)
-    else:
-        return result
+            result = args.function(args)
+        if getattr(args.function, 'argh_generator', False):
+            # handle iterable results (function marked with @generator decorator)
+            if not encoding:
+                # choose between terminal's and system's preferred encodings
+                if sys.stdout.isatty():
+                    encoding = sys.stdout.encoding
+                else:
+                    encoding = locale.getpreferredencoding()
+            if intercept:
+                return '\n'.join([line.encode(encoding) for line in result])
+            else:
+                # we must print each line as soon as it is generated to ensure that
+                # it is displayed to the user before anything else happens, e.g.
+                # raw_input() is called
+                for line in result:
+                    print(line.encode(encoding))
+        else:
+            return result
+    except CommandError as e:
+        if intercept:
+            return str(e)
+        else:
+            print(e)
 
 
 class ArghParser(argparse.ArgumentParser):
@@ -303,3 +345,53 @@ class ArghParser(argparse.ArgumentParser):
     def dispatch(self, *args, **kwargs):
         "Wrapper for :func:`dispatch`."
         return dispatch(self, *args, **kwargs)
+
+
+def confirm(action, default=None, skip=False):
+    """A shortcut for typical confirmation prompt.
+
+    :param action:
+        a string describing the action, e.g. "Apply changes". A question mark
+        will be appended.
+    :param default:
+        `bool` or `None`. Determines what happens when user hits :kbd:`Enter`
+        without typing in a choice. If `True`, default choice is "yes". If
+        `False`, it is "no". If `None` the prompt keeps reappearing until user
+        types in a choice (not necessarily acceptable), Default is `None`.
+    :param skip:
+        `bool`l if `True`,
+
+    Usage::
+
+        @arg('key')
+        @arg('-y', '--yes', help='do not prompt, always answer "yes"')
+        def delete(args):
+            item = db.get(Item, args.key)
+            if confirm('Delete item {title}'.format(**item), skip=args.yes):
+                item.delete()
+                print('Item deleted.')
+            else:
+                print('Operation cancelled.')
+
+    Returns `False` on `KeyboardInterrupt` event.
+    """
+    if skip:
+        choice = 'y'
+    else:
+        defaults = {
+            None: ('y','n'),
+            True: ('Y','n'),
+            False: ('y','N'),
+        }
+        y, n = defaults[default]
+        prompt = u'{action}? ({y}/{n})'.format(**locals())
+        choice = None
+        try:
+            if default is None:
+                while not choice:
+                    choice = raw_input(prompt)
+            else:
+                choice = raw_input(prompt) or ('y' if default else 'n')
+        except KeyboardInterrupt:
+            return False
+    return choice in ('y', 'yes')
