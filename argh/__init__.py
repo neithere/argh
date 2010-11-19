@@ -17,25 +17,27 @@ import argparse
 
 class CommandError(Exception):
     """The only exception that is wrapped by the dispatcher. Useful for
-    print-and-exit tasks. The following examples are equal::
+    print-and-exit tasks.
 
-        @arg('key')
+    Consider the following example::
+
         def foo(args):
             try:
-                db[args.key]
+                ...
             except KeyError as e:
                 print(u'Could not fetch item: {0}'.format(e))
                 return
 
-        @arg('key')
-         def bar(args):
+    It is exactly the same as::
+
+        def bar(args):
             try:
-                db[args.key]
+                ...
             except KeyError as e:
                 raise CommandError(u'Could not fetch item: {0}'.format(e))
 
-    This exception can be safely used in both printing and :func:`generator
-    <generating>` commands.
+    This exception can be safely used in both printing and :func:`generating
+    <generator>` commands.
     """
 
 
@@ -57,9 +59,14 @@ def alias(name):
 
 def generator(func):
     """Marks given function as a generator. Such function will be called by
-    :func:`dispatch <dispatcher>` and the yielded strings printed one by one.
+    :func:`dispatcher <dispatch>` and the yielded strings printed one by one.
 
     Encoding of the output is automatically adapted to the terminal or a pipe.
+
+    .. hint::
+
+        If your command is likely to output Unicode and be used in pipes, you
+        should definitely use the generator approach.
 
     Functions without this decorator are expected to simply print their output.
 
@@ -359,15 +366,16 @@ def confirm(action, default=None, skip=False):
         `False`, it is "no". If `None` the prompt keeps reappearing until user
         types in a choice (not necessarily acceptable), Default is `None`.
     :param skip:
-        `bool`l if `True`,
+        `bool`; if `True`, no interactive prompt is used and default choice is
+        returned (useful for batch mode). Default is `False`.
 
     Usage::
 
         @arg('key')
-        @arg('-y', '--yes', help='do not prompt, always answer "yes"')
+        @arg('--silent', help='do not prompt, always give default answers')
         def delete(args):
             item = db.get(Item, args.key)
-            if confirm('Delete item {title}'.format(**item), skip=args.yes):
+            if confirm('Delete '+item.title, default=True, skip=args.silent):
                 item.delete()
                 print('Item deleted.')
             else:
@@ -376,7 +384,7 @@ def confirm(action, default=None, skip=False):
     Returns `False` on `KeyboardInterrupt` event.
     """
     if skip:
-        choice = 'y'
+        return default
     else:
         defaults = {
             None: ('y','n'),
