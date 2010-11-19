@@ -4,7 +4,8 @@ API reference
 =============
 
 """
-__all__ = ['ArghParser', 'arg', 'plain_signature', 'add_commands', 'dispatch']
+__all__ = ['add_commands', 'alias', 'arg', 'ArghParser', 'dispatch',
+           'generator', 'plain_signature']
 
 import locale
 import sys
