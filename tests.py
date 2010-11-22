@@ -3,8 +3,8 @@
 import sys
 import unittest2 as unittest
 import argparse
-import argh
-from argh import ArghParser, arg, add_commands, dispatch, plain_signature
+import argh.helpers
+from argh import alias, ArghParser, arg, add_commands, dispatch, plain_signature
 
 
 class DebugArghParser(ArghParser):
@@ -36,6 +36,10 @@ def hello(args):
 def howdy(args):
     return u'Howdy {0}?'.format(args.buddy)
 
+@alias('aliased')
+def do_aliased(args):
+    return 'ok'
+
 @arg('foo')
 @arg('bar')
 def foo_bar(args):
@@ -46,7 +50,7 @@ class ArghTestCase(unittest.TestCase):
     def setUp(self):
         #self.parser = build_parser(echo, plain_echo, foo=[hello, howdy])
         self.parser = DebugArghParser('PROG')
-        self.parser.add_commands([echo, plain_echo, foo_bar])
+        self.parser.add_commands([echo, plain_echo, foo_bar, do_aliased])
         self.parser.add_commands([hello, howdy], namespace='greet')
 
     def _call_cmd(self, command_string):
@@ -113,6 +117,9 @@ class ArghTestCase(unittest.TestCase):
         self.assert_cmd_fails('greet howdy --name=John', 'too few arguments')
         self.assert_cmd_returns('greet howdy John', u'Howdy John?')
 
+    def test_alias(self):
+        self.assert_cmd_returns('aliased', 'ok')
+
     def test_help_alias(self):
         self.assert_cmd_doesnt_fail('--help')
         self.assert_cmd_doesnt_fail('greet --help')
@@ -130,7 +137,7 @@ class ArghTestCase(unittest.TestCase):
 
 class ConfirmTestCase(unittest.TestCase):
     def assert_choice(self, choice, expected, **kwargs):
-        argh.raw_input = lambda prompt: choice
+        argh.helpers.raw_input = lambda prompt: choice
         self.assertEqual(argh.confirm('test', **kwargs), expected)
 
     def test_simple(self):
@@ -157,7 +164,7 @@ class ConfirmTestCase(unittest.TestCase):
 
         def raw_input_mock(prompt):
             prompts.append(prompt)
-        argh.raw_input = raw_input_mock
+        argh.helpers.raw_input = raw_input_mock
 
         argh.confirm('do smth')
         self.assertEqual(prompts[-1], 'do smth? (y/n)')
@@ -175,5 +182,5 @@ class ConfirmTestCase(unittest.TestCase):
         "Unicode and bytes are accepted as prompt message"
         def raw_input_mock(prompt):
             assert isinstance(prompt, str)
-        argh.raw_input = raw_input_mock
+        argh.helpers.raw_input = raw_input_mock
         argh.confirm(u'привет')
