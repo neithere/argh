@@ -6,13 +6,14 @@ API reference
 """
 __all__ = (
     'add_commands', 'alias', 'arg', 'ArghParser', 'CommandError', 'confirm',
-    'dispatch', 'generator', 'plain_signature'
+    'dispatch', 'plain_signature'
 )
 
+import argparse
+from functools import wraps
 import locale
 import sys
-from functools import wraps
-import argparse
+from types import GeneratorType
 
 
 class CommandError(Exception):
@@ -58,35 +59,16 @@ def alias(name):
     return wrapper
 
 def generator(func):
-    """Marks given function as a generator. Such function will be called by
-    :func:`dispatcher <dispatch>` and the yielded strings printed one by one.
+    """
+    .. warning::
 
-    Encoding of the output is automatically adapted to the terminal or a pipe.
-
-    .. hint::
-
-        If your command is likely to output Unicode and be used in pipes, you
-        should definitely use the generator approach.
-
-    Functions without this decorator are expected to simply print their output.
-
-    These three commands produce equal results::
-
-        def foo(args):
-            print('hello')
-            print('world')
-
-        @generator
-        def bar(args):
-            return ['hello', 'world']
-
-        @generator
-        def quux(args):
-            yield('hello')
-            yield('world')
+        This decorator is deprecated. Argh can detect whether the result is a
+        generator without explicit decorators.
 
     """
-    func.argh_generator = True
+    import warnings
+    warnings.warn('Decorator @generator is deprecated. The commands can still '
+                  'return generators.', DeprecationWarning)
     return func
 
 def plain_signature(func):
@@ -159,7 +141,10 @@ def arg(*args, **kwargs):
 
     def wrapper(func):
         func.argh_args = getattr(func, 'argh_args', [])
-        func.argh_args.append((args, kwargs))
+        # The innermost decorator is called first but appears last in the code.
+        # We need to preserve the expected order of positional arguments, so
+        # the outermost decorator inserts its value before the innermost's:
+        func.argh_args.insert(0, (args, kwargs))
         return func
     return wrapper
 
@@ -312,7 +297,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
             result = args.function(*ok_args, **ok_kwargs)
         else:
             result = args.function(args)
-        if getattr(args.function, 'argh_generator', False):
+        if isinstance(result, (GeneratorType, list, tuple)):
             # handle iterable results (function marked with @generator decorator)
             if not encoding:
                 # choose between terminal's and system's preferred encodings
@@ -327,6 +312,11 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
                 # it is displayed to the user before anything else happens, e.g.
                 # raw_input() is called
                 for line in result:
+                    if not isinstance(line, unicode):
+                        try:
+                            line = unicode(line)
+                        except UnicodeDecodeError:
+                            line = str(line).decode('utf-8')
                     print(line.encode(encoding))
         else:
             return result
@@ -364,7 +354,8 @@ def confirm(action, default=None, skip=False):
         `bool` or `None`. Determines what happens when user hits :kbd:`Enter`
         without typing in a choice. If `True`, default choice is "yes". If
         `False`, it is "no". If `None` the prompt keeps reappearing until user
-        types in a choice (not necessarily acceptable), Default is `None`.
+        types in a choice (not necessarily acceptable) or until the number of
+        iteration reaches the limit. Default is `None`.
     :param skip:
         `bool`; if `True`, no interactive prompt is used and default choice is
         returned (useful for batch mode). Default is `False`.
@@ -381,8 +372,9 @@ def confirm(action, default=None, skip=False):
             else:
                 print('Operation cancelled.')
 
-    Returns `False` on `KeyboardInterrupt` event.
+    Returns `None` on `KeyboardInterrupt` event.
     """
+    MAX_ITERATIONS = 3
     if skip:
         return default
     else:
@@ -392,14 +384,22 @@ def confirm(action, default=None, skip=False):
             False: ('y','N'),
         }
         y, n = defaults[default]
-        prompt = u'{action}? ({y}/{n})'.format(**locals())
+        prompt = u'{action}? ({y}/{n})'.format(**locals()).encode('utf-8')
         choice = None
         try:
             if default is None:
-                while not choice:
+                cnt = 1
+                while not choice and cnt < MAX_ITERATIONS:
                     choice = raw_input(prompt)
+                    cnt += 1
             else:
-                choice = raw_input(prompt) or ('y' if default else 'n')
+                choice = raw_input(prompt)
         except KeyboardInterrupt:
-            return False
-    return choice in ('y', 'yes')
+            return None
+    if choice in ('yes', 'y', 'Y'):
+        return True
+    if choice in ('no', 'n', 'N'):
+        return False
+    if default is not None:
+        return default
+    return None

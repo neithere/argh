@@ -3,6 +3,7 @@
 import sys
 import unittest2 as unittest
 import argparse
+import argh
 from argh import ArghParser, arg, add_commands, dispatch, plain_signature
 
 
@@ -35,17 +36,22 @@ def hello(args):
 def howdy(args):
     return u'Howdy {0}?'.format(args.buddy)
 
+@arg('foo')
+@arg('bar')
+def foo_bar(args):
+    return args.foo, args.bar
+
 
 class ArghTestCase(unittest.TestCase):
     def setUp(self):
         #self.parser = build_parser(echo, plain_echo, foo=[hello, howdy])
         self.parser = DebugArghParser('PROG')
-        self.parser.add_commands([echo, plain_echo])
+        self.parser.add_commands([echo, plain_echo, foo_bar])
         self.parser.add_commands([hello, howdy], namespace='greet')
 
     def _call_cmd(self, command_string):
         args = command_string.split() if command_string else command_string
-        return self.parser.dispatch(args)
+        return self.parser.dispatch(args, intercept=True)
 
     def assert_cmd_returns(self, command_string, expected_result):
         """Executes given command using given parser and asserts that it prints
@@ -115,3 +121,59 @@ class ArghTestCase(unittest.TestCase):
         self.assert_cmd_doesnt_fail('help')
         self.assert_cmd_doesnt_fail('help greet')
         self.assert_cmd_doesnt_fail('help greet hello')
+
+    def test_arg_order(self):
+        """Positional arguments are resolved in the order in which the @arg
+        decorators are defined.
+        """
+        self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar')
+
+class ConfirmTestCase(unittest.TestCase):
+    def assert_choice(self, choice, expected, **kwargs):
+        argh.raw_input = lambda prompt: choice
+        self.assertEqual(argh.confirm('test', **kwargs), expected)
+
+    def test_simple(self):
+        self.assert_choice('', None)
+        self.assert_choice('', None, default=None)
+        self.assert_choice('', True, default=True)
+        self.assert_choice('', False, default=False)
+
+        self.assert_choice('y', True)
+        self.assert_choice('y', True, default=True)
+        self.assert_choice('y', True, default=False)
+        self.assert_choice('y', True, default=None)
+
+        self.assert_choice('n', False)
+        self.assert_choice('n', False, default=True)
+        self.assert_choice('n', False, default=False)
+        self.assert_choice('n', False, default=None)
+
+        self.assert_choice('x', None)
+
+    def test_prompt(self):
+        "Prompt is properly formatted"
+        prompts = []
+
+        def raw_input_mock(prompt):
+            prompts.append(prompt)
+        argh.raw_input = raw_input_mock
+
+        argh.confirm('do smth')
+        self.assertEqual(prompts[-1], 'do smth? (y/n)')
+
+        argh.confirm('do smth', default=None)
+        self.assertEqual(prompts[-1], 'do smth? (y/n)')
+
+        argh.confirm('do smth', default=True)
+        self.assertEqual(prompts[-1], 'do smth? (Y/n)')
+
+        argh.confirm('do smth', default=False)
+        self.assertEqual(prompts[-1], 'do smth? (y/N)')
+
+    def test_encoding(self):
+        "Unicode and bytes are accepted as prompt message"
+        def raw_input_mock(prompt):
+            assert isinstance(prompt, str)
+        argh.raw_input = raw_input_mock
+        argh.confirm(u'привет')
