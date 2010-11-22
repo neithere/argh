@@ -3,13 +3,16 @@
 API reference
 =============
 
+.. automodule:: argh.decorators
+   :members:
+
+.. automodule:: argh.helpers
+   :members:
+
+.. automodule:: argh.exceptions
+   :members:
+
 """
-
-__all__ = (
-    'add_commands', 'alias', 'arg', 'ArghParser', 'CommandError', 'confirm',
-    'dispatch', 'plain_signature'
-)
-
 from .exceptions import *
 from .helpers import *
 from .decorators import *

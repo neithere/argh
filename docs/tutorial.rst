@@ -1,23 +1,39 @@
 Tutorial
 ========
 
-Here's an example::
+Defining commands
+-----------------
+
+Let's start with an almost real-life example where we define some commands.
+First, import :class:`~argh.helpers.ArghParser` (an extended version of the
+standard :class:`argparse.ArgumentParser`) and the decorator
+:func:`~argh.decorators.arg` which we'll use to tell the parser what arguments
+should given function accept::
 
     # coding: utf-8
     from argh import arg, ArghParser
 
-    # define a couple of non-web commands
+Now define a command. It is just a function that may accept arguments. By
+default it should accept a namespace object::
 
     def shell(args):
         "Runs the interactive shell."    # ← the command documentation
         run_the_interactive_shell()
+
+That command didn't actually have any arguments. Let's create another one that
+does::
 
     @arg('file', help='fixture to load')  # ← a command argument
     def load(args):
         "Loads a JSON fixture from given file."
         print json.load(args.file)
 
-    # define a pair of web server commands with a handful of arguments
+The command ``load`` will now require a positional argument `file`. We'll run
+it later this way::
+
+    $ ./prog.py load
+
+Here's another command with a handful of arguments, all of them optional::
 
     @arg('--host', default='127.0.0.1', help='The host')
     @arg('--port', default=6060, help='The port')
@@ -26,35 +42,89 @@ Here's an example::
         "Runs a simple webserver."
         do_something(host=args.host, port=args.port, noreload=args.noreload)
 
+...and the fourth command will follow. It's pretty simple. Note that it too has
+a docstring that will show up when we call our script with the ``--help``
+switch::
+
     def serve_rest(args):
         "Run some REST service... whatever."
         do_something()
 
-    # now assemble all the commands — web-related and miscellaneous — within
-    # a single argument parser
+At this point we have four functions: `shell`, `load`, `serve` and
+`serve_rest`. They are not "commands" yet because we don't even have a parser
+or dispatcher. The script must know how to interpret the arguments passed in by
+the user.
+
+Our next step is to assemble all the commands — web-related and miscellaneous —
+within a single argument parser. First, create the parser itself::
 
     parser = ArghParser()  # ← this is an ArgumentParser subclass
+
+Inform it of the first two commands::
+
     parser.add_commands([shell, load])
-    parser.add_commands([serve, serve_rest], namespace='www',
-                        title='Web-related commands')
+
+These will be accessible under the related functions' names.
+
+Then add the web-related commands (note the difference)::
+
+    parser.add_commands([serve, serve_rest],
+                         namespace='www',
+                         title='Web-related commands')
+
+We have just created a couple of *subcommands* under the namespace "www". The
+`title` keyword is for documentation purposes (see
+:func:`~argh.helpers.add_commands` documentation).
+
+The last thing is to actually parse the arguments and call the relevant command
+(function) when our module is called as a script::
 
     if __name__=='__main__':
         parser.dispatch()
 
-The example above defines four commands: `shell`, `load`, `serve` and `serve-rest`.
-Note how they are assembled together by :meth:`argh.ArghParser.add_commands`:
-two at root level and two within a namespace "www". This is the resulting
-command-line interface:
+Great! We have created a fully working script with two simple commands
+(``shell`` and ``load``) and two subcommands (``www serve`` and ``www
+serve-rest``).
 
-    * ``./prog.py shell``
-    * ``./prog.py load prancing_ponies.json``
-    * ``./prog.py www serve-rest``
-    * ``./prog.py www serve --port 6060 --noreload``
+Note how they are assembled together by
+:meth:`~argh.helpers.ArghParser.add_commands`: two at root level and two within
+a namespace "www". This is the resulting command-line interface::
 
-See what's happening here?
+    $ ./prog.py shell
+    $ ./prog.py load prancing_ponies.json
+    $ ./prog.py www serve-rest
+    $ ./prog.py www serve --port 6060 --noreload
+
+Subparsers
+----------
 
 The statement ``parser.add_commands([bar, quux])`` builds two subparsers named
-`bar` and `quux`.
+`bar` and `quux`. A "subparser" is an argument parser bound to a namespace. In
+other words, it works with everything after a certain positional argument.
+`Argh` implements commands by creating a subparser for every function.
+
+Again, here's how we create two subparsers for commands ``foo`` and ``bar``::
+
+    parser = ArghParser()
+    parser.add_commands([bar, quux])
+    parser.dispatch()
+
+The equivalent code without `Argh` would be::
+
+    import sys
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    foo_parser = subparsers.add_parser('foo')
+    foo_parser.set_defaults(function=foo)
+
+    foo_parser = subparsers.add_parser('bar')
+    foo_parser.set_defaults(function=bar)
+
+    args = parser.parse_args()
+    print args.function(args)
 
 Now consider this expression::
 
@@ -63,7 +133,8 @@ Now consider this expression::
     parser.dispatch() 
 
 It produces a command hierarchy for the command-line expressions ``foo bar``
-and ``foo quux``. It is equivalent to this generic argparse code::
+and ``foo quux``. This involves "subsubparsers". Without `Argh` you would need
+to write something like this (generic argparse API)::
 
     import sys
     import argparse
@@ -83,17 +154,25 @@ and ``foo quux``. It is equivalent to this generic argparse code::
     args = parser.parse_args()
     print args.function(args)
 
-The `help` command is always added automatically and displays the docstring:
-
-    * ``help shell`` → ``shell --help``
-    * ``help web serve`` → ``web serve --help``
-
 .. note::
 
     You don't have to use :class:`argh.ArghParser`; the standard
     :class:`argparse.ArgumentParser` will do. You will just need to call
     stand-alone functions :func:`argh.add_commands` and :func:`argh.dispatch`
     instead of :class:`argh.ArghParser` methods.
+
+Generated help
+--------------
+
+`Argparse` takes care of generating nicely formatted help for commands and
+arguments. The usage information is displayed when user provides the switch
+``--help``. However `argparse` does not provide a ``help`` *command*.
+
+`Argh` always adds the command ``help`` automatically. It displays the
+docstring:
+
+    * ``help shell`` → ``shell --help``
+    * ``help web serve`` → ``web serve --help``
 
 Returning results
 -----------------
@@ -120,7 +199,7 @@ encoding::
         return ['hello', 'world']
 
 .. note::
-    
+
     If you return a string, it is printed as is. A list or tuple is iterated
     and printed line by line. This is how :func:`dispatcher <argh.dispatch>`
     works.

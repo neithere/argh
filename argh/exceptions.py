@@ -1,3 +1,8 @@
+"""
+Exceptions
+==========
+"""
+
 class CommandError(Exception):
     """The only exception that is wrapped by the dispatcher. Useful for
     print-and-exit tasks.
@@ -19,6 +24,6 @@ class CommandError(Exception):
             except KeyError as e:
                 raise CommandError(u'Could not fetch item: {0}'.format(e))
 
-    This exception can be safely used in both printing and :func:`generating
-    <generator>` commands.
+    This exception can be safely used in both print-style and yield-style
+    commands (see :doc:`tutorial`).
     """
