@@ -21,20 +21,20 @@ class DebugArghParser(ArghParser):
 @arg('--twice', default=False, help='repeat twice')
 def echo(args):
     repeat = 2 if args.twice else 1
-    return u'you said {0}'.format(args.text) * repeat
+    return (u'you said %s' % args.text) * repeat
 
 @arg('text')
 @plain_signature
 def plain_echo(text):
-    return u'you said {0}'.format(text)
+    return u'you said %s' % text
 
 @arg('--name', default='world')
 def hello(args):
-    return u'Hello {0}!'.format(args.name or 'world')
+    return u'Hello %s!' % (args.name or 'world')
 
 @arg('buddy')
 def howdy(args):
-    return u'Howdy {0}?'.format(args.buddy)
+    return u'Howdy %s?' % args.buddy
 
 @alias('aliased')
 def do_aliased(args):
@@ -70,8 +70,8 @@ class ArghTestCase(unittest.TestCase):
     def assert_cmd_exits(self, command_string, message_regex=None):
         "When a command forces exit, it *may* fail, but may just print help."
         message_regex = str(message_regex)  # make sure None -> "None"
-        with self.assertRaisesRegexp(SystemExit, message_regex):
-            self.parser.dispatch(command_string.split())
+        f = lambda: self.parser.dispatch(command_string.split())
+        self.assertRaisesRegexp(SystemExit, message_regex, f)
 
     def assert_cmd_fails(self, command_string, message_regex):
         "exists with a message = fails"

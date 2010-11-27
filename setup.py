@@ -36,7 +36,7 @@ setup(
     # technical info
     version  = version,
     packages = ['argh'],
-    requires = ['python (>= 2.6)', 'argparse (>=1.1)'],
+    requires = ['python (>= 2.5)', 'argparse (>=1.1)'],
     provides = ['argh'],
 
     # copyright

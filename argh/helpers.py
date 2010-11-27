@@ -7,7 +7,7 @@ import locale
 import sys
 from types import GeneratorType
 
-from .exceptions import CommandError
+from argh.exceptions import CommandError
 
 
 __all__ = ['ArghParser', 'add_commands', 'dispatch', 'confirm']
@@ -190,7 +190,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
                     print(line.encode(encoding))
         else:
             return result
-    except CommandError as e:
+    except CommandError, e:
         if intercept:
             return str(e)
         else:
@@ -254,7 +254,7 @@ def confirm(action, default=None, skip=False):
             False: ('y','N'),
         }
         y, n = defaults[default]
-        prompt = u'{action}? ({y}/{n})'.format(**locals()).encode('utf-8')
+        prompt = (u'%(action)s? (%(y)s/%(n)s)' % locals()).encode('utf-8')
         choice = None
         try:
             if default is None:
