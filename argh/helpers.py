@@ -7,6 +7,8 @@ import locale
 import sys
 from types import GeneratorType
 
+from .exceptions import CommandError
+
 
 __all__ = ['ArghParser', 'add_commands', 'dispatch', 'confirm']
 
@@ -145,6 +147,11 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
 
     # this will raise SystemExit if parsing fails
     args = parser.parse_args(argv)
+
+    if not hasattr(args, 'function'):
+        # FIXME: "./prog.py" hits this error while "./prog.py foo" doesn't
+        # if there were no commands defined for the parser (a possible case)
+        raise NotImplementedError('Cannot dispatch without commands')
 
     # try different ways of calling the command; if meanwhile it raises
     # CommandError, return the string representation of that error
