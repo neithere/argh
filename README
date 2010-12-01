@@ -35,15 +35,23 @@ Example
 
 A very simple application with one command::
 
-    @arg('text')  # signature is same as ArgumentParser.add_argument
-    def echo(args):
-        print args.text
-    
+    @command
+    def echo(text='hello'):
+        print text
+   
     parser = ArghParser()
     parser.add_commands([echo])
 
     if __name__ == '__main__':
         parser.dispatch()
+
+The powerful API of `argparse` is also available::
+
+    @arg('text', default='hello world', nargs='+', help='The message')
+    def echo(args):
+        print args.text
+
+The approaches can be safely combined.
 
 Documentation
 -------------

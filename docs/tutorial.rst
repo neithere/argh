@@ -12,7 +12,7 @@ decorator — and then tune the behaviour with any of the lower layers:
 Dive in
 -------
 
-Defining commands is dead simple::
+Defining and running commands is dead simple::
 
     from argh import *
     
@@ -20,7 +20,9 @@ Defining commands is dead simple::
     def load(path, format='json'):
         print loaders[format].load(path)
 
-    argh.dispatch()
+    p = ArghParser()
+    p.add_commands([load])
+    p.dispatch()
 
 And then call your script like this::
 
