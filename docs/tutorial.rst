@@ -1,8 +1,38 @@
 Tutorial
 ========
 
-Defining commands
------------------
+`Argh` is a small library that provides several layers of abstraction on top of
+`argparse`. You are free to use any layer that fits given task best. The layers
+can be mixed. It is always possible to declare a command with the highest
+possible (and least flexible) layer — the :func:`~argh.decorators.command`
+decorator — and then tune the behaviour with any of the lower layers:
+:func:`~argh.decorators.arg`, :func:`~argh.helpers.add_commands`,
+:func:`~argh.helpers.dispatch` or directly via the `argparse` API.
+
+Dive in
+-------
+
+Defining commands is dead simple::
+
+    from argh import *
+    
+    @command
+    def load(path, format='json'):
+        print loaders[format].load(path)
+
+    argh.dispatch()
+
+And then call your script like this::
+
+    $ ./script.py load fixture.json
+    $ ./script.py load fixture.yaml --format=yaml
+
+I guess you get the picture. Still, there's much more to commands than this.
+You'll want to provide help per commands and per argument, you will want to
+specify aliases, data types, namespaces and... just read on.
+
+Declaring commands
+------------------
 
 Let's start with an almost real-life example where we define some commands.
 First, import :class:`~argh.helpers.ArghParser` (an extended version of the
@@ -54,6 +84,14 @@ At this point we have four functions: `shell`, `load`, `serve` and
 `serve_rest`. They are not "commands" yet because we don't even have a parser
 or dispatcher. The script must know how to interpret the arguments passed in by
 the user.
+
+Assembling commands
+-------------------
+
+.. note::
+
+    `Argh` decorators introduce a declarative mode for defining commands. You
+    can access the `argparse` API after a parser instance is created.
 
 Our next step is to assemble all the commands — web-related and miscellaneous —
 within a single argument parser. First, create the parser itself::
@@ -156,10 +194,11 @@ to write something like this (generic argparse API)::
 
 .. note::
 
-    You don't have to use :class:`argh.ArghParser`; the standard
+    You don't have to use :class:`~argh.helpers.ArghParser`; the standard
     :class:`argparse.ArgumentParser` will do. You will just need to call
-    stand-alone functions :func:`argh.add_commands` and :func:`argh.dispatch`
-    instead of :class:`argh.ArghParser` methods.
+    stand-alone functions :func:`~argh.helpers.add_commands` and
+    :func:`~argh.helpers.dispatch` instead of :class:`~argh.helpers.ArghParser`
+    methods.
 
 Generated help
 --------------
@@ -201,8 +240,8 @@ encoding::
 .. note::
 
     If you return a string, it is printed as is. A list or tuple is iterated
-    and printed line by line. This is how :func:`dispatcher <argh.dispatch>`
-    works.
+    and printed line by line. This is how :func:`dispatcher
+    <argh.helpers.dispatch>` works.
 
 This is fine, but what about non-linear code with if/else, exceptions and
 interactive promts? Well, you don't need to manage the stack of results within
@@ -239,7 +278,7 @@ know that something can be wrong, you'll probably handle it this way::
 
 This works but the print-and-exit tasks are repetitive; moreover, there are
 cases when you don't want to raise `SystemExit` and just want to collect the
-output in a uniform way. Use :class:`~argh.CommandError`::
+output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
 
     @arg('key')
     def show_item(args):
@@ -252,4 +291,4 @@ output in a uniform way. Use :class:`~argh.CommandError`::
             yield item
 
 `Argh` will wrap this exception and choose the right way to display its
-message (depending on how :func:`argh.dispatch` was called).
+message (depending on how :func:`~argh.helpers.dispatch` was called).

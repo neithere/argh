@@ -24,6 +24,7 @@ Here's a list of features that `argh` adds to `argparse`:
 * infer command name from function name;
 * infer agrument type from the default value;
 * infer argument action from the default value (for booleans);
+* infer arguments from function signature;
 * add an alias root command ``help`` for the ``--help`` argument;
 * enable passing unwrapped arguments to certain functions instead of a
   :class:`argparse.Namespace` object.

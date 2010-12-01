@@ -3,9 +3,10 @@ Command decorators
 ==================
 """
 from functools import wraps
+import inspect
 
 
-__all__ = ['alias', 'plain_signature', 'arg']
+__all__ = ['alias', 'arg', 'command', 'plain_signature']
 
 
 def alias(name):
@@ -113,3 +114,40 @@ def arg(*args, **kwargs):
         func.argh_args.insert(0, (args, kwargs))
         return func
     return wrapper
+
+def command(func):
+    """Infers argument specifications from given function. Wraps the function
+    in the :func:`plain_signature` decorator and also in an :func:`arg`
+    decorator for every actual argument the function expects.
+
+    Usage::
+
+        @command
+        def foo(bar, quux=123):
+            yield bar, quux
+
+    This is equivalent to::
+
+        @arg('-b', '--bar')
+        @arg('-q', '--quux', default=123)
+        def foo(args):
+            yield args.bar, args.quux
+
+    """
+    # @plain_signature
+    func = plain_signature(func)
+
+    # @arg (inferred)
+    spec = inspect.getargspec(func)
+    kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+    for a in reversed(spec.args):  # @arg adds specs in reversed order
+        if a in kwargs:
+            func = arg(
+                '-{0}'.format(a[0]),
+                '--{0}'.format(a),
+                default=kwargs.get(a)
+            )(func)
+        else:
+            func = arg(a)(func)
+
+    return func
