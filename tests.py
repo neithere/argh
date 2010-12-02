@@ -4,7 +4,10 @@ import sys
 import unittest2 as unittest
 import argparse
 import argh.helpers
-from argh import alias, ArghParser, arg, add_commands, dispatch, plain_signature
+from argh import (
+    alias, ArghParser, arg, add_commands, dispatch, plain_signature
+)
+from argh import completion
 
 
 class DebugArghParser(ArghParser):
@@ -135,6 +138,7 @@ class ArghTestCase(unittest.TestCase):
         """
         self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar')
 
+
 class ConfirmTestCase(unittest.TestCase):
     def assert_choice(self, choice, expected, **kwargs):
         argh.helpers.raw_input = lambda prompt: choice
@@ -184,3 +188,56 @@ class ConfirmTestCase(unittest.TestCase):
             assert isinstance(prompt, str)
         argh.helpers.raw_input = raw_input_mock
         argh.confirm(u'привет')
+
+
+class CompletionTestCase(unittest.TestCase):
+    def setUp(self):
+        "Declare some commands and allocate two namespaces for them"
+        def echo(args):
+            return args
+
+        def load(args):
+            return 'fake load'
+
+        @arg('--format')
+        def dump(args):
+            return 'fake dump'
+
+        self.parser = DebugArghParser()
+        self.parser.add_commands([echo], namespace='silly')
+        self.parser.add_commands([load, dump], namespace='fixtures')
+
+    def assert_choices(self, arg_string, expected):
+        args = arg_string.split()
+        cwords = args
+        cword = len(args) + 1
+        choices = completion._autocomplete(self.parser, cwords, cword)
+        self.assertEqual(' '.join(sorted(choices)), expected)
+
+    def test_root(self):
+        self.assert_choices('', 'fixtures silly')
+
+    def test_root_missing(self):
+        self.assert_choices('xyz', '')
+
+    def test_root_partial(self):
+        self.assert_choices('f', 'fixtures')
+        self.assert_choices('fi', 'fixtures')
+        self.assert_choices('s', 'silly')
+
+    def test_inner(self):
+        self.assert_choices('fixtures', 'dump load')
+        self.assert_choices('silly', 'echo')
+
+    def test_inner_partial(self):
+        self.assert_choices('fixtures d', 'dump')
+        self.assert_choices('fixtures dum', 'dump')
+        self.assert_choices('silly e', 'echo')
+
+    def test_inner_extra(self):
+        self.assert_choices('silly echo foo', '')
+
+    @unittest.expectedFailure
+    def test_inner_options(self):
+        self.assert_choices('fixtures dump', '--format')
+        self.assert_choices('silly echo', 'text')

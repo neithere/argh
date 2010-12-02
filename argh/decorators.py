@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Command decorators
 ==================
@@ -25,7 +26,7 @@ def alias(name):
         return func
     return wrapper
 
-def generator(func):
+def generator(func):  # pragma: no cover
     """
     .. warning::
 

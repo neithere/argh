@@ -8,28 +8,11 @@ import sys
 from types import GeneratorType
 
 from argh.exceptions import CommandError
+from argh.utils import get_subparsers
+from argh.completion import autocomplete
 
 
-__all__ = ['ArghParser', 'add_commands', 'dispatch', 'confirm']
-
-
-def _get_subparsers(parser):
-    """Returns the :class:`argparse._SupParsersAction` instance for given
-    :class:`ArgumentParser` instance as would have been returned by
-    :meth:`ArgumentParser.add_subparsers`. The problem with the latter is that
-    it only works once and raises an exception on the second attempt, and the
-    public API seems to lack a method to get *existing* subparsers.
-    """
-    # note that ArgumentParser._subparsers is *not* what is returned by
-    # ArgumentParser.add_subparsers().
-    if parser._subparsers:
-        actions = [a for a in parser._actions
-                   if isinstance(a, argparse._SubParsersAction)]
-        assert len(actions) == 1
-        return actions[0]
-    else:
-        return parser.add_subparsers()
-
+__all__ = ['ArghParser', 'add_commands', 'autocomplete', 'dispatch', 'confirm']
 def add_commands(parser, functions, namespace=None, title=None,
                  description=None, help=None):
     """Adds given functions as commands to given parser.
@@ -91,7 +74,7 @@ def add_commands(parser, functions, namespace=None, title=None,
         we'll simply add a workaround a keep it compatibile.
 
     """
-    subparsers = _get_subparsers(parser)
+    subparsers = get_subparsers(parser, create=True)
 
     if namespace:
         # make a namespace placeholder and register the commands within it
@@ -115,7 +98,7 @@ def add_commands(parser, functions, namespace=None, title=None,
         command_parser.set_defaults(function=func)
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
-             intercept=False):
+             intercept=False, completion=True, pre_call=None):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -133,11 +116,23 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         if `True`, converts first positional argument "help" to a keyword
         argument so that ``help foo`` becomes ``foo --help`` and displays usage
         information for "foo". Default is `True`.
+    :param encoding:
+        Encoding for results. If `None`, it is determined automatically.
+        Default is `None`.
+    :param intercept:
+        If `True`, results are returned as strings. If `False`, results are
+        printed to stdout. Default is `False`.
+    :param completion:
+        If `True`, shell tab completion is enabled. Default is `True`. (You
+        will also need to install it.)
 
     Exceptions are not wrapped and will propagate. The only exception among the
     exceptions is :class:`CommandError` which is interpreted as an expected
     event so the traceback is hidden.
     """
+    if completion:
+        autocomplete(parser)
+
     if argv is None:
         argv = sys.argv[1:]
     if add_help_command:
@@ -152,6 +147,9 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         # FIXME: "./prog.py" hits this error while "./prog.py foo" doesn't
         # if there were no commands defined for the parser (a possible case)
         raise NotImplementedError('Cannot dispatch without commands')
+
+    if pre_call:
+        pre_call(args)
 
     # try different ways of calling the command; if meanwhile it raises
     # CommandError, return the string representation of that error
@@ -208,6 +206,9 @@ class ArghParser(argparse.ArgumentParser):
     def add_commands(self, *args, **kwargs):
         "Wrapper for :func:`add_commands`."
         return add_commands(self, *args, **kwargs)
+
+    def autocomplete(self):
+        return autocomplete(self)
 
     def dispatch(self, *args, **kwargs):
         "Wrapper for :func:`dispatch`."
