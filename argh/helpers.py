@@ -79,7 +79,7 @@ def add_commands(parser, functions, namespace=None, title=None,
     if namespace:
         # make a namespace placeholder and register the commands within it
         assert isinstance(namespace, str)
-        subsubparser = subparsers.add_parser(namespace)
+        subsubparser = subparsers.add_parser(namespace, help=title)
         subparsers = subsubparser.add_subparsers(title=title,
                                                 description=description,
                                                 help=help)
