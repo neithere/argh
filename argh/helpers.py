@@ -108,21 +108,32 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     namespace object are passed to the function instead of the object itself.
 
     :param parser:
+
         the ArgumentParser instance.
+
     :param argv:
+
         a list of strings representing the arguments. If `None`, ``sys.argv``
         is used instead. Default is `None`.
+
     :param add_help_command:
+
         if `True`, converts first positional argument "help" to a keyword
         argument so that ``help foo`` becomes ``foo --help`` and displays usage
         information for "foo". Default is `True`.
+
     :param encoding:
+
         Encoding for results. If `None`, it is determined automatically.
         Default is `None`.
+
     :param intercept:
+
         If `True`, results are returned as strings. If `False`, results are
         printed to stdout. Default is `False`.
+
     :param completion:
+
         If `True`, shell tab completion is enabled. Default is `True`. (You
         will also need to install it.)
 
@@ -166,7 +177,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         else:
             result = args.function(args)
         if isinstance(result, (GeneratorType, list, tuple)):
-            # handle iterable results (function marked with @generator decorator)
+            # handle iterable results
             if not encoding:
                 # choose between terminal's and system's preferred encodings
                 if sys.stdout.isatty():
@@ -219,15 +230,20 @@ def confirm(action, default=None, skip=False):
     """A shortcut for typical confirmation prompt.
 
     :param action:
+
         a string describing the action, e.g. "Apply changes". A question mark
         will be appended.
+
     :param default:
+
         `bool` or `None`. Determines what happens when user hits :kbd:`Enter`
         without typing in a choice. If `True`, default choice is "yes". If
         `False`, it is "no". If `None` the prompt keeps reappearing until user
         types in a choice (not necessarily acceptable) or until the number of
         iteration reaches the limit. Default is `None`.
+
     :param skip:
+
         `bool`; if `True`, no interactive prompt is used and default choice is
         returned (useful for batch mode). Default is `False`.
 

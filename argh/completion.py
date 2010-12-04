@@ -22,7 +22,10 @@ def autocomplete(root_parser):
         return
 
     cwords = os.environ['COMP_WORDS'].split()[1:]
-    cword = int(os.environ['COMP_CWORD'])  # XXX do we need this at all?
+
+    # this is obviously needed when user edits a word in the middle of the
+    # sentence. We don't support it yet but should:
+    cword = int(os.environ['COMP_CWORD'])
 
     choices = _autocomplete(root_parser, cwords, cword)
 

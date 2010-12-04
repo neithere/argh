@@ -72,6 +72,23 @@ Please feel free to submit patches, report bugs or request features:
 
     http://bitbucket.org/neithere/argh/issues/
 
+Here's the discussion group:
+
+    http://groups.google.com/group/argh-users
+
+Real-life usage
+---------------
+
+Among applications that use `argh` are Tool_, OrgTool_, Watchdog_, Poni_ and
+more. Well, there's probably no need to keep a complete and up-to-date list.
+Still, please let me know anyway if you use `argh`_ in your project. I'll be
+glad to know. :-)
+
+.. _Tool: http://pypi.python.org/pypi/tool
+.. _OrgTool: http://pypi.python.org/pypi/orgtool
+.. _Watchdog: https://github.com/gorakhargosh/watchdog/blob/master/watchdog/watchmedo.py
+.. _Poni: https://github.com/melor/poni/commit/14e8ccbb50e9e17b95a2f2a0d2cd0af5d90ca22b
+
 Licensing
 ---------
 

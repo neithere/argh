@@ -151,7 +151,6 @@ Again, here's how we create two subparsers for commands ``foo`` and ``bar``::
 
 The equivalent code without `Argh` would be::
 
-    import sys
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -170,7 +169,7 @@ Now consider this expression::
 
     parser = ArghParser()
     parser.add_commands([bar, quux], namespace='foo')
-    parser.dispatch() 
+    parser.dispatch()
 
 It produces a command hierarchy for the command-line expressions ``foo bar``
 and ``foo quux``. This involves "subsubparsers". Without `Argh` you would need
