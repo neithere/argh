@@ -6,6 +6,8 @@ Command decorators
 from functools import wraps
 import inspect
 
+from argh.constants import ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE
+
 
 __all__ = ['alias', 'arg', 'command', 'plain_signature']
 
@@ -22,7 +24,7 @@ def alias(name):
 
     """
     def wrapper(func):
-        func.argh_alias = name
+        setattr(func, ATTR_ALIAS, name)
         return func
     return wrapper
 
@@ -63,7 +65,7 @@ def plain_signature(func):
     over the place; instead, you just stick this and some :func:`arg`
     decorators on top of every function and that's it.
     """
-    func.argh_no_namespace = True
+    setattr(func, ATTR_NO_NAMESPACE, True)
     return func
 
 def arg(*args, **kwargs):
@@ -108,11 +110,12 @@ def arg(*args, **kwargs):
             kwargs['type'] = type(value)
 
     def wrapper(func):
-        func.argh_args = getattr(func, 'argh_args', [])
+        declared_args = getattr(func, ATTR_ARGS, [])
         # The innermost decorator is called first but appears last in the code.
         # We need to preserve the expected order of positional arguments, so
         # the outermost decorator inserts its value before the innermost's:
-        func.argh_args.insert(0, (args, kwargs))
+        declared_args.insert(0, (args, kwargs))
+        setattr(func, ATTR_ARGS, declared_args)
         return func
     return wrapper
 

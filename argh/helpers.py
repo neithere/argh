@@ -10,6 +10,7 @@ from types import GeneratorType
 from argh.exceptions import CommandError
 from argh.utils import get_subparsers
 from argh.completion import autocomplete
+from argh.constants import ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE
 
 
 __all__ = ['ArghParser', 'add_commands', 'autocomplete', 'dispatch', 'confirm']
@@ -81,8 +82,8 @@ def add_commands(parser, functions, namespace=None, title=None,
         assert isinstance(namespace, str)
         subsubparser = subparsers.add_parser(namespace, help=title)
         subparsers = subsubparser.add_subparsers(title=title,
-                                                description=description,
-                                                help=help)
+                                                 description=description,
+                                                 help=help)
     else:
         assert not any([title, description, help]), (
             'Arguments "title", "description" or "extra_help" only make sense '
@@ -90,10 +91,10 @@ def add_commands(parser, functions, namespace=None, title=None,
 
     for func in functions:
         # XXX we could add multiple aliases here but it's a bit of a hack
-        cmd_name = getattr(func, 'argh_alias', func.__name__.replace('_','-'))
+        cmd_name = getattr(func, ATTR_ALIAS, func.__name__.replace('_','-'))
         cmd_help = func.__doc__
         command_parser = subparsers.add_parser(cmd_name, help=cmd_help)
-        for a_args, a_kwargs in getattr(func, 'argh_args', []):
+        for a_args, a_kwargs in getattr(func, ATTR_ARGS, []):
             command_parser.add_argument(*a_args, **a_kwargs)
         command_parser.set_defaults(function=func)
 
@@ -146,6 +147,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
 
     if argv is None:
         argv = sys.argv[1:]
+
     if add_help_command:
         if argv and argv[0] == 'help':
             argv.pop(0)
@@ -162,48 +164,76 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     if pre_call:
         pre_call(args)
 
-    # try different ways of calling the command; if meanwhile it raises
-    # CommandError, return the string representation of that error
-    try:
-        if getattr(args.function, 'argh_no_namespace', False):
-            # filter the namespace variables so that only those expected by the
-            # actual function will pass
-            f = args.function
-            expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
-            ok_args = [x for x in args._get_args() if x in expected_args]
-            ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
-                             if k in expected_args)
-            result = args.function(*ok_args, **ok_kwargs)
-        else:
-            result = args.function(args)
-        if isinstance(result, (GeneratorType, list, tuple)):
-            # handle iterable results
-            if not encoding:
-                # choose between terminal's and system's preferred encodings
-                if sys.stdout.isatty():
-                    encoding = sys.stdout.encoding
-                else:
-                    encoding = locale.getpreferredencoding()
-            if intercept:
-                return '\n'.join([line.encode(encoding) for line in result])
-            else:
-                # we must print each line as soon as it is generated to ensure that
-                # it is displayed to the user before anything else happens, e.g.
-                # raw_input() is called
-                for line in result:
-                    if not isinstance(line, unicode):
-                        try:
-                            line = unicode(line)
-                        except UnicodeDecodeError:
-                            line = str(line).decode('utf-8')
-                    print(line.encode(encoding))
-        else:
-            return result
-    except CommandError, e:
+    lines = _execute_command(args)
+    buf = []
+
+    for line in lines:
         if intercept:
-            return str(e)
+            buf.append(line)
         else:
-            print(e)
+            # print the line as soon as it is generated to ensure that it is
+            # displayed to the user before anything else happens, e.g.
+            # raw_input() is called
+            print _encode(line, encoding)
+    if buf:
+        return '\n'.join(buf)
+
+def _encode(line, encoding=None):
+    """Converts given string to given encoding. If no encoding is specified, it
+    is determined from terminal settings or, if none, from system settings.
+    """
+    # Convert string to Unicode
+    if not isinstance(line, unicode):
+        try:
+            line = unicode(line)
+        except UnicodeDecodeError:
+            line = str(line).decode('utf-8')
+
+    # Choose output encoding
+    if not encoding:
+        # choose between terminal's and system's preferred encodings
+        if sys.stdout.isatty():
+            encoding = sys.stdout.encoding
+        else:
+            encoding = locale.getpreferredencoding()
+
+    # Convert string from Unicode to the output encoding
+    return line.encode(encoding)
+
+def _execute_command(args):
+    """Asserts that ``args.function`` is present and callable. Tries different
+    approaches to calling the function (with an `argparse.Namespace` object or
+    with ordinary signature). Yields the results line by line. If CommandError
+    is raised, its message is appended to the results (i.e. yielded by the
+    generator as a string). All other exceptions propagate.
+    """
+    assert hasattr(args, 'function') and hasattr(args.function, '__call__')
+
+    # Call the function
+    if getattr(args.function, ATTR_NO_NAMESPACE, False):
+        # filter the namespace variables so that only those expected by the
+        # actual function will pass
+        f = args.function
+        expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
+        ok_args = [x for x in args._get_args() if x in expected_args]
+        ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
+                         if k in expected_args)
+        result = args.function(*ok_args, **ok_kwargs)
+    else:
+        result = args.function(args)
+
+    # Yield the results
+    if isinstance(result, (GeneratorType, list, tuple)):
+        # yield each line ASAP, convert CommandError message to a line
+        try:
+            for line in result:
+                yield line
+        except CommandError, e:
+            yield str(e)
+    else:
+        # yield non-empty non-iterable result as a single line
+        if result is not None:
+            yield result
 
 
 class ArghParser(argparse.ArgumentParser):
