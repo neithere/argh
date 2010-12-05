@@ -99,7 +99,8 @@ def add_commands(parser, functions, namespace=None, title=None,
         command_parser.set_defaults(function=func)
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
-             intercept=False, completion=True, pre_call=None):
+             intercept=False, completion=True, pre_call=None,
+             raw_output=False):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -132,6 +133,11 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
 
         If `True`, results are returned as strings. If `False`, results are
         printed to stdout. Default is `False`.
+
+    :param raw_output:
+
+        If `True`, results are written to the output file raw, without adding
+        whitespaces or newlines between yielded strings. Default is `False`.
 
     :param completion:
 
@@ -173,7 +179,11 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
             # print the line as soon as it is generated to ensure that it is
             # displayed to the user before anything else happens, e.g.
             # raw_input() is called
-            print _encode(line, encoding)
+            output = _encode(line, encoding)
+            if raw_output:
+                sys.stdout.write(output)
+            else:
+                print output
     if buf:
         return '\n'.join(buf)
 
