@@ -156,15 +156,14 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     # this will raise SystemExit if parsing fails
     args = parser.parse_args(argv)
 
-    if not hasattr(args, 'function'):
-        # FIXME: "./prog.py" hits this error while "./prog.py foo" doesn't
-        # if there were no commands defined for the parser (a possible case)
-        raise NotImplementedError('Cannot dispatch without commands')
+    if hasattr(args, 'function'):
+        if pre_call:
+            pre_call(args)
+        lines = _execute_command(args)
+    else:
+        # no commands at all; displaying help message
+        lines = [parser.format_usage()]
 
-    if pre_call:
-        pre_call(args)
-
-    lines = _execute_command(args)
     buf = []
 
     for line in lines:
