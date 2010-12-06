@@ -4,6 +4,7 @@ Helpers
 """
 import argparse
 import locale
+from StringIO import StringIO
 import sys
 from types import GeneratorType
 
@@ -100,7 +101,7 @@ def add_commands(parser, functions, namespace=None, title=None,
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
              intercept=False, completion=True, pre_call=None,
-             raw_output=False):
+             output_file=sys.stdout, raw_output=False):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -129,10 +130,10 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         Encoding for results. If `None`, it is determined automatically.
         Default is `None`.
 
-    :param intercept:
+    :param output_file:
 
-        If `True`, results are returned as strings. If `False`, results are
-        printed to stdout. Default is `False`.
+        A file-like object for output. If `None`, the resulting lines are
+        collected and returned as a string. Default is ``sys.stdout``.
 
     :param raw_output:
 
@@ -148,6 +149,13 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     exceptions is :class:`CommandError` which is interpreted as an expected
     event so the traceback is hidden.
     """
+    # TODO: can be safely removed at version ~= 0.14
+    if intercept: # PRAGMA: NOCOVER
+        import warnings
+        warnings.warn('dispatch(intercept=True) is deprecated, use '
+                      'dispatch(output_file=None).', DeprecationWarning)
+        output_file = None
+
     if completion:
         autocomplete(parser)
 
@@ -163,31 +171,37 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     args = parser.parse_args(argv)
 
     if hasattr(args, 'function'):
-        if pre_call:
+        if pre_call:  # XXX undocumented because I'm unsure if it's OK
             pre_call(args)
         lines = _execute_command(args)
     else:
-        # no commands at all; displaying help message
+        # no commands declared, can't dispatch; display help message
         lines = [parser.format_usage()]
 
-    buf = []
+    if output_file is None:
+        # user wants a string; we create an internal temporary file-like object
+        # and will return its contents as a string
+        f = StringIO()
+    else:
+        # normally this is stdout; can be any file
+        f = output_file
 
     for line in lines:
-        if intercept:
-            buf.append(line)
-        else:
-            # print the line as soon as it is generated to ensure that it is
-            # displayed to the user before anything else happens, e.g.
-            # raw_input() is called
-            output = _encode(line, encoding)
-            if raw_output:
-                sys.stdout.write(output)
-            else:
-                print output
-    if buf:
-        return '\n'.join(buf)
+        # print the line as soon as it is generated to ensure that it is
+        # displayed to the user before anything else happens, e.g.
+        # raw_input() is called
+        output = _encode(line, f, encoding)
+        f.write(output)
+        if not raw_output:
+            # in most cases user wants on message per line
+            f.write('\n')
 
-def _encode(line, encoding=None):
+    if output_file is None:
+        # user wanted a string; return contents of out temporary file-like obj
+        f.seek(0)
+        return f.read()
+
+def _encode(line, output_file, encoding=None):
     """Converts given string to given encoding. If no encoding is specified, it
     is determined from terminal settings or, if none, from system settings.
     """
@@ -201,10 +215,9 @@ def _encode(line, encoding=None):
     # Choose output encoding
     if not encoding:
         # choose between terminal's and system's preferred encodings
-        if sys.stdout.isatty():
-            encoding = sys.stdout.encoding
-        else:
-            encoding = locale.getpreferredencoding()
+        if output_file.isatty():
+            encoding = getattr(output_file, 'encoding', None)
+        encoding = encoding or locale.getpreferredencoding()
 
     # Convert string from Unicode to the output encoding
     return line.encode(encoding)

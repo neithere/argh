@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from StringIO import StringIO
 import unittest2 as unittest
 import argparse
 import argh.helpers
 from argh import (
-    alias, ArghParser, arg, add_commands, dispatch, plain_signature
+    alias, ArghParser, arg, add_commands, CommandError, dispatch,
+    plain_signature
 )
 from argh import completion
 
@@ -48,26 +50,45 @@ def do_aliased(args):
 def foo_bar(args):
     return args.foo, args.bar
 
+def whiner(args):
+    yield 'Hello...'
+    raise CommandError('I feel depressed.')
 
-class ArghTestCase(unittest.TestCase):
+
+class BaseArghTestCase(unittest.TestCase):
+    commands = {}
+
     def setUp(self):
-        #self.parser = build_parser(echo, plain_echo, foo=[hello, howdy])
         self.parser = DebugArghParser('PROG')
-        self.parser.add_commands([echo, plain_echo, foo_bar, do_aliased])
-        self.parser.add_commands([hello, howdy], namespace='greet')
+        for namespace, commands in self.commands.iteritems():
+            self.parser.add_commands(commands, namespace=namespace)
 
-    def _call_cmd(self, command_string):
-        args = command_string.split() if command_string else command_string
-        return self.parser.dispatch(args, intercept=True)
+    def _call_cmd(self, command_string, **kwargs):
+        if isinstance(command_string, basestring):
+            args = command_string.split()
+        else:
+            args = command_string
 
-    def assert_cmd_returns(self, command_string, expected_result):
+        io = StringIO()
+        if 'output_file' not in kwargs:
+            kwargs['output_file'] = io
+
+        result = self.parser.dispatch(args, **kwargs)
+
+        if kwargs.get('output_file') is None:
+            return result
+        else:
+            io.seek(0)
+            return io.read()
+
+    def assert_cmd_returns(self, command_string, expected_result, **kwargs):
         """Executes given command using given parser and asserts that it prints
         given value.
         """
         try:
-            result = self._call_cmd(command_string)
+            result = self._call_cmd(command_string, **kwargs)
         except SystemExit:
-            self.fail('Argument parsing failed for {0}'.format(command_string))
+            self.fail('Argument parsing failed for {0}'.format(repr(command_string)))
         self.assertEqual(result, expected_result)
 
     def assert_cmd_exits(self, command_string, message_regex=None):
@@ -86,26 +107,36 @@ class ArghTestCase(unittest.TestCase):
         """
         result = self.assert_cmd_exits(command_string)
 
+
+class ArghTestCase(BaseArghTestCase):
+    commands = {
+        None: [echo, plain_echo, foo_bar, do_aliased, whiner],
+        'greet': [hello, howdy]
+    }
+
     def test_argv(self):
         _argv = sys.argv
         sys.argv = sys.argv[:1] + ['echo', 'hi there']
-        self.assert_cmd_returns(None, 'you said hi there')
+        self.assert_cmd_returns(None, 'you said hi there\n')
         sys.argv = _argv
+
+    def test_no_command(self):
+        self.assert_cmd_fails('', 'too few arguments')
 
     def test_invalid_choice(self):
         self.assert_cmd_fails('whatchamacallit', '^invalid choice')
 
     def test_echo(self):
         "A simple command is resolved to a function."
-        self.assert_cmd_returns('echo foo', 'you said foo')
+        self.assert_cmd_returns('echo foo', 'you said foo\n')
 
     def test_bool_action(self):
         "Action `store_true`/`store_false` is inferred from default value."
-        self.assert_cmd_returns('echo --twice foo', 'you said fooyou said foo')
+        self.assert_cmd_returns('echo --twice foo', 'you said fooyou said foo\n')
 
     def test_plain_signature(self):
         "Arguments can be passed to the function without a Namespace instance."
-        self.assert_cmd_returns('plain-echo bar', 'you said bar')
+        self.assert_cmd_returns('plain-echo bar', 'you said bar\n')
 
     def test_bare_namespace(self):
         "A command can be resolved to a function, not a namespace."
@@ -114,14 +145,14 @@ class ArghTestCase(unittest.TestCase):
 
     def test_namespaced_function(self):
         "A subcommand is resolved to a function."
-        self.assert_cmd_returns('greet hello', u'Hello world!')
-        self.assert_cmd_returns('greet hello --name=John', u'Hello John!')
+        self.assert_cmd_returns('greet hello', u'Hello world!\n')
+        self.assert_cmd_returns('greet hello --name=John', u'Hello John!\n')
         self.assert_cmd_fails('greet hello John', 'unrecognized arguments')
         self.assert_cmd_fails('greet howdy --name=John', 'too few arguments')
-        self.assert_cmd_returns('greet howdy John', u'Howdy John?')
+        self.assert_cmd_returns('greet howdy John', u'Howdy John?\n')
 
     def test_alias(self):
-        self.assert_cmd_returns('aliased', 'ok')
+        self.assert_cmd_returns('aliased', 'ok\n')
 
     def test_help_alias(self):
         self.assert_cmd_doesnt_fail('--help')
@@ -136,7 +167,27 @@ class ArghTestCase(unittest.TestCase):
         """Positional arguments are resolved in the order in which the @arg
         decorators are defined.
         """
-        self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar')
+        self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar\n')
+
+    def test_raw_output(self):
+        "If the raw_output flag is set, no extra whitespace is added"
+        self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar\n')
+        self.assert_cmd_returns('foo-bar foo bar', 'foobar', raw_output=True)
+
+    def test_output_file(self):
+        self.assert_cmd_returns('greet hello', 'Hello world!\n')
+        self.assert_cmd_returns('greet hello', 'Hello world!\n', output_file=None)
+
+    def test_command_error(self):
+        self.assert_cmd_returns('whiner', 'Hello...\nI feel depressed.\n')
+
+
+class NoCommandsTestCase(BaseArghTestCase):
+    "Edge case: no commands defined"
+    commands = {}
+    def test_no_command(self):
+        self.assert_cmd_returns('', self.parser.format_usage(), raw_output=True)
+        self.assert_cmd_returns('', self.parser.format_usage()+'\n')
 
 
 class ConfirmTestCase(unittest.TestCase):
