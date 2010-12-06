@@ -30,8 +30,8 @@ Here's a list of features that `argh` adds to `argparse`:
   :class:`argparse.Namespace` object.
 
 `Argh` is fully compatible with `argparse`. You can mix `argh`-agnostic and
-`argh`-aware code. Just keep in mind that :func:`argh.dispatch` does some extra
-work that a custom dispatcher may not do.
+`argh`-aware code. Just keep in mind that :func:`~argh.helpers.dispatch` does
+some extra work that a custom dispatcher may not do.
 
 Details
 -------
@@ -45,7 +45,7 @@ Details
 Stability
 ---------
 
-`Argh` is well-tested (100% test coverage).
+`Argh` is well-tested (could be better but still 80-100% test coverage).
 
 The API may change in the future but there are no such plans yet.
 
