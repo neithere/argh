@@ -101,7 +101,7 @@ def add_commands(parser, functions, namespace=None, title=None,
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
              intercept=False, completion=True, pre_call=None,
-             output_file=sys.stdout, raw_output=False):
+             output_file=sys.stdout, raw_output=False, namespace=None):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -168,7 +168,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
             argv.append('--help')
 
     # this will raise SystemExit if parsing fails
-    args = parser.parse_args(argv)
+    args = parser.parse_args(argv, namespace=namespace)
 
     if hasattr(args, 'function'):
         if pre_call:  # XXX undocumented because I'm unsure if it's OK

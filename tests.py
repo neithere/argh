@@ -50,6 +50,9 @@ def do_aliased(args):
 def foo_bar(args):
     return args.foo, args.bar
 
+def custom_namespace(args):
+    return args.custom_value
+
 def whiner(args):
     yield 'Hello...'
     raise CommandError('I feel depressed.')
@@ -87,8 +90,9 @@ class BaseArghTestCase(unittest.TestCase):
         """
         try:
             result = self._call_cmd(command_string, **kwargs)
-        except SystemExit:
-            self.fail('Argument parsing failed for {0}'.format(repr(command_string)))
+        except SystemExit, error:
+            self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
+                command_string, error))
         self.assertEqual(result, expected_result)
 
     def assert_cmd_exits(self, command_string, message_regex=None):
@@ -110,7 +114,8 @@ class BaseArghTestCase(unittest.TestCase):
 
 class ArghTestCase(BaseArghTestCase):
     commands = {
-        None: [echo, plain_echo, foo_bar, do_aliased, whiner],
+        None: [echo, plain_echo, foo_bar, do_aliased, whiner,
+               custom_namespace],
         'greet': [hello, howdy]
     }
 
@@ -180,6 +185,12 @@ class ArghTestCase(BaseArghTestCase):
 
     def test_command_error(self):
         self.assert_cmd_returns('whiner', 'Hello...\nI feel depressed.\n')
+
+    def test_custom_namespace(self):
+        namespace = argparse.Namespace()
+        namespace.custom_value = "foo"
+        self.assert_cmd_returns('custom-namespace', 'foo\n',
+                                namespace=namespace)
 
 
 class NoCommandsTestCase(BaseArghTestCase):
