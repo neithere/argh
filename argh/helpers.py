@@ -197,7 +197,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
             f.write('\n')
 
     if output_file is None:
-        # user wanted a string; return contents of out temporary file-like obj
+        # user wanted a string; return contents of our temporary file-like obj
         f.seek(0)
         return f.read()
 
@@ -263,8 +263,8 @@ class ArghParser(argparse.ArgumentParser):
     methods.
 
     There is actually no need to subclass the parser. The methods are but
-    wrappers for stand-alone functions :func:`add_commands` and
-    :func:`dispatch`.
+    wrappers for stand-alone functions :func:`add_commands` ,
+    :func:`autocomplete` and :func:`dispatch`.
     """
     def add_commands(self, *args, **kwargs):
         "Wrapper for :func:`add_commands`."

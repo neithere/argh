@@ -30,7 +30,7 @@ And then call your script like this::
     $ ./script.py load fixture.yaml --format=yaml
 
 I guess you get the picture. Still, there's much more to commands than this.
-You'll want to provide help per commands and per argument, you will want to
+You'll want to provide help per command and per argument, you will want to
 specify aliases, data types, namespaces and... just read on.
 
 Declaring commands
@@ -63,7 +63,7 @@ does::
 The command ``load`` will now require a positional argument `file`. We'll run
 it later this way::
 
-    $ ./prog.py load
+    $ ./prog.py load fixture.json
 
 Here's another command with a handful of arguments, all of them optional::
 
