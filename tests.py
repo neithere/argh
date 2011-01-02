@@ -7,7 +7,7 @@ import argparse
 import argh.helpers
 from argh import (
     alias, ArghParser, arg, add_commands, CommandError, dispatch,
-    plain_signature
+    plain_signature, wrap_errors
 )
 from argh import completion
 
@@ -53,9 +53,23 @@ def foo_bar(args):
 def custom_namespace(args):
     return args.custom_value
 
-def whiner(args):
+def whiner_plain(args):
+    raise CommandError('I feel depressed.')
+
+def whiner_iterable(args):
     yield 'Hello...'
     raise CommandError('I feel depressed.')
+
+@arg('text')
+def strict_hello(args):
+    assert args.text == 'world', 'Do it yourself'  # bad manners :-(
+    yield 'Hello %s' % args.text
+
+@arg('text')
+@wrap_errors(AssertionError)
+def strict_hello_smart(args):
+    assert args.text == 'world', 'Do it yourself'  # bad manners :-(
+    yield 'Hello %s' % args.text
 
 
 class BaseArghTestCase(unittest.TestCase):
@@ -114,8 +128,8 @@ class BaseArghTestCase(unittest.TestCase):
 
 class ArghTestCase(BaseArghTestCase):
     commands = {
-        None: [echo, plain_echo, foo_bar, do_aliased, whiner,
-               custom_namespace],
+        None: [echo, plain_echo, foo_bar, do_aliased,
+               whiner_plain, whiner_iterable, custom_namespace],
         'greet': [hello, howdy]
     }
 
@@ -184,13 +198,26 @@ class ArghTestCase(BaseArghTestCase):
         self.assert_cmd_returns('greet hello', 'Hello world!\n', output_file=None)
 
     def test_command_error(self):
-        self.assert_cmd_returns('whiner', 'Hello...\nI feel depressed.\n')
+        self.assert_cmd_returns('whiner-plain', 'I feel depressed.\n')
+        self.assert_cmd_returns('whiner-iterable', 'Hello...\nI feel depressed.\n')
 
     def test_custom_namespace(self):
         namespace = argparse.Namespace()
         namespace.custom_value = "foo"
         self.assert_cmd_returns('custom-namespace', 'foo\n',
                                 namespace=namespace)
+
+
+class ErrorWrappingTestCase(BaseArghTestCase):
+    commands = {None: [strict_hello, strict_hello_smart]}
+    def test_error_raised(self):
+        f = lambda: self.parser.dispatch(['strict-hello', 'John'])
+        self.assertRaisesRegexp(AssertionError, 'Do it yourself', f)
+
+    def test_error_wrapped(self):
+        self.parser.dispatch(['strict-hello-smart', 'John'])
+        self.assert_cmd_returns('strict-hello-smart John', 'Do it yourself\n')
+        self.assert_cmd_returns('strict-hello-smart world', 'Hello world\n')
 
 
 class NoCommandsTestCase(BaseArghTestCase):
