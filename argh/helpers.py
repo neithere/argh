@@ -33,7 +33,7 @@ __all__ = [
 ]
 def add_commands(parser, functions, namespace=None, title=None,
                  description=None, help=None):
-     decorator"""Adds given functions as commands to given parser.
+    """Adds given functions as commands to given parser.
 
     :param parser:
 
