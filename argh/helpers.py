@@ -33,7 +33,7 @@ __all__ = [
 ]
 def add_commands(parser, functions, namespace=None, title=None,
                  description=None, help=None):
-    """Adds given functions as commands to given parser.
+     decorator"""Adds given functions as commands to given parser.
 
     :param parser:
 
@@ -116,8 +116,8 @@ def add_commands(parser, functions, namespace=None, title=None,
         command_parser.set_defaults(function=func)
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
-             intercept=False, completion=True, pre_call=None,
-             output_file=sys.stdout, raw_output=False, namespace=None):
+             completion=True, pre_call=None, output_file=sys.stdout,
+             raw_output=False, namespace=None):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
@@ -161,17 +161,12 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         If `True`, shell tab completion is enabled. Default is `True`. (You
         will also need to install it.)
 
-    Exceptions are not wrapped and will propagate. The only exception among the
-    exceptions is :class:`CommandError` which is interpreted as an expected
-    event so the traceback is hidden. See also :func:`wrap_errors`.
+    By default the exceptions are not wrapped and will propagate. The only
+    exception that is always wrapped is :class:`CommandError` which is
+    interpreted as an expected event so the traceback is hidden. You can also
+    mark arbitrary exceptions as "wrappable" by using the :func:`wrap_errors`
+    decorator.
     """
-    # TODO: can be safely removed at version ~= 0.14
-    if intercept: # PRAGMA: NOCOVER
-        import warnings
-        warnings.warn('dispatch(intercept=True) is deprecated, use '
-                      'dispatch(output_file=None).', DeprecationWarning)
-        output_file = None
-
     if completion:
         autocomplete(parser)
 
@@ -244,7 +239,8 @@ def _execute_command(args):
     approaches to calling the function (with an `argparse.Namespace` object or
     with ordinary signature). Yields the results line by line. If CommandError
     is raised, its message is appended to the results (i.e. yielded by the
-    generator as a string). All other exceptions propagate.
+    generator as a string). All other exceptions propagate unless marked as
+    wrappable by :func:`wrap_errors`.
     """
     assert hasattr(args, 'function') and hasattr(args.function, '__call__')
 
@@ -382,6 +378,6 @@ def wrap_errors(*exceptions):
     stack hidden. This helps to avoid boilerplate code.
     """
     def wrapper(func):
-        func.argh_wrap_errors = exceptions
+        setattr(func, ATTR_WRAPPED_EXCEPTIONS, exceptions)
         return func
     return wrapper
