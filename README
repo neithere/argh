@@ -81,7 +81,7 @@ Real-life usage
 
 Among applications that use `argh` are Tool_, OrgTool_, Watchdog_, Poni_ and
 more. Well, there's probably no need to keep a complete and up-to-date list.
-Still, please let me know anyway if you use `argh`_ in your project. I'll be
+Still, please let me know anyway if you use `argh` in your project. I'll be
 glad to know. :-)
 
 .. _Tool: http://pypi.python.org/pypi/tool
