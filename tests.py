@@ -6,7 +6,7 @@ import unittest2 as unittest
 import argparse
 import argh.helpers
 from argh import (
-    alias, ArghParser, arg, add_commands, CommandError, dispatch,
+    alias, ArghParser, arg, add_commands, command, CommandError, dispatch,
     plain_signature, wrap_errors
 )
 from argh import completion
@@ -70,6 +70,14 @@ def strict_hello(args):
 def strict_hello_smart(args):
     assert args.text == 'world', 'Do it yourself'  # bad manners :-(
     yield 'Hello %s' % args.text
+
+@command
+def command_deco(text='Hello'):
+    yield text
+
+@command
+def command_deco_issue12(foo=1, fox=2):
+    yield u'foo {0}, fox {1}'.format(foo, fox)
 
 
 class BaseArghTestCase(unittest.TestCase):
@@ -206,6 +214,26 @@ class ArghTestCase(BaseArghTestCase):
         namespace.custom_value = "foo"
         self.assert_cmd_returns('custom-namespace', 'foo\n',
                                 namespace=namespace)
+
+
+class CommandDecoratorTests(BaseArghTestCase):
+    commands = {None: [command_deco, command_deco_issue12]}
+
+    def test_command_decorator(self):
+        """The @command decorator creates arguments from function signature.
+        """
+        self.assert_cmd_returns('command-deco', 'Hello\n')
+        self.assert_cmd_returns('command-deco --text=hi', 'hi\n')
+
+    def test_regression_issue12(self):
+        """Issue #12: @command was broken if there were more than one argument
+        to begin with same character (i.e. short option names were inferred
+        incorrectly).
+        """
+        self.assert_cmd_returns('command-deco-issue12', 'foo 1, fox 2\n')
+        self.assert_cmd_returns('command-deco-issue12 --foo 3', 'foo 3, fox 2\n')
+        self.assert_cmd_returns('command-deco-issue12 --fox 3', 'foo 1, fox 3\n')
+        self.assert_cmd_fails('command-deco-issue12 -f 3', 'unrecognized')
 
 
 class ErrorWrappingTestCase(BaseArghTestCase):

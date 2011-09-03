@@ -144,13 +144,28 @@ def command(func):
     # @arg (inferred)
     spec = inspect.getargspec(func)
     kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+
+    # define the list of conflicting option strings
+    # (short forms, i.e. single-character ones)
+    chars = [a[0] for a in spec.args]
+    char_counts = dict((char, chars.count(char)) for char in set(chars))
+    conflicting_opts = tuple(char for char in char_counts
+                             if 1 < char_counts[char])
+
     for a in reversed(spec.args):  # @arg adds specs in reversed order
         if a in kwargs:
-            func = arg(
-                '-{0}'.format(a[0]),
-                '--{0}'.format(a),
-                default=kwargs.get(a)
-            )(func)
+            if a.startswith(conflicting_opts):
+                func = arg(
+                    '--{0}'.format(a),
+                    default=kwargs.get(a)
+                )(func)
+            else:
+                print a, 'non conflicting'
+                func = arg(
+                    '-{0}'.format(a[0]),
+                    '--{0}'.format(a),
+                    default=kwargs.get(a)
+                )(func)
         else:
             func = arg(a)(func)
 
