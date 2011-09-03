@@ -159,8 +159,8 @@ The equivalent code without `Argh` would be::
     foo_parser = subparsers.add_parser('foo')
     foo_parser.set_defaults(function=foo)
 
-    foo_parser = subparsers.add_parser('bar')
-    foo_parser.set_defaults(function=bar)
+    bar_parser = subparsers.add_parser('bar')
+    bar_parser.set_defaults(function=bar)
 
     args = parser.parse_args()
     print args.function(args)

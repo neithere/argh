@@ -70,7 +70,7 @@ def plain_signature(func):
 
 def arg(*args, **kwargs):
     """Declares an argument for given function. Does not register the function
-    anywhere, not does it modify the function in any way. The signature is
+    anywhere, nor does it modify the function in any way. The signature is
     exactly the same as that of :meth:`argparse.ArgumentParser.add_argument`,
     only some keywords are not required if they can be easily guessed.
 
