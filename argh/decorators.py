@@ -160,7 +160,6 @@ def command(func):
                     default=kwargs.get(a)
                 )(func)
             else:
-                print a, 'non conflicting'
                 func = arg(
                     '-{0}'.format(a[0]),
                     '--{0}'.format(a),
