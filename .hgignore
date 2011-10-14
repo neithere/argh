@@ -12,3 +12,9 @@
 ^\.coverage
 ^cover/
 ,cover$
+
+# Arch Linux: makepkg
+^src/
+^pkg/
+^.PKGINFO$
+^(python2-)?argh-.+\.tar\..z
