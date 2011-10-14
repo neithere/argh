@@ -6,7 +6,7 @@ import unittest2 as unittest
 import argparse
 import argh.helpers
 from argh import (
-    alias, ArghParser, arg, add_commands, command, CommandError, dispatch,
+    alias, ArghParser, arg, command, CommandError,
     plain_signature, wrap_errors
 )
 from argh import completion

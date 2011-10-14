@@ -3,7 +3,6 @@
 Command decorators
 ==================
 """
-from functools import wraps
 import inspect
 
 from argh.constants import ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE
