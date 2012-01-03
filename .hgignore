@@ -18,3 +18,7 @@
 ^pkg/
 ^.PKGINFO$
 ^(python2-)?argh-.+\.tar\..z
+
+# Debian
+^debian/python-argh
+^debian/python-module-stampdir
