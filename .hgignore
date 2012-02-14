@@ -19,7 +19,7 @@
 ^src/
 ^pkg/
 ^.PKGINFO$
-^(python2-)?argh-.+\.tar\..z
+^archlinux-python.?/.+(gz|xz)$
 
 # Debian
 ^debian/python-argh
