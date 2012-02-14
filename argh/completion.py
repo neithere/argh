@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  Copyright (c) 2010 Andrey Mikhailenko and contributors
+#  Copyright (c) 2010—2012 Andrey Mikhailenko and contributors
 #
 #  This file is part of Argh.
 #
@@ -38,7 +38,7 @@ def autocomplete(root_parser):
 
     choices = _autocomplete(root_parser, cwords, cword)
 
-    print ' '.join(choices)
+    print(' '.join(choices))
 
     sys.exit(1)
 

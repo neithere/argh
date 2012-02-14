@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  Copyright (c) 2010 Andrey Mikhailenko and contributors
+#  Copyright (c) 2010—2012 Andrey Mikhailenko and contributors
 #
 #  This file is part of Argh.
 #

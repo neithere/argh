@@ -13,6 +13,8 @@
 ^cover/
 ,cover$
 
+^\.tox/
+
 # Arch Linux: makepkg
 ^src/
 ^pkg/

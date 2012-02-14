@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from StringIO import StringIO
+from argh.six import (
+    BytesIO, u, b, string_types, text_type, binary_type, iteritems
+)
 import unittest2 as unittest
 import argparse
 import argh.helpers
@@ -26,20 +28,20 @@ class DebugArghParser(ArghParser):
 @arg('--twice', default=False, help='repeat twice')
 def echo(args):
     repeat = 2 if args.twice else 1
-    return (u'you said %s' % args.text) * repeat
+    return (u('you said {0}').format(args.text)) * repeat
 
 @arg('text')
 @plain_signature
 def plain_echo(text):
-    return u'you said %s' % text
+    return u('you said {0}').format(text)
 
 @arg('--name', default='world')
 def hello(args):
-    return u'Hello %s!' % (args.name or 'world')
+    return u('Hello {0}!').format(args.name or 'world')
 
 @arg('buddy')
 def howdy(args):
-    return u'Howdy %s?' % args.buddy
+    return u('Howdy {0}?').format(args.buddy)
 
 @alias('aliased')
 def do_aliased(args):
@@ -63,13 +65,13 @@ def whiner_iterable(args):
 @arg('text')
 def strict_hello(args):
     assert args.text == 'world', 'Do it yourself'  # bad manners :-(
-    yield 'Hello %s' % args.text
+    yield 'Hello {0}'.format(args.text)
 
 @arg('text')
 @wrap_errors(AssertionError)
 def strict_hello_smart(args):
     assert args.text == 'world', 'Do it yourself'  # bad manners :-(
-    yield 'Hello %s' % args.text
+    yield 'Hello {0}'.format(args.text)
 
 @command
 def command_deco(text='Hello'):
@@ -77,7 +79,7 @@ def command_deco(text='Hello'):
 
 @command
 def command_deco_issue12(foo=1, fox=2):
-    yield u'foo {0}, fox {1}'.format(foo, fox)
+    yield u('foo {0}, fox {1}').format(foo, fox)
 
 
 class BaseArghTestCase(unittest.TestCase):
@@ -85,16 +87,16 @@ class BaseArghTestCase(unittest.TestCase):
 
     def setUp(self):
         self.parser = DebugArghParser('PROG')
-        for namespace, commands in self.commands.iteritems():
+        for namespace, commands in iteritems(self.commands):
             self.parser.add_commands(commands, namespace=namespace)
 
     def _call_cmd(self, command_string, **kwargs):
-        if isinstance(command_string, basestring):
+        if isinstance(command_string, string_types):
             args = command_string.split()
         else:
             args = command_string
 
-        io = StringIO()
+        io = BytesIO()
         if 'output_file' not in kwargs:
             kwargs['output_file'] = io
 
@@ -112,14 +114,14 @@ class BaseArghTestCase(unittest.TestCase):
         """
         try:
             result = self._call_cmd(command_string, **kwargs)
-        except SystemExit, error:
+        except SystemExit as error:
             self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
                 command_string, error))
         self.assertEqual(result, expected_result)
 
     def assert_cmd_exits(self, command_string, message_regex=None):
         "When a command forces exit, it *may* fail, but may just print help."
-        message_regex = str(message_regex)  # make sure None -> "None"
+        message_regex = text_type(message_regex)  # make sure None -> "None"
         f = lambda: self.parser.dispatch(command_string.split())
         self.assertRaisesRegexp(SystemExit, message_regex, f)
 
@@ -131,7 +133,7 @@ class BaseArghTestCase(unittest.TestCase):
         """(for cases when a commands doesn't fail but also (maybe) doesn't
         return results and just prints them.)
         """
-        result = self.assert_cmd_exits(command_string)
+        self.assert_cmd_exits(command_string)
 
 
 class ArghTestCase(BaseArghTestCase):
@@ -144,7 +146,7 @@ class ArghTestCase(BaseArghTestCase):
     def test_argv(self):
         _argv = sys.argv
         sys.argv = sys.argv[:1] + ['echo', 'hi there']
-        self.assert_cmd_returns(None, 'you said hi there\n')
+        self.assert_cmd_returns(None, b('you said hi there\n'))
         sys.argv = _argv
 
     def test_no_command(self):
@@ -155,15 +157,15 @@ class ArghTestCase(BaseArghTestCase):
 
     def test_echo(self):
         "A simple command is resolved to a function."
-        self.assert_cmd_returns('echo foo', 'you said foo\n')
+        self.assert_cmd_returns('echo foo', b('you said foo\n'))
 
     def test_bool_action(self):
         "Action `store_true`/`store_false` is inferred from default value."
-        self.assert_cmd_returns('echo --twice foo', 'you said fooyou said foo\n')
+        self.assert_cmd_returns('echo --twice foo', b('you said fooyou said foo\n'))
 
     def test_plain_signature(self):
         "Arguments can be passed to the function without a Namespace instance."
-        self.assert_cmd_returns('plain-echo bar', 'you said bar\n')
+        self.assert_cmd_returns('plain-echo bar', b('you said bar\n'))
 
     def test_bare_namespace(self):
         "A command can be resolved to a function, not a namespace."
@@ -172,14 +174,14 @@ class ArghTestCase(BaseArghTestCase):
 
     def test_namespaced_function(self):
         "A subcommand is resolved to a function."
-        self.assert_cmd_returns('greet hello', u'Hello world!\n')
-        self.assert_cmd_returns('greet hello --name=John', u'Hello John!\n')
+        self.assert_cmd_returns('greet hello', b('Hello world!\n'))
+        self.assert_cmd_returns('greet hello --name=John', b('Hello John!\n'))
         self.assert_cmd_fails('greet hello John', 'unrecognized arguments')
         self.assert_cmd_fails('greet howdy --name=John', 'too few arguments')
-        self.assert_cmd_returns('greet howdy John', u'Howdy John?\n')
+        self.assert_cmd_returns('greet howdy John', b('Howdy John?\n'))
 
     def test_alias(self):
-        self.assert_cmd_returns('aliased', 'ok\n')
+        self.assert_cmd_returns('aliased', b('ok\n'))
 
     def test_help_alias(self):
         self.assert_cmd_doesnt_fail('--help')
@@ -194,25 +196,25 @@ class ArghTestCase(BaseArghTestCase):
         """Positional arguments are resolved in the order in which the @arg
         decorators are defined.
         """
-        self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar\n')
+        self.assert_cmd_returns('foo-bar foo bar', b('foo\nbar\n'))
 
     def test_raw_output(self):
         "If the raw_output flag is set, no extra whitespace is added"
-        self.assert_cmd_returns('foo-bar foo bar', 'foo\nbar\n')
-        self.assert_cmd_returns('foo-bar foo bar', 'foobar', raw_output=True)
+        self.assert_cmd_returns('foo-bar foo bar', b('foo\nbar\n'))
+        self.assert_cmd_returns('foo-bar foo bar', b('foobar'), raw_output=True)
 
     def test_output_file(self):
-        self.assert_cmd_returns('greet hello', 'Hello world!\n')
-        self.assert_cmd_returns('greet hello', 'Hello world!\n', output_file=None)
+        self.assert_cmd_returns('greet hello', b('Hello world!\n'))
+        self.assert_cmd_returns('greet hello', b('Hello world!\n'), output_file=None)
 
     def test_command_error(self):
-        self.assert_cmd_returns('whiner-plain', 'I feel depressed.\n')
-        self.assert_cmd_returns('whiner-iterable', 'Hello...\nI feel depressed.\n')
+        self.assert_cmd_returns('whiner-plain', b('I feel depressed.\n'))
+        self.assert_cmd_returns('whiner-iterable', b('Hello...\nI feel depressed.\n'))
 
     def test_custom_namespace(self):
         namespace = argparse.Namespace()
-        namespace.custom_value = "foo"
-        self.assert_cmd_returns('custom-namespace', 'foo\n',
+        namespace.custom_value = 'foo'
+        self.assert_cmd_returns('custom-namespace', b('foo\n'),
                                 namespace=namespace)
 
 
@@ -222,17 +224,17 @@ class CommandDecoratorTests(BaseArghTestCase):
     def test_command_decorator(self):
         """The @command decorator creates arguments from function signature.
         """
-        self.assert_cmd_returns('command-deco', 'Hello\n')
-        self.assert_cmd_returns('command-deco --text=hi', 'hi\n')
+        self.assert_cmd_returns('command-deco', b('Hello\n'))
+        self.assert_cmd_returns('command-deco --text=hi', b('hi\n'))
 
     def test_regression_issue12(self):
         """Issue #12: @command was broken if there were more than one argument
         to begin with same character (i.e. short option names were inferred
         incorrectly).
         """
-        self.assert_cmd_returns('command-deco-issue12', 'foo 1, fox 2\n')
-        self.assert_cmd_returns('command-deco-issue12 --foo 3', 'foo 3, fox 2\n')
-        self.assert_cmd_returns('command-deco-issue12 --fox 3', 'foo 1, fox 3\n')
+        self.assert_cmd_returns('command-deco-issue12', b('foo 1, fox 2\n'))
+        self.assert_cmd_returns('command-deco-issue12 --foo 3', b('foo 3, fox 2\n'))
+        self.assert_cmd_returns('command-deco-issue12 --fox 3', b('foo 1, fox 3\n'))
         self.assert_cmd_fails('command-deco-issue12 -f 3', 'unrecognized')
 
 
@@ -243,17 +245,16 @@ class ErrorWrappingTestCase(BaseArghTestCase):
         self.assertRaisesRegexp(AssertionError, 'Do it yourself', f)
 
     def test_error_wrapped(self):
-        self.parser.dispatch(['strict-hello-smart', 'John'])
-        self.assert_cmd_returns('strict-hello-smart John', 'Do it yourself\n')
-        self.assert_cmd_returns('strict-hello-smart world', 'Hello world\n')
+        self.assert_cmd_returns('strict-hello-smart John', b('Do it yourself\n'))
+        self.assert_cmd_returns('strict-hello-smart world', b('Hello world\n'))
 
 
 class NoCommandsTestCase(BaseArghTestCase):
     "Edge case: no commands defined"
     commands = {}
     def test_no_command(self):
-        self.assert_cmd_returns('', self.parser.format_usage(), raw_output=True)
-        self.assert_cmd_returns('', self.parser.format_usage()+'\n')
+        self.assert_cmd_returns('', b(self.parser.format_usage()), raw_output=True)
+        self.assert_cmd_returns('', b(self.parser.format_usage()+'\n'))
 
 
 class ConfirmTestCase(unittest.TestCase):
@@ -288,23 +289,23 @@ class ConfirmTestCase(unittest.TestCase):
         argh.helpers.raw_input = raw_input_mock
 
         argh.confirm('do smth')
-        self.assertEqual(prompts[-1], 'do smth? (y/n)')
+        self.assertEqual(prompts[-1], b('do smth? (y/n)'))
 
         argh.confirm('do smth', default=None)
-        self.assertEqual(prompts[-1], 'do smth? (y/n)')
+        self.assertEqual(prompts[-1], b('do smth? (y/n)'))
 
         argh.confirm('do smth', default=True)
-        self.assertEqual(prompts[-1], 'do smth? (Y/n)')
+        self.assertEqual(prompts[-1], b('do smth? (Y/n)'))
 
         argh.confirm('do smth', default=False)
-        self.assertEqual(prompts[-1], 'do smth? (y/N)')
+        self.assertEqual(prompts[-1], b('do smth? (y/N)'))
 
     def test_encoding(self):
         "Unicode and bytes are accepted as prompt message"
         def raw_input_mock(prompt):
-            assert isinstance(prompt, str)
+            assert isinstance(prompt, binary_type)
         argh.helpers.raw_input = raw_input_mock
-        argh.confirm(u'привет')
+        argh.confirm(u('привет'))
 
 
 class CompletionTestCase(unittest.TestCase):

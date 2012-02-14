@@ -33,6 +33,20 @@ Here's a list of features that `argh` adds to `argparse`:
 `argh`-aware code. Just keep in mind that :func:`~argh.helpers.dispatch` does
 some extra work that a custom dispatcher may not do.
 
+Dependencies
+------------
+
+The `argh` library is supported (and tested unless otherwise specified) on
+the following versions of Python:
+
+* 2.6 (`argparse` library is required)
+* 2.7 (including PyPy 1.8)
+* 3.1 (`argparse` library is required; **not** tested)
+* 3.2
+
+.. versionchanged:: 0.15
+   Added support for Python 3.x, dropped support for Python ≤ 2.5.
+
 Details
 -------
 
@@ -86,7 +100,7 @@ Similar projects
 Author
 ------
 
-Originally written by Andrey Mikhaylenko in 2010.
+Developed by Andrey Mikhaylenko since 2010.
 
 See :file:`AUTHORS` for a complete authors list of this application.
 
@@ -102,6 +116,7 @@ Glossary
     CLI
         `Command-line interface`_. You should know what that is if you are
         here, right? :)
+
     DRY
         The `don't repeat yourself`_ principle.
 
@@ -114,4 +129,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

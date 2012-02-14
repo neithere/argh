@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  Copyright (c) 2010 Andrey Mikhailenko and contributors
+#  Copyright (c) 2010—2012 Andrey Mikhailenko and contributors
 #
 #  This file is part of Argh.
 #
@@ -14,10 +14,10 @@ Helpers
 """
 import argparse
 import locale
-from StringIO import StringIO
 import sys
 from types import GeneratorType
 
+from argh.six import b, u, string_types, text_type, BytesIO
 from argh.exceptions import CommandError
 from argh.utils import get_subparsers
 from argh.completion import autocomplete
@@ -95,7 +95,7 @@ def add_commands(parser, functions, namespace=None, title=None,
 
     if namespace:
         # make a namespace placeholder and register the commands within it
-        assert isinstance(namespace, str)
+        assert isinstance(namespace, string_types)
         subsubparser = subparsers.add_parser(namespace, help=title)
         subparsers = subsubparser.add_subparsers(title=title,
                                                  description=description,
@@ -191,7 +191,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     if output_file is None:
         # user wants a string; we create an internal temporary file-like object
         # and will return its contents as a string
-        f = StringIO()
+        f = BytesIO()
     else:
         # normally this is stdout; can be any file
         f = output_file
@@ -205,7 +205,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         f.write(output)
         if not raw_output:
             # in most cases user wants on message per line
-            f.write('\n')
+            f.write(b('\n'))
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
@@ -217,11 +217,11 @@ def _encode(line, output_file, encoding=None):
     is determined from terminal settings or, if none, from system settings.
     """
     # Convert string to Unicode
-    if not isinstance(line, unicode):
+    if not isinstance(line, text_type):
         try:
-            line = unicode(line)
+            line = text_type(line)
         except UnicodeDecodeError:
-            line = str(line).decode('utf-8')
+            line = b(line).decode('utf-8')
 
     # Choose output encoding
     if not encoding:
@@ -250,7 +250,12 @@ def _execute_command(args):
             # filter the namespace variables so that only those expected by the
             # actual function will pass
             f = args.function
-            expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
+            if hasattr(f, 'func_code'):
+                # Python 2
+                expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
+            else:
+                # Python 3
+                expected_args = f.__code__.co_varnames[:f.__code__.co_argcount]
             ok_args = [x for x in args._get_args() if x in expected_args]
             ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
                              if k in expected_args)
@@ -275,8 +280,8 @@ def _execute_command(args):
         result = _call()
         for line in result:
             yield line
-    except tuple(wrappable_exceptions), e:
-        yield str(e)
+    except tuple(wrappable_exceptions) as e:
+        yield text_type(e)
 
 
 class ArghParser(argparse.ArgumentParser):
@@ -344,7 +349,7 @@ def confirm(action, default=None, skip=False):
             False: ('y','N'),
         }
         y, n = defaults[default]
-        prompt = (u'%(action)s? (%(y)s/%(n)s)' % locals()).encode('utf-8')
+        prompt = u('{action}? ({y}/{n})').format(**locals()).encode('utf-8')
         choice = None
         try:
             if default is None:
