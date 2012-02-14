@@ -13,7 +13,7 @@ Here's a list of features that `argh` adds to `argparse`:
 
 * mark a function as a CLI command and specify its arguments before the parser
   is instantiated;
-* nesed commands made easy: no messing with subparsers (though they are of
+* nested commands made easy: no messing with subparsers (though they are of
   course used under the hood);
 * infer agrument type from the default value;
 * infer command name from function name;
@@ -38,7 +38,7 @@ A very simple application with one command::
     @command
     def echo(text='hello'):
         print text
-   
+
     parser = ArghParser()
     parser.add_commands([echo])
 
@@ -52,6 +52,11 @@ The powerful API of `argparse` is also available::
         print args.text
 
 The approaches can be safely combined.
+
+Dependencies
+------------
+
+`Argh` runs on Python 2.x (since 2.6, incl. PyPy) and 3.x. See documentation.
 
 Documentation
 -------------
