@@ -17,7 +17,7 @@ import locale
 import sys
 from types import GeneratorType
 
-from argh.six import b, u, string_types, text_type, BytesIO
+from argh.six import b, u, string_types, text_type, BytesIO, PY3
 from argh.exceptions import CommandError
 from argh.utils import get_subparsers
 from argh.completion import autocomplete
@@ -25,6 +25,9 @@ from argh.constants import (
     ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS
 )
 
+if PY3:
+    def raw_input(text):
+        return input(text.decode())
 
 __all__ = [
     'ArghParser', 'add_commands', 'autocomplete', 'dispatch', 'confirm',
