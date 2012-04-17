@@ -62,7 +62,7 @@ def plain_signature(func):
 
     ...is equivalent to::
 
-        @argh('filename')
+        @arg('filename')
         def load(args):
             print json.load(args.filename)
 
