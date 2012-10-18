@@ -25,14 +25,24 @@ from argh.constants import (
     ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS
 )
 
+
 if PY3:
     def raw_input(text):
         return input(text.decode())
 
+
 __all__ = [
-    'ArghParser', 'add_commands', 'autocomplete', 'dispatch', 'confirm',
-    'wrap_errors'
+    'ArghParser', 'add_commands', 'autocomplete', 'confirm', 'dispatch',
+    'set_default_command', 'wrap_errors'
 ]
+
+
+def set_default_command(parser, function):
+    for a_args, a_kwargs in getattr(function, ATTR_ARGS, []):
+        parser.add_argument(*a_args, **a_kwargs)
+    parser.set_defaults(function=function)
+
+
 def add_commands(parser, functions, namespace=None, title=None,
                  description=None, help=None):
     """Adds given functions as commands to given parser.
@@ -113,9 +123,8 @@ def add_commands(parser, functions, namespace=None, title=None,
         cmd_name = getattr(func, ATTR_ALIAS, func.__name__.replace('_','-'))
         cmd_help = func.__doc__
         command_parser = subparsers.add_parser(cmd_name, help=cmd_help)
-        for a_args, a_kwargs in getattr(func, ATTR_ARGS, []):
-            command_parser.add_argument(*a_args, **a_kwargs)
-        command_parser.set_defaults(function=func)
+        set_default_command(command_parser, func)
+
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
              completion=True, pre_call=None, output_file=sys.stdout,
@@ -215,6 +224,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         f.seek(0)
         return f.read()
 
+
 def _encode(line, output_file, encoding=None):
     """Converts given string to given encoding. If no encoding is specified, it
     is determined from terminal settings or, if none, from system settings.
@@ -235,6 +245,7 @@ def _encode(line, output_file, encoding=None):
 
     # Convert string from Unicode to the output encoding
     return line.encode(encoding)
+
 
 def _execute_command(args):
     """Asserts that ``args.function`` is present and callable. Tries different
@@ -295,6 +306,10 @@ class ArghParser(argparse.ArgumentParser):
     wrappers for stand-alone functions :func:`add_commands` ,
     :func:`autocomplete` and :func:`dispatch`.
     """
+    def set_default_command(self, *args, **kwargs):
+        "Wrapper for :func:`set_command`."
+        return set_default_command(self, *args, **kwargs)
+
     def add_commands(self, *args, **kwargs):
         "Wrapper for :func:`add_commands`."
         return add_commands(self, *args, **kwargs)
@@ -371,6 +386,7 @@ def confirm(action, default=None, skip=False):
     if default is not None:
         return default
     return None
+
 
 def wrap_errors(*exceptions):
     """Decorator. Wraps given exceptions into :class:`CommandError`. Usage::

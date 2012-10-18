@@ -257,6 +257,24 @@ class NoCommandsTestCase(BaseArghTestCase):
         self.assert_cmd_returns('', b(self.parser.format_usage()+'\n'))
 
 
+
+
+class DefaultCommandTestCase(BaseArghTestCase):
+    def setUp(self):
+        self.parser = DebugArghParser('PROG')
+
+        @arg('--foo', default=1)
+        def main(args):
+            return args.foo
+
+        self.parser.set_default_command(main)
+
+    def test_default_command(self):
+        self.assert_cmd_returns('', b('1\n'))
+        self.assert_cmd_returns('--foo 2', b('2\n'))
+        self.assert_cmd_exits('--help')
+
+
 class ConfirmTestCase(unittest.TestCase):
     def assert_choice(self, choice, expected, **kwargs):
         argh.helpers.raw_input = lambda prompt: choice
