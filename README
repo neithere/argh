@@ -35,12 +35,25 @@ Example
 
 A very simple application with one command::
 
+    from argh import *
+
+    @dispatch_command
+    @arg('name')
+    def main(args):
+        return 'Hello ' + args.name
+
+An application with multiple commands::
+
     @command
     def echo(text='hello'):
         print text
 
+    @command
+    def another_echo(text='hi there'):
+        print text
+
     parser = ArghParser()
-    parser.add_commands([echo])
+    parser.add_commands([echo, another_echo])
 
     if __name__ == '__main__':
         parser.dispatch()
