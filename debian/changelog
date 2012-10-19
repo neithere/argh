@@ -1,3 +1,9 @@
+python-argh (0.16) unstable; urgency=low
+
+  * updating version to match upstream.
+
+ -- Andy Mikhaylenko <neithere@gmail.com>  Fri, 19 Oct 2012 20:25:00 +0600
+
 python-argh (0.15.1-1) unstable; urgency=low
 
   * updating version to match upstream.
