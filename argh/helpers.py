@@ -25,14 +25,37 @@ from argh.constants import (
     ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS
 )
 
+
 if PY3:
     def raw_input(text):
         return input(text.decode())
 
+
 __all__ = [
-    'ArghParser', 'add_commands', 'autocomplete', 'dispatch', 'confirm',
-    'wrap_errors'
+    'ArghParser', 'add_commands', 'autocomplete', 'confirm', 'dispatch',
+    'dispatch_command', 'set_default_command', 'wrap_errors'
 ]
+
+
+def set_default_command(parser, function):
+    """ Sets default command (i.e. a function) for given parser.
+
+    .. note::
+
+       An attempt to set default command to a parser which already has
+       subparsers (e.g. added with :func:`~argh.helpers.add_commands`)
+       results in a `RuntimeError`.
+
+    """
+    if parser._subparsers:
+        raise RuntimeError('Cannot set default command to a parser with '
+                           'existing subparsers')
+
+    for a_args, a_kwargs in getattr(function, ATTR_ARGS, []):
+        parser.add_argument(*a_args, **a_kwargs)
+    parser.set_defaults(function=function)
+
+
 def add_commands(parser, functions, namespace=None, title=None,
                  description=None, help=None):
     """Adds given functions as commands to given parser.
@@ -93,7 +116,16 @@ def add_commands(parser, functions, namespace=None, title=None,
         stable. If some implementation details would change and break `argh`,
         we'll simply add a workaround a keep it compatibile.
 
+    .. note::
+
+       An attempt to add commands to a parser which already has a default
+       function (e.g. added with :func:`~argh.helpers.set_default_command`)
+       results in a `RuntimeError`.
+
     """
+    if 'function' in parser._defaults:
+        raise RuntimeError('Cannot add commands to a single-command parser')
+
     subparsers = get_subparsers(parser, create=True)
 
     if namespace:
@@ -113,9 +145,45 @@ def add_commands(parser, functions, namespace=None, title=None,
         cmd_name = getattr(func, ATTR_ALIAS, func.__name__.replace('_','-'))
         cmd_help = func.__doc__
         command_parser = subparsers.add_parser(cmd_name, help=cmd_help)
-        for a_args, a_kwargs in getattr(func, ATTR_ARGS, []):
-            command_parser.add_argument(*a_args, **a_kwargs)
-        command_parser.set_defaults(function=func)
+        set_default_command(command_parser, func)
+
+
+def dispatch_command(function, *args, **kwargs):
+    """ A wrapper for :func:`dispatch` that creates a one-command parser.
+
+    This::
+
+        @command
+        def foo():
+            return 1
+
+        dispatch_command(foo)
+
+    ...is a shortcut for::
+
+        @command
+        def foo():
+            return 1
+
+        parser = ArgumentParser()
+        set_default_command(parser, foo)
+        dispatch(parser)
+
+    This function can also be used as a decorator. Here's a more or less
+    sensible example::
+
+        from argh import *
+
+        @dispatch_command
+        @arg('name')
+        def main(args):
+            return args.name
+
+    """
+    parser = argparse.ArgumentParser()
+    set_default_command(parser, function)
+    dispatch(parser, *args, **kwargs)
+
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,
              completion=True, pre_call=None, output_file=sys.stdout,
@@ -215,6 +283,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         f.seek(0)
         return f.read()
 
+
 def _encode(line, output_file, encoding=None):
     """Converts given string to given encoding. If no encoding is specified, it
     is determined from terminal settings or, if none, from system settings.
@@ -235,6 +304,7 @@ def _encode(line, output_file, encoding=None):
 
     # Convert string from Unicode to the output encoding
     return line.encode(encoding)
+
 
 def _execute_command(args):
     """Asserts that ``args.function`` is present and callable. Tries different
@@ -295,6 +365,10 @@ class ArghParser(argparse.ArgumentParser):
     wrappers for stand-alone functions :func:`add_commands` ,
     :func:`autocomplete` and :func:`dispatch`.
     """
+    def set_default_command(self, *args, **kwargs):
+        "Wrapper for :func:`set_default_command`."
+        return set_default_command(self, *args, **kwargs)
+
     def add_commands(self, *args, **kwargs):
         "Wrapper for :func:`add_commands`."
         return add_commands(self, *args, **kwargs)
@@ -371,6 +445,7 @@ def confirm(action, default=None, skip=False):
     if default is not None:
         return default
     return None
+
 
 def wrap_errors(*exceptions):
     """Decorator. Wraps given exceptions into :class:`CommandError`. Usage::

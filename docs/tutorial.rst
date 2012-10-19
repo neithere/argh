@@ -15,7 +15,30 @@ Dive in
 Defining and running commands is dead simple::
 
     from argh import *
-    
+
+    @dispatch_command
+    def main(args):
+        print 'Hello'
+
+That's it. And it works::
+
+    $ python script.py
+    Hello
+
+Nice for a quick'n'dirty script. A reusable app would look closer to this::
+
+    from argh import *
+
+    def main(args):
+        print 'Hello'
+
+    if __name__ == '__main__':
+        dispatch_command(main)
+
+...and here's a bit more complex example (still pretty readable)::
+
+    from argh import *
+
     @command
     def load(path, format='json'):
         print loaders[format].load(path)
@@ -134,6 +157,24 @@ a namespace "www". This is the resulting command-line interface::
     $ ./prog.py load prancing_ponies.json
     $ ./prog.py www serve-rest
     $ ./prog.py www serve --port 6060 --noreload
+
+Single-command application
+--------------------------
+
+There are cases when the application performs a single task and it perfectly
+maps to a single command. The method above would require the user to type a
+command like ``check_mail.py check --now`` while ``check_mail.py --now`` would
+suffice. In such cases :func:`~argh.helpers.add_commands` should be replaced with
+:func:`~argh.helpers.set_default_command`::
+
+    def main(args):
+        return 1
+
+    parser = ArghParser()
+    parser.set_default_command(main)
+
+There's also a nice shortcut :func:`~argh.helpers.dispatch_command`.
+Please refer to the API documentation for details.
 
 Subparsers
 ----------

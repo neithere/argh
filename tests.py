@@ -8,7 +8,7 @@ import unittest2 as unittest
 import argparse
 import argh.helpers
 from argh import (
-    alias, ArghParser, arg, command, CommandError,
+    alias, ArghParser, arg, command, CommandError, dispatch_command,
     plain_signature, wrap_errors
 )
 from argh import completion
@@ -255,6 +255,84 @@ class NoCommandsTestCase(BaseArghTestCase):
     def test_no_command(self):
         self.assert_cmd_returns('', b(self.parser.format_usage()), raw_output=True)
         self.assert_cmd_returns('', b(self.parser.format_usage()+'\n'))
+
+
+class DefaultCommandTestCase(BaseArghTestCase):
+    def setUp(self):
+        self.parser = DebugArghParser('PROG')
+
+        @arg('--foo', default=1)
+        def main(args):
+            return args.foo
+
+        self.parser.set_default_command(main)
+
+    def test_default_command(self):
+        self.assert_cmd_returns('', b('1\n'))
+        self.assert_cmd_returns('--foo 2', b('2\n'))
+        self.assert_cmd_exits('--help')
+
+    def test_prevent_conflict_with_single_command(self):
+        def one(args): return 1
+        def two(args): return 2
+
+        p = DebugArghParser('PROG')
+        p.set_default_command(one)
+        with self.assertRaisesRegexp(RuntimeError,
+                               'Cannot add commands to a single-command parser'):
+            p.add_commands([two])
+
+    def test_prevent_conflict_with_subparsers(self):
+        def one(args): return 1
+        def two(args): return 2
+
+        p = DebugArghParser('PROG')
+        p.add_commands([one])
+        with self.assertRaisesRegexp(RuntimeError,
+                               'Cannot set default command to a parser with '
+                               'existing subparsers'):
+            p.set_default_command(two)
+
+
+class DispatchCommandTestCase(BaseArghTestCase):
+
+    def _dispatch_and_capture(self, func, command_string, **kwargs):
+        if isinstance(command_string, string_types):
+            args = command_string.split()
+        else:
+            args = command_string
+
+        io = BytesIO()
+        if 'output_file' not in kwargs:
+            kwargs['output_file'] = io
+
+        result = dispatch_command(func, args, **kwargs)
+
+        if kwargs.get('output_file') is None:
+            return result
+        else:
+            io.seek(0)
+            return io.read()
+
+    def assert_cmd_returns(self, func, command_string, expected_result, **kwargs):
+        """Executes given command using given parser and asserts that it prints
+        given value.
+        """
+        try:
+            result = self._dispatch_and_capture(func, command_string, **kwargs)
+        except SystemExit as error:
+            self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
+                command_string, error))
+        self.assertEqual(result, expected_result)
+
+    def test_dispatch_command_shortcut(self):
+
+        @arg('--foo', default=1)
+        def main(args):
+            return args.foo
+
+        self.assert_cmd_returns(main, '', b('1\n'))
+        self.assert_cmd_returns(main, '--foo 2', b('2\n'))
 
 
 class ConfirmTestCase(unittest.TestCase):
