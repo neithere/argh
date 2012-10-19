@@ -12,49 +12,64 @@ decorator — and then tune the behaviour with any of the lower layers:
 Dive in
 -------
 
-Defining and running commands is dead simple::
+Assume we need a CLI application which output is modulated by arguments::
+
+    $ python greet.py
+    Hello unknown user!
+
+    $ python greet.py John
+    Hello John!
+
+This is the whole application::
+
+    # greet.py
 
     from argh import *
 
-    @dispatch_command
-    def main(args):
-        print 'Hello'
+    @command
+    def main(name='unknown user'):
+        return 'Hello ' + name + '!'
 
-That's it. And it works::
+    dispatch_command(main)
 
-    $ python script.py
-    Hello
+Dead simple.
 
-Nice for a quick'n'dirty script. A reusable app would look closer to this::
-
-    from argh import *
-
-    def main(args):
-        print 'Hello'
-
-    if __name__ == '__main__':
-        dispatch_command(main)
-
-...and here's a bit more complex example (still pretty readable)::
+What if we need multiple commands? Easy::
 
     from argh import *
+
+    def dump(args):
+        return db.find()
 
     @command
     def load(path, format='json'):
         print loaders[format].load(path)
 
     p = ArghParser()
-    p.add_commands([load])
-    p.dispatch()
+    p.add_commands([load, dump])
+
+    if __name__ == '__main__':
+        p.dispatch()
 
 And then call your script like this::
 
+    $ ./script.py dump
     $ ./script.py load fixture.json
     $ ./script.py load fixture.yaml --format=yaml
 
 I guess you get the picture. Still, there's much more to commands than this.
-You'll want to provide help per command and per argument, you will want to
-specify aliases, data types, namespaces and... just read on.
+
+The examples above raise some questions, including:
+
+* why the ``@command`` decorator for just one of the two functions?
+* do ``return`` and ``print`` behave equally?
+* what's the difference between ``dispatch_command()`` from one example
+  and the more complex version from another one?
+
+Then, you'll want to provide help per command and per argument; to specify
+aliases, data types, namespaces and...
+
+Just read on.
 
 Declaring commands
 ------------------
@@ -330,7 +345,16 @@ output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
             raise CommandError(error)  # bail out, hide traceback
         else:
             ... do something ...
-            yield item
+            return item
 
 `Argh` will wrap this exception and choose the right way to display its
 message (depending on how :func:`~argh.helpers.dispatch` was called).
+
+The decorator :func:`~argh.helpers.wrap_errors` reduces the code even further::
+
+    @arg('key')
+    @wrap_errors(KeyError)        # catch KeyError, show the message, hide traceback
+    def show_item(args):
+        return items[args.key]    # raise KeyError
+
+Of course it should be used with care in more complex commands.
