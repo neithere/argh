@@ -40,6 +40,9 @@ __all__ = [
 def set_default_command(parser, function):
     """ Sets default command (i.e. a function) for given parser.
 
+    If `parser.description` is empty and the function has a docstring, it is
+    used as the description.
+
     .. note::
 
        An attempt to set default command to a parser which already has
@@ -53,6 +56,8 @@ def set_default_command(parser, function):
 
     for a_args, a_kwargs in getattr(function, ATTR_ARGS, []):
         parser.add_argument(*a_args, **a_kwargs)
+    if function.__doc__ and not parser.description:
+        parser.description = function.__doc__
     parser.set_defaults(function=function)
 
 
@@ -143,8 +148,7 @@ def add_commands(parser, functions, namespace=None, title=None,
     for func in functions:
         # XXX we could add multiple aliases here but it's a bit of a hack
         cmd_name = getattr(func, ATTR_ALIAS, func.__name__.replace('_','-'))
-        cmd_help = func.__doc__
-        command_parser = subparsers.add_parser(cmd_name, help=cmd_help)
+        command_parser = subparsers.add_parser(cmd_name)
         set_default_command(command_parser, func)
 
 
