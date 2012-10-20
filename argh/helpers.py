@@ -158,17 +158,9 @@ def dispatch_command(function, *args, **kwargs):
 
     This::
 
-        @command
-        def foo():
-            return 1
-
         dispatch_command(foo)
 
     ...is a shortcut for::
-
-        @command
-        def foo():
-            return 1
 
         parser = ArghParser()
         parser.set_default_command(foo)
@@ -196,23 +188,9 @@ def dispatch_commands(functions, *args, **kwargs):
 
     This::
 
-        @command
-        def foo():
-            return 1
-
-        def bar(args):
-            return 1
-
         dispatch_commands([foo, bar])
 
     ...is a shortcut for::
-
-        @command
-        def foo():
-            return 1
-
-        def bar(args):
-            return 1
 
         parser = ArgumentParser()
         parser.add_commands(parser, [foo, bar])
