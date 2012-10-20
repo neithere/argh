@@ -45,11 +45,8 @@ What if we need multiple commands? Easy::
     def load(path, format='json'):
         print loaders[format].load(path)
 
-    p = ArghParser()
-    p.add_commands([load, dump])
-
     if __name__ == '__main__':
-        p.dispatch()
+        dispatch_commands([load, dump])
 
 And then call your script like this::
 
@@ -63,8 +60,8 @@ The examples above raise some questions, including:
 
 * why the ``@command`` decorator for just one of the two functions?
 * do ``return`` and ``print`` behave equally?
-* what's the difference between ``dispatch_command()`` from one example
-  and the more complex version from another one?
+* what's the difference between ``dispatch_command()``
+  and ``dispatch_commands()``? What's going on under the hood?
 
 Then, you'll want to provide help per command and per argument; to specify
 aliases, data types, namespaces and...
@@ -172,6 +169,10 @@ a namespace "www". This is the resulting command-line interface::
     $ ./prog.py load prancing_ponies.json
     $ ./prog.py www serve-rest
     $ ./prog.py www serve --port 6060 --noreload
+
+There's also a shortcut :func:`~argh.helpers.dispatch_commands` which isn't as
+flexible as the full version described above but helps reduce the code in many
+cases.  Please refer to the API documentation for details.
 
 Single-command application
 --------------------------

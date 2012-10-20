@@ -33,7 +33,8 @@ if PY3:
 
 __all__ = [
     'ArghParser', 'add_commands', 'autocomplete', 'confirm', 'dispatch',
-    'dispatch_command', 'set_default_command', 'wrap_errors'
+    'dispatch_command', 'dispatch_commands', 'set_default_command',
+    'wrap_errors'
 ]
 
 
@@ -169,9 +170,9 @@ def dispatch_command(function, *args, **kwargs):
         def foo():
             return 1
 
-        parser = ArgumentParser()
-        set_default_command(parser, foo)
-        dispatch(parser)
+        parser = ArghParser()
+        parser.set_default_command(foo)
+        parser.dispatch()
 
     This function can also be used as a decorator. Here's a more or less
     sensible example::
@@ -184,9 +185,43 @@ def dispatch_command(function, *args, **kwargs):
             return args.name
 
     """
-    parser = argparse.ArgumentParser()
-    set_default_command(parser, function)
-    dispatch(parser, *args, **kwargs)
+    parser = ArghParser()
+    parser.set_default_command(function)
+    parser.dispatch(*args, **kwargs)
+
+
+def dispatch_commands(functions, *args, **kwargs):
+    """ A wrapper for :func:`dispatch` that creates a parser, adds commands to
+    the parser and dispatches them.
+
+    This::
+
+        @command
+        def foo():
+            return 1
+
+        def bar(args):
+            return 1
+
+        dispatch_commands([foo, bar])
+
+    ...is a shortcut for::
+
+        @command
+        def foo():
+            return 1
+
+        def bar(args):
+            return 1
+
+        parser = ArgumentParser()
+        parser.add_commands(parser, [foo, bar])
+        parser.dispatch(parser)
+
+    """
+    parser = ArghParser()
+    parser.add_commands(functions)
+    parser.dispatch(*args, **kwargs)
 
 
 def dispatch(parser, argv=None, add_help_command=True, encoding=None,

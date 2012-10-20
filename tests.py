@@ -9,7 +9,7 @@ import argparse
 import argh.helpers
 from argh import (
     alias, ArghParser, arg, command, CommandError, dispatch_command,
-    plain_signature, wrap_errors
+    dispatch_commands, plain_signature, wrap_errors
 )
 from argh import completion
 
@@ -295,6 +295,7 @@ class DefaultCommandTestCase(BaseArghTestCase):
 
 
 class DispatchCommandTestCase(BaseArghTestCase):
+    "Tests for :func:`argh.helpers.dispatch_command`"
 
     def _dispatch_and_capture(self, func, command_string, **kwargs):
         if isinstance(command_string, string_types):
@@ -333,6 +334,53 @@ class DispatchCommandTestCase(BaseArghTestCase):
 
         self.assert_cmd_returns(main, '', b('1\n'))
         self.assert_cmd_returns(main, '--foo 2', b('2\n'))
+
+
+class DispatchCommandsTestCase(BaseArghTestCase):
+    "Tests for :func:`argh.helpers.dispatch_commands`"
+
+    def _dispatch_and_capture(self, funcs, command_string, **kwargs):
+        if isinstance(command_string, string_types):
+            args = command_string.split()
+        else:
+            args = command_string
+
+        io = BytesIO()
+        if 'output_file' not in kwargs:
+            kwargs['output_file'] = io
+
+        result = dispatch_commands(funcs, args, **kwargs)
+
+        if kwargs.get('output_file') is None:
+            return result
+        else:
+            io.seek(0)
+            return io.read()
+
+    def assert_cmd_returns(self, funcs, command_string, expected_result, **kwargs):
+        """Executes given command using given parser and asserts that it prints
+        given value.
+        """
+        try:
+            result = self._dispatch_and_capture(funcs, command_string, **kwargs)
+        except SystemExit as error:
+            self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
+                command_string, error))
+        self.assertEqual(result, expected_result)
+
+    def test_dispatch_commands_shortcut(self):
+
+        @arg('-x', default=1)
+        def foo(args):
+            return args.x
+
+        @arg('-y', default=2)
+        def bar(args):
+            return args.y
+
+        self.assert_cmd_returns([foo, bar], 'foo', b('1\n'))
+        self.assert_cmd_returns([foo, bar], 'foo -x 5', b('5\n'))
+        self.assert_cmd_returns([foo, bar], 'bar', b('2\n'))
 
 
 class ConfirmTestCase(unittest.TestCase):
