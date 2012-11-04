@@ -22,7 +22,7 @@
 
 import os
 from setuptools import setup
-from _version import version
+from argh import __version__
 
 
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
@@ -34,7 +34,7 @@ setup(
     long_description = readme,
 
     # technical info
-    version  = version,
+    version  = __version__,
     packages = ['argh'],
     requires = ['python (>= 2.5)', 'argparse (>=1.1)'],
     provides = ['argh'],

@@ -25,3 +25,5 @@ API reference
 from .exceptions import *
 from .helpers import *
 from .decorators import *
+
+__version__ = '0.16.0'
