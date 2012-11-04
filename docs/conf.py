@@ -17,7 +17,7 @@ import sys, os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('..'))
-from _version import version as full_version
+from argh import __version__ as full_version
 
 # -- General configuration -----------------------------------------------------
 
