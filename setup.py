@@ -22,7 +22,14 @@
 
 import os
 from setuptools import setup
-from argh import __version__
+
+#
+# NOTE: keep in sync with argh.__version__ !
+#
+# (importing `__version__` from `argh` would trigger a cascading import
+#  of `argparse`; but Python < 2.7 ships without argparse.)
+#
+ARGH_VERSION = '0.17.1'    # = argh.__version__
 
 
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
@@ -34,7 +41,7 @@ setup(
     long_description = readme,
 
     # technical info
-    version  = __version__,
+    version  = ARGH_VERSION,
     packages = ['argh'],
     requires = ['python (>= 2.5)', 'argparse (>=1.1)'],
     provides = ['argh'],
