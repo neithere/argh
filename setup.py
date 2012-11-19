@@ -48,7 +48,7 @@ setup(
 
     # copyright
     author   = 'Andrey Mikhaylenko',
-    author_email = 'andy@neithere.net',
+    author_email = 'neithere@gmail.com',
     license  = 'GNU Lesser General Public License (LGPL), Version 3',
 
     # more info
