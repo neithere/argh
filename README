@@ -97,16 +97,18 @@ Here's the discussion group:
 Real-life usage
 ---------------
 
-Among applications that use `argh` are Tool_, OrgTool_, Watchdog_, Poni_, Pyg_
-and more. Well, there's probably no need to keep a complete and up-to-date
-list. Still, please let me know anyway if you use `argh` in your project. I'll
-be glad to know. :-)
+Among applications that use `argh` are Tool_, OrgTool_, Watchdog_, Poni_, Pyg_,
+Barman_ and more. Well, there's probably no need to keep a complete
+and up-to-date list.
+Still, please let me know anyway if you use `argh` in your project.
+I'll be glad to know. :-)
 
 .. _Tool: http://pypi.python.org/pypi/tool
 .. _OrgTool: http://pypi.python.org/pypi/orgtool
 .. _Watchdog: https://github.com/gorakhargosh/watchdog/
 .. _Poni: https://github.com/melor/poni/commit/14e8ccbb50e9e17b95a2f2a0d2cd0af5d90ca22b
 .. _Pyg: https://github.com/rubik/pyg/commit/a201de1d70536e7e4637a6079f03174b7b493ffa
+.. _Barman: http://pgbarman.org
 
 Licensing
 ---------
