@@ -21,18 +21,31 @@
 
 
 import os
-from setuptools import setup
 
+# Why distutils?
 #
-# NOTE: keep in sync with argh.__version__ !
-#
-# (importing `__version__` from `argh` would trigger a cascading import
-#  of `argparse`; but Python < 2.7 ships without argparse.)
-#
-ARGH_VERSION = '0.17.1'    # = argh.__version__
+# We could bundle distribute_setup.py and call it as recommended:
+#   http://packages.python.org/distribute/using.html
+# However, `distribute` seems to break PyPy (at least 1.6 thru 1.9).
+# So we'll simply fall back to plain distutils.
+try:
+    from setuptools import setup
+except:
+    from distutils.core import setup
+
+# Importing `__version__` from `argh` would trigger a cascading import
+# of `argparse`. We need to avoid this as Python < 2.7 ships without argparse.
+__version__ = None
+with open('argh/__init__.py') as f:
+    for line in f:
+        if line.startswith('__version__'):
+            exec(line)
+            break
+assert __version__, 'argh.__version__ must be imported correctly'
 
 
 readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
+
 
 setup(
     # overview
@@ -41,10 +54,11 @@ setup(
     long_description = readme,
 
     # technical info
-    version  = ARGH_VERSION,
+    version  = __version__,
     packages = ['argh'],
-    requires = ['python (>= 2.5)', 'argparse (>=1.1)'],
     provides = ['argh'],
+    requires = ['python(>=2.5)', 'argparse(>=1.1)'],
+    install_requires = ['argparse>=1.1'],    # for Python 2.6 (no bundled argparse; setuptools is likely to exist)
 
     # copyright
     author   = 'Andrey Mikhaylenko',

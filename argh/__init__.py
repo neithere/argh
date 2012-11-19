@@ -26,4 +26,4 @@ from .exceptions import *
 from .helpers import *
 from .decorators import *
 
-__version__ = '0.17.1'    # = setup.py:ARGH_VERSION  (keep in sync!)
+__version__ = '0.17.2'
