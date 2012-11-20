@@ -1,6 +1,6 @@
 The "Argh" project was originally developed by:
 
-  * Andrey Mikhaylenko <andy@neithere.net>
+  * Andrey Mikhaylenko <neithere@gmail.com>
 
 ...and here is an inevitably incomplete list of contributors, i.e.
 people who have submitted patches, reported bugs, added translations
@@ -12,6 +12,7 @@ and generally made Models better:
   * Hannu Valtonen (Debian package)
   * Georges Dubus (Python3 support fixes)
   * Roman Ovchinnikov (Debian package)
+  * thethomasw (Python2.6 bug reports)
   * you? :)
 
 Patches, ideas and any feedback is highly appreciated.
