@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import re
 from argh.six import (
     PY3, BytesIO, StringIO, u, string_types, text_type, binary_type,
     iteritems
@@ -126,7 +127,15 @@ class BaseArghTestCase(unittest.TestCase):
         except SystemExit as error:
             self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
                 command_string, error))
-        self.assertEqual(result, expected_result)
+
+        if isinstance(expected_result, re._pattern_type):
+            self.assertRegex(result, expected_result)
+        else:
+            self.assertEqual(result, expected_result)
+
+    def assert_cmd_regex(self, command_string, pattern, **kwargs):
+        return self.assert_cmd_returns(command_string, re.compile(pattern),
+                                       **kwargs)
 
     def assert_cmd_exits(self, command_string, message_regex=None):
         "When a command forces exit, it *may* fail, but may just print help."
@@ -159,7 +168,12 @@ class ArghTestCase(BaseArghTestCase):
         sys.argv = _argv
 
     def test_no_command(self):
-        self.assert_cmd_fails('', 'too few arguments')
+        if sys.version_info < (3,3):
+            # Python before 3.3 exits with an error
+            self.assert_cmd_fails('', 'too few arguments')
+        else:
+            # Python since 3.3 returns a help message and doesn't exit
+            self.assert_cmd_regex('', 'usage:')
 
     def test_invalid_choice(self):
         self.assert_cmd_fails('whatchamacallit', '^invalid choice')
@@ -178,15 +192,40 @@ class ArghTestCase(BaseArghTestCase):
 
     def test_bare_namespace(self):
         "A command can be resolved to a function, not a namespace."
-        self.assert_cmd_fails('greet', 'too few arguments')
-        self.assert_cmd_fails('greet --name=world', 'too few arguments')
+
+        # without arguments
+
+        if sys.version_info < (3,3):
+            # Python before 3.3 exits with an error
+            self.assert_cmd_fails('greet', 'too few arguments')
+        else:
+            # Python since 3.3 returns a help message and doesn't exit
+            self.assert_cmd_regex('greet', 'usage:')
+
+        # with an argument
+
+        if sys.version_info < (3,3):
+            # Python before 3.3 exits with a less informative error
+            self.assert_cmd_fails('greet --name=world', 'too few arguments')
+        else:
+            # Python since 3.3 exits with a more informative error
+            self.assert_cmd_fails('greet --name=world',
+                                  'unrecognized arguments: --name=world')
 
     def test_namespaced_function(self):
         "A subcommand is resolved to a function."
         self.assert_cmd_returns('greet hello', 'Hello world!\n')
         self.assert_cmd_returns('greet hello --name=John', 'Hello John!\n')
         self.assert_cmd_fails('greet hello John', 'unrecognized arguments')
-        self.assert_cmd_fails('greet howdy --name=John', 'too few arguments')
+
+        if sys.version_info < (3,3):
+            # Python before 3.3 exits with a less informative error
+            missing_arg_regex = 'too few arguments'
+        else:
+            # Python since 3.3 exits with a more informative error
+            missing_arg_regex = 'the following arguments are required: buddy'
+
+        self.assert_cmd_fails('greet howdy --name=John', missing_arg_regex)
         self.assert_cmd_returns('greet howdy John', 'Howdy John?\n')
 
     def test_alias(self):
