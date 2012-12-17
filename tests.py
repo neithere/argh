@@ -17,11 +17,12 @@ from argh import completion
 
 
 def make_IO():
-    # NOTE: this is according to sys.stdout
+    "Returns a file object of the same type as `sys.stdout`."
     if PY3:
         return StringIO()
     else:
         return BytesIO()
+
 
 class DebugArghParser(ArghParser):
     "(does not print stuff to stderr on exit)"
