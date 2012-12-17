@@ -17,7 +17,8 @@ import locale
 import sys
 from types import GeneratorType
 
-from argh.six import b, u, string_types, text_type, BytesIO, PY3
+from argh.six import (b, u, string_types, binary_type, text_type,
+                      BytesIO, StringIO, PY3)
 from argh.exceptions import CommandError
 from argh.utils import get_subparsers
 from argh.completion import autocomplete
@@ -279,7 +280,7 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
     if output_file is None:
         # user wants a string; we create an internal temporary file-like object
         # and will return its contents as a string
-        f = BytesIO()
+        f = StringIO() if PY3 else BytesIO()
     else:
         # normally this is stdout; can be any file
         f = output_file
@@ -288,12 +289,12 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         # print the line as soon as it is generated to ensure that it is
         # displayed to the user before anything else happens, e.g.
         # raw_input() is called
-        output = _encode(line, f, encoding)
-        output = '' if output is None else output
+
+        output = _encode(line, f, encoding) or ''
         f.write(output)
         if not raw_output:
             # in most cases user wants on message per line
-            f.write(b('\n'))
+            f.write('\n')
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
@@ -304,19 +305,43 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
 def _encode(line, output_file, encoding=None):
     """Converts given string to given encoding. If no encoding is specified, it
     is determined from terminal settings or, if none, from system settings.
+
+    .. note:: Compatibility
+
+       :Python 2.x:
+           `sys.stdout` is a file-like object that accepts `str` (bytes)
+           and breaks when `unicode` is passed to `sys.stdout.write()`.
+       :Python 3.x:
+           `sys.stdout` is a `_io.TextIOWrapper` instance that accepts `str`
+           (unicode) and breaks on `bytes`.
+
+       In Python 2.x arbitrary types are coerced to `unicode` and then to `str`.
+
+       In Python 3.x all types are coerced to `str` with the exception
+       for `bytes` which is **not allowed** to avoid confusion.
+
     """
-    # Convert string to Unicode
     if not isinstance(line, text_type):
+        if PY3 and isinstance(line, binary_type):
+            # in Python 3.x we require Unicode, period.
+            raise TypeError('Binary comand output is not supported '
+                            'in Python 3.x')
+
+        # in Python 2.x we accept bytes and convert them to Unicode.
         try:
             line = text_type(line)
         except UnicodeDecodeError:
             line = b(line).decode('utf-8')
+
+    if PY3:
+        return line
 
     # Choose output encoding
     if not encoding:
         # choose between terminal's and system's preferred encodings
         if output_file.isatty():
             encoding = getattr(output_file, 'encoding', None)
+
         encoding = encoding or locale.getpreferredencoding()
 
     # Convert string from Unicode to the output encoding
@@ -443,7 +468,9 @@ def confirm(action, default=None, skip=False):
             False: ('y','N'),
         }
         y, n = defaults[default]
-        prompt = u('{action}? ({y}/{n})').format(**locals()).encode('utf-8')
+        prompt = u('{action}? ({y}/{n})').format(**locals())
+        if not PY3:
+            prompt = prompt.encode('utf-8')
         choice = None
         try:
             if default is None:
