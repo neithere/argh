@@ -23,12 +23,13 @@ __all__ = ['ArghParser']
 
 
 class ArghParser(argparse.ArgumentParser):
-    """An :class:`ArgumentParser` subclass which adds a couple of convenience
+    """ A subclass of :class:`ArgumentParser` with a couple of convenience
     methods.
 
     There is actually no need to subclass the parser. The methods are but
-    wrappers for stand-alone functions :func:`add_commands` ,
-    :func:`autocomplete` and :func:`dispatch`.
+    wrappers for stand-alone functions :func:`~argh.assembling.add_commands`,
+    :func:`~argh.completion.autocomplete` and
+    :func:`~argh.dispatching.dispatch`.
     """
     def set_default_command(self, *args, **kwargs):
         "Wrapper for :func:`set_default_command`."

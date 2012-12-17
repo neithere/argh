@@ -171,7 +171,8 @@ def command(func):
 
 
 def wrap_errors(*exceptions):
-    """Decorator. Wraps given exceptions into :class:`CommandError`. Usage::
+    """Decorator. Wraps given exceptions into
+    :class:`~argh.exceptions.CommandError`. Usage::
 
         @arg('-x')
         @arg('-y')

@@ -6,8 +6,8 @@ Tutorial
 can be mixed. It is always possible to declare a command with the highest
 possible (and least flexible) layer — the :func:`~argh.decorators.command`
 decorator — and then tune the behaviour with any of the lower layers:
-:func:`~argh.decorators.arg`, :func:`~argh.helpers.add_commands`,
-:func:`~argh.helpers.dispatch` or directly via the `argparse` API.
+:func:`~argh.decorators.arg`, :func:`~argh.assembling.add_commands`,
+:func:`~argh.dispatching.dispatch` or directly via the `argparse` API.
 
 Dive in
 -------
@@ -149,7 +149,7 @@ Then add the web-related commands (note the difference)::
 
 We have just created a couple of *subcommands* under the namespace "www". The
 `title` keyword is for documentation purposes (see
-:func:`~argh.helpers.add_commands` documentation).
+:func:`~argh.assembling.add_commands` documentation).
 
 The last thing is to actually parse the arguments and call the relevant command
 (function) when our module is called as a script::
@@ -170,9 +170,9 @@ a namespace "www". This is the resulting command-line interface::
     $ ./prog.py www serve-rest
     $ ./prog.py www serve --port 6060 --noreload
 
-There's also a shortcut :func:`~argh.helpers.dispatch_commands` which isn't as
-flexible as the full version described above but helps reduce the code in many
-cases.  Please refer to the API documentation for details.
+There's also a shortcut :func:`~argh.dispatching.dispatch_commands` which
+isn't as flexible as the full version described above but helps reduce
+the code in many cases.  Please refer to the API documentation for details.
 
 Single-command application
 --------------------------
@@ -180,8 +180,8 @@ Single-command application
 There are cases when the application performs a single task and it perfectly
 maps to a single command. The method above would require the user to type a
 command like ``check_mail.py check --now`` while ``check_mail.py --now`` would
-suffice. In such cases :func:`~argh.helpers.add_commands` should be replaced with
-:func:`~argh.helpers.set_default_command`::
+suffice. In such cases :func:`~argh.assembling.add_commands` should be replaced
+with :func:`~argh.assembling.set_default_command`::
 
     def main(args):
         return 1
@@ -189,7 +189,7 @@ suffice. In such cases :func:`~argh.helpers.add_commands` should be replaced wit
     parser = ArghParser()
     parser.set_default_command(main)
 
-There's also a nice shortcut :func:`~argh.helpers.dispatch_command`.
+There's also a nice shortcut :func:`~argh.dispatching.dispatch_command`.
 Please refer to the API documentation for details.
 
 Subparsers
@@ -349,9 +349,9 @@ output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
             return item
 
 `Argh` will wrap this exception and choose the right way to display its
-message (depending on how :func:`~argh.helpers.dispatch` was called).
+message (depending on how :func:`~argh.dispatching.dispatch` was called).
 
-The decorator :func:`~argh.helpers.wrap_errors` reduces the code even further::
+The decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 
     @arg('key')
     @wrap_errors(KeyError)        # catch KeyError, show the message, hide traceback

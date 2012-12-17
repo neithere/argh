@@ -36,8 +36,9 @@ def dispatch(parser, argv=None, add_help_command=True,
 
     The target function should expect one positional argument: the
     :class:`argparse.Namespace` object. However, if the function is decorated with
-    :func:`plain_signature`, the positional and named arguments from the
-    namespace object are passed to the function instead of the object itself.
+    :func:`~argh.decorators.plain_signature`, the positional and named
+    arguments from the namespace object are passed to the function instead
+    of the object itself.
 
     :param parser:
 
@@ -70,10 +71,10 @@ def dispatch(parser, argv=None, add_help_command=True,
         will also need to install it.)
 
     By default the exceptions are not wrapped and will propagate. The only
-    exception that is always wrapped is :class:`CommandError` which is
-    interpreted as an expected event so the traceback is hidden. You can also
-    mark arbitrary exceptions as "wrappable" by using the :func:`wrap_errors`
-    decorator.
+    exception that is always wrapped is :class:`~argh.exceptions.CommandError`
+    which is interpreted as an expected event so the traceback is hidden.
+    You can also mark arbitrary exceptions as "wrappable" by using the
+    :func:`~argh.decorators.wrap_errors` decorator.
     """
     if completion:
         autocomplete(parser)
@@ -127,10 +128,12 @@ def dispatch(parser, argv=None, add_help_command=True,
 def _execute_command(args):
     """Asserts that ``args.function`` is present and callable. Tries different
     approaches to calling the function (with an `argparse.Namespace` object or
-    with ordinary signature). Yields the results line by line. If CommandError
-    is raised, its message is appended to the results (i.e. yielded by the
-    generator as a string). All other exceptions propagate unless marked as
-    wrappable by :func:`wrap_errors`.
+    with ordinary signature). Yields the results line by line.
+
+    If :class:`~argh.exceptions.CommandError` is raised, its message is
+    appended to the results (i.e. yielded by the generator as a string).
+    All other exceptions propagate unless marked as wrappable
+    by :func:`wrap_errors`.
     """
     assert hasattr(args, 'function') and hasattr(args.function, '__call__')
 
@@ -188,16 +191,7 @@ def dispatch_command(function, *args, **kwargs):
         parser.set_default_command(foo)
         parser.dispatch()
 
-    This function can also be used as a decorator. Here's a more or less
-    sensible example::
-
-        from argh import *
-
-        @dispatch_command
-        @arg('name')
-        def main(args):
-            return args.name
-
+    This function can be also used as a decorator.
     """
     parser = argparse.ArgumentParser()
     set_default_command(parser, function)

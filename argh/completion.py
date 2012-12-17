@@ -12,9 +12,7 @@
 Shell completion
 ================
 
-... warning::
-
-    TODO: describe how to install
+.. warning:: TODO: describe how to install
 
 """
 import sys
@@ -27,6 +25,8 @@ __all__ = ['autocomplete']
 
 
 def autocomplete(root_parser):
+    """ Prints shell completion choices.
+    """
     if not os.environ.get('ARGH_AUTO_COMPLETE'):
         return
 
@@ -41,6 +41,7 @@ def autocomplete(root_parser):
     print(' '.join(choices))
 
     sys.exit(1)
+
 
 def _autocomplete(root_parser, cwords, cword):
 

@@ -25,13 +25,13 @@ __all__ = ['set_default_command', 'add_commands']
 def set_default_command(parser, function):
     """ Sets default command (i.e. a function) for given parser.
 
-    If `parser.description` is empty and the function has a docstring, it is
-    used as the description.
+    If `parser.description` is empty and the function has a docstring,
+    it is used as the description.
 
     .. note::
 
        An attempt to set default command to a parser which already has
-       subparsers (e.g. added with :func:`~argh.helpers.add_commands`)
+       subparsers (e.g. added with :func:`~argh.assembling.add_commands`)
        results in a `RuntimeError`.
 
     """
@@ -56,13 +56,13 @@ def add_commands(parser, functions, namespace=None, title=None,
 
     :param functions:
 
-        a list of functions. A subparser is created for each of them. If the
-        function is decorated with :func:`arg`, the arguments are passed to
-        the :class:`~argparse.ArgumentParser.add_argument` method of the
-        parser. See also :func:`dispatch` for requirements concerning function
-        signatures. The command name is inferred from the function name. Note
-        that the underscores in the name are replaced with hyphens, i.e.
-        function name "foo_bar" becomes command name "foo-bar".
+        a list of functions. A subparser is created for each of them.
+        If the function is decorated with :func:`~argh.decorators.arg`, the
+        arguments are passed to :class:`argparse.ArgumentParser.add_argument`.
+        See also :func:`~argh.dispatching.dispatch` for requirements
+        concerning function signatures. The command name is inferred from the
+        function name. Note that the underscores in the name are replaced with
+        hyphens, i.e. function name "foo_bar" becomes command name "foo-bar".
 
     :param namespace:
 
@@ -93,8 +93,9 @@ def add_commands(parser, functions, namespace=None, title=None,
 
         This function modifies the parser object. Generally side effects are
         bad practice but we don't seem to have any choice as ArgumentParser is
-        pretty opaque. You may prefer :class:`ArghParser.add_commands` for a
-        bit more predictable API.
+        pretty opaque.
+        You may prefer :class:`~argh.helpers.ArghParser.add_commands` for a bit
+        more predictable API.
 
     .. admonition:: Design flaw
 
@@ -109,7 +110,7 @@ def add_commands(parser, functions, namespace=None, title=None,
     .. note::
 
        An attempt to add commands to a parser which already has a default
-       function (e.g. added with :func:`~argh.helpers.set_default_command`)
+       function (e.g. added with :func:`~argh.assembling.set_default_command`)
        results in a `RuntimeError`.
 
     """

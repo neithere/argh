@@ -9,33 +9,8 @@
 #  Software Foundation. See the file README for copying conditions.
 #
 """
-API reference
-=============
-
-.. automodule:: argh.decorators
-   :members:
-
-.. automodule:: argh.assembling
-   :members:
-
-.. automodule:: argh.dispatching
-   :members:
-
-.. automodule:: argh.completion
-   :members:
-
-.. automodule:: argh.helpers
-   :members:
-
-.. automodule:: argh.exceptions
-   :members:
-
-.. automodule:: argh.io
-   :members:
-
-.. automodule:: argh.utils
-   :members:
-
+Argh
+====
 """
 from .assembling import *
 from .decorators import *
