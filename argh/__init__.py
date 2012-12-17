@@ -26,4 +26,4 @@ from .exceptions import *
 from .helpers import *
 from .decorators import *
 
-__version__ = '0.17.2'
+__version__ = '0.18.0'
