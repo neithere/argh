@@ -14,10 +14,11 @@ Command decorators
 """
 import inspect
 
-from argh.constants import ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE
+from argh.constants import (ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE,
+                            ATTR_WRAPPED_EXCEPTIONS)
 
 
-__all__ = ['alias', 'arg', 'command', 'plain_signature']
+__all__ = ['alias', 'arg', 'command', 'plain_signature', 'wrap_errors']
 
 
 def alias(name):
@@ -36,18 +37,6 @@ def alias(name):
         return func
     return wrapper
 
-def generator(func):  # pragma: no cover
-    """
-    .. warning::
-
-        This decorator is deprecated. Argh can detect whether the result is a
-        generator without explicit decorators.
-
-    """
-    import warnings
-    warnings.warn('Decorator @generator is deprecated. The commands can still '
-                  'return generators.', DeprecationWarning)
-    return func
 
 def plain_signature(func):
     """Marks that given function expects ordinary positional and named
@@ -75,6 +64,7 @@ def plain_signature(func):
     """
     setattr(func, ATTR_NO_NAMESPACE, True)
     return func
+
 
 def arg(*args, **kwargs):
     """Declares an argument for given function. Does not register the function
@@ -127,6 +117,7 @@ def arg(*args, **kwargs):
         return func
     return wrapper
 
+
 def command(func):
     """Infers argument specifications from given function. Wraps the function
     in the :func:`plain_signature` decorator and also in an :func:`arg`
@@ -177,3 +168,21 @@ def command(func):
             func = arg(a)(func)
 
     return func
+
+
+def wrap_errors(*exceptions):
+    """Decorator. Wraps given exceptions into :class:`CommandError`. Usage::
+
+        @arg('-x')
+        @arg('-y')
+        @wrap_errors(AssertionError)
+        def foo(args):
+            assert args.x or args.y, 'x or y must be specified'
+
+    If the assertion fails, its message will be correctly printed and the
+    stack hidden. This helps to avoid boilerplate code.
+    """
+    def wrapper(func):
+        setattr(func, ATTR_WRAPPED_EXCEPTIONS, exceptions)
+        return func
+    return wrapper

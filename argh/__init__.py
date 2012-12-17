@@ -15,15 +15,34 @@ API reference
 .. automodule:: argh.decorators
    :members:
 
+.. automodule:: argh.assembling
+   :members:
+
+.. automodule:: argh.dispatching
+   :members:
+
+.. automodule:: argh.completion
+   :members:
+
 .. automodule:: argh.helpers
    :members:
 
 .. automodule:: argh.exceptions
    :members:
 
-"""
-from .exceptions import *
-from .helpers import *
-from .decorators import *
+.. automodule:: argh.output
+   :members:
 
-__version__ = '0.18.0'
+.. automodule:: argh.utils
+   :members:
+
+"""
+from .assembling import *
+from .decorators import *
+from .dispatching import *
+from .exceptions import *
+from .interaction import *
+from .helpers import *
+
+
+__version__ = '0.19.0'
