@@ -16,7 +16,7 @@ backup=()
 options=(!emptydirs)
 install=
 source=(http://pypi.python.org/packages/source/a/argh/argh-${pkgver}.tar.gz)
-md5sums=('3f24eb284cbd636262425c06f58a1633')
+md5sums=('ef5633f181c48d7a28eead049814791e')
 
 build() {
    cd "${srcdir}/argh-${pkgver}"

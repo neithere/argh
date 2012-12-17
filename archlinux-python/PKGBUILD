@@ -2,7 +2,7 @@
 # Contributor: Fabien Devaux <fdev31 at gmail dot com>
 pkgname=python-argh
 pkgver=0.18.0
-pkgrel=1
+pkgrel=2       # XXX don't forget to reset on version change
 pkgdesc="A simple argparse wrapper"
 arch=(any)
 url="http://bitbucket.org/neithere/argh/"
@@ -16,7 +16,7 @@ backup=()
 options=(!emptydirs)
 install=
 source=(http://pypi.python.org/packages/source/a/argh/argh-${pkgver}.tar.gz)
-md5sums=('3f24eb284cbd636262425c06f58a1633')
+md5sums=('ef5633f181c48d7a28eead049814791e')
 
 build() {
    cd "${srcdir}/argh-${pkgver}"
