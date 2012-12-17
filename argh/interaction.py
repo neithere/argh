@@ -12,33 +12,11 @@
 Interaction
 ===========
 """
-from argh.six import text_type, PY3
+from argh.six import text_type
+from argh.io import safe_input
 
 
 __all__ = ['confirm']
-
-
-def _input(prompt):
-    # this function can be mocked up in tests
-    if PY3:
-        return input(prompt)
-    else:
-        return raw_input(prompt)
-
-
-def safe_input(prompt):
-    "Prompts user for input. Correctly handles prompt message encoding."
-
-    if PY3:
-        if not isinstance(prompt, text_type):
-            # Python 3.x: bytes →  unicode
-            prompt = prompt.decode()
-    else:
-        if isinstance(prompt, text_type):
-            # Python 2.x: unicode →  bytes
-            prompt = prompt.encode('utf-8')
-
-    return _input(prompt)
 
 
 def confirm(action, default=None, skip=False):

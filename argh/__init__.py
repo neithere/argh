@@ -30,7 +30,7 @@ API reference
 .. automodule:: argh.exceptions
    :members:
 
-.. automodule:: argh.output
+.. automodule:: argh.io
    :members:
 
 .. automodule:: argh.utils

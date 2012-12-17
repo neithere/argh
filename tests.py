@@ -434,7 +434,7 @@ class DispatchCommandsTestCase(BaseArghTestCase):
 
 class ConfirmTestCase(unittest.TestCase):
     def assert_choice(self, choice, expected, **kwargs):
-        argh.interaction._input = lambda prompt: choice
+        argh.io._input = lambda prompt: choice
         self.assertEqual(argh.confirm('test', **kwargs), expected)
 
     def test_simple(self):
@@ -461,7 +461,7 @@ class ConfirmTestCase(unittest.TestCase):
 
         def raw_input_mock(prompt):
             prompts.append(prompt)
-        argh.interaction._input = raw_input_mock
+        argh.io._input = raw_input_mock
 
         argh.confirm('do smth')
         self.assertEqual(prompts[-1], 'do smth? (y/n)')
@@ -480,7 +480,7 @@ class ConfirmTestCase(unittest.TestCase):
         def raw_input_mock(prompt):
             if not PY3:
                 assert isinstance(prompt, binary_type)
-        argh.interaction._input = raw_input_mock
+        argh.io._input = raw_input_mock
         argh.confirm(u('привет'))
 
 

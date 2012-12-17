@@ -22,7 +22,7 @@ from argh.constants import ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
-from argh import output
+from argh import io
 
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands']
@@ -113,10 +113,10 @@ def dispatch(parser, argv=None, add_help_command=True,
         # displayed to the user before anything else happens, e.g.
         # raw_input() is called
 
-        output.dump(line, f)
+        io.dump(line, f)
         if not raw_output:
             # in most cases user wants on message per line
-            output.dump('\n', f)
+            io.dump('\n', f)
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
