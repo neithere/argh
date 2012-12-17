@@ -10,7 +10,7 @@
 #
 """
 Dispatching
-==========
+===========
 """
 import argparse
 import sys
@@ -22,13 +22,13 @@ from argh.constants import ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
-from argh.output import encode_output
+from argh import output
 
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands']
 
 
-def dispatch(parser, argv=None, add_help_command=True, encoding=None,
+def dispatch(parser, argv=None, add_help_command=True,
              completion=True, pre_call=None, output_file=sys.stdout,
              raw_output=False, namespace=None):
     """Parses given list of arguments using given parser, calls the relevant
@@ -53,11 +53,6 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         if `True`, converts first positional argument "help" to a keyword
         argument so that ``help foo`` becomes ``foo --help`` and displays usage
         information for "foo". Default is `True`.
-
-    :param encoding:
-
-        Encoding for results. If `None`, it is determined automatically.
-        Default is `None`.
 
     :param output_file:
 
@@ -118,11 +113,10 @@ def dispatch(parser, argv=None, add_help_command=True, encoding=None,
         # displayed to the user before anything else happens, e.g.
         # raw_input() is called
 
-        output = encode_output(line, f, encoding) or ''
-        f.write(output)
+        output.dump(line, f)
         if not raw_output:
             # in most cases user wants on message per line
-            f.write('\n')
+            output.dump('\n', f)
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
