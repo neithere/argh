@@ -14,12 +14,31 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
+import argparse
+
 from argh.six import string_types
-from argh.constants import ATTR_ALIAS, ATTR_ARGS
+from argh.constants import ATTR_ALIASES, ATTR_ARGS, ATTR_NAME
 from argh.utils import get_subparsers
 
 
-__all__ = ['set_default_command', 'add_commands']
+__all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
+
+
+def _check_support_aliases():
+    p = argparse.ArgumentParser()
+    s = p.add_subparsers()
+    try:
+        s.add_parser('x', aliases=[])
+    except TypeError:
+        return False
+    else:
+        return True
+
+
+SUPPORTS_ALIASES = _check_support_aliases()
+""" Calculated on load. If `True`, current version of argparse supports
+alternative command names (can be set via :func:`~argh.decorators.aliases`).
+"""
 
 
 def set_default_command(parser, function):
@@ -132,7 +151,18 @@ def add_commands(parser, functions, namespace=None, title=None,
             'if provided along with a namespace.')
 
     for func in functions:
-        # XXX we could add multiple aliases here but it's a bit of a hack
-        cmd_name = getattr(func, ATTR_ALIAS, func.__name__.replace('_','-'))
-        command_parser = subparsers.add_parser(cmd_name)
+        # use explicitly defined name; if none, use function name (a_b → a-b)
+        cmd_name = getattr(func, ATTR_NAME,
+                           func.__name__.replace('_','-'))
+        parser_kwargs = {}
+
+        # add command help from function's docstring
+        parser_kwargs['help'] = func.__doc__
+
+        # try adding aliases for command name
+        if SUPPORTS_ALIASES:
+            parser_kwargs['aliases'] = getattr(func, ATTR_ALIASES, [])
+
+        # create and set up the parser for this command
+        command_parser = subparsers.add_parser(cmd_name, **parser_kwargs)
         set_default_command(command_parser, func)

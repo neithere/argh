@@ -8,9 +8,10 @@ from argh.six import (
 )
 import unittest2 as unittest
 import argparse
+import argh
 import argh.helpers
 from argh import (
-    alias, ArghParser, arg, command, CommandError, dispatch_command,
+    aliases, ArghParser, arg, command, CommandError, dispatch_command,
     dispatch_commands, plain_signature, wrap_errors
 )
 from argh import completion
@@ -53,8 +54,12 @@ def hello(args):
 def howdy(args):
     return u('Howdy {0}?').format(args.buddy)
 
-@alias('aliased')
-def do_aliased(args):
+@aliases('alias2', 'alias3')
+def alias1(args):
+    return 'ok'
+
+@argh.name('new-name')
+def orig_name(args):
     return 'ok'
 
 @arg('foo')
@@ -157,7 +162,7 @@ class BaseArghTestCase(unittest.TestCase):
 
 class ArghTestCase(BaseArghTestCase):
     commands = {
-        None: [echo, plain_echo, foo_bar, do_aliased,
+        None: [echo, plain_echo, foo_bar, alias1, orig_name,
                whiner_plain, whiner_iterable, custom_namespace],
         'greet': [hello, howdy]
     }
@@ -229,8 +234,15 @@ class ArghTestCase(BaseArghTestCase):
         self.assert_cmd_fails('greet howdy --name=John', missing_arg_regex)
         self.assert_cmd_returns('greet howdy John', 'Howdy John?\n')
 
-    def test_alias(self):
-        self.assert_cmd_returns('aliased', 'ok\n')
+    def test_explicit_cmd_name(self):
+        self.assert_cmd_fails('orig-name', 'invalid choice')
+        self.assert_cmd_returns('new-name', 'ok\n')
+
+    def test_aliases(self):
+        if argh.assembling.SUPPORTS_ALIASES:
+            self.assert_cmd_returns('alias1', 'ok\n')
+            self.assert_cmd_returns('alias2', 'ok\n')
+            self.assert_cmd_returns('alias3', 'ok\n')
 
     def test_help_alias(self):
         self.assert_cmd_doesnt_fail('--help')

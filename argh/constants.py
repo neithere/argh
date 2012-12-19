@@ -13,8 +13,11 @@
 # Names of function attributes where Argh stores command behaviour
 #
 
-# explicit command name
-ATTR_ALIAS = 'argh_alias'
+# explicit command name (differing from function name)
+ATTR_NAME = 'argh_name'
+
+# alternative command names
+ATTR_ALIASES = 'argh_aliases'
 
 # declared arguments
 ATTR_ARGS = 'argh_args'

@@ -14,32 +14,78 @@ Command decorators
 """
 import inspect
 
-from argh.constants import (ATTR_ALIAS, ATTR_ARGS, ATTR_NO_NAMESPACE,
-                            ATTR_WRAPPED_EXCEPTIONS)
+from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
+                            ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS)
 
 
-__all__ = ['alias', 'arg', 'command', 'plain_signature', 'wrap_errors']
+__all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
+           'wrap_errors']
 
 
-def alias(name):
-    """Defines the command name for given function. The alias will be used for
-    the command instead of the original function name.
+def named(new_name):
+    """
+    Defines command name for given function, replacing its original name
+    that would be implicitly . Usage::
+
+        @named('load')
+        def do_load_some_stuff_and_keep_the_original_function_name(args):
+            ...
+
+    The resulting command will be available only as ``load``.  To add aliases
+    without renaming the command, check :func:`aliases`.
+
+    .. versionadded:: 0.19
+    """
+    def wrapper(func):
+        setattr(func, ATTR_NAME, new_name)
+        return func
+    return wrapper
+
+
+def alias(new_name):
+    """
+    .. deprecated:: 0.19
+       Use :func:`named` or :func:`aliases` instead.
+    """
+    import warnings
+    warnings.warn('Decorator @alias() is deprecated. '
+                  'Use @aliases() or @named() instead.', DeprecationWarning)
+    return named(new_name)
+
+
+def aliases(*names):
+    """
+    Defines alternative command name(s) for given function (along with its
+    original name). Usage::
+
+        @aliases('co', 'check')
+        def checkout(args):
+            ...
+
+    The resulting command will be available as ``checkout``, ``check`` and ``co``.
 
     .. note::
 
-        Currently `argparse` does not support (multiple) aliases so this
-        decorator actually *renames* the command. However, in the future it may
-        accept multiple names for the same command.
+       This decorator only works with a recent version of argparse (see `Python
+       issue 9324`_ and `Python rev 4c0426`_).  Such version ships with
+       **Python 3.2+** and may be available in other environments as a separate
+       package.  Argh does not issue warnings and simply ignores aliases if
+       they are not supported.  See :attr:`~argh.assembling.SUPPORTS_ALIASES`.
 
+       .. _Python issue 9324: http://bugs.python.org/issue9324
+       .. _Python rev 4c0426: http://hg.python.org/cpython/rev/4c0426261148/
+
+    .. versionadded:: 0.19
     """
     def wrapper(func):
-        setattr(func, ATTR_ALIAS, name)
+        setattr(func, ATTR_ALIASES, names)
         return func
     return wrapper
 
 
 def plain_signature(func):
-    """Marks that given function expects ordinary positional and named
+    """
+    Marks that given function expects ordinary positional and named
     arguments instead of a single positional argument (a
     :class:`argparse.Namespace` object). Useful for existing functions that you
     don't want to alter nor write wrappers by hand. Usage::
@@ -67,7 +113,8 @@ def plain_signature(func):
 
 
 def arg(*args, **kwargs):
-    """Declares an argument for given function. Does not register the function
+    """
+    Declares an argument for given function. Does not register the function
     anywhere, nor does it modify the function in any way. The signature is
     exactly the same as that of :meth:`argparse.ArgumentParser.add_argument`,
     only some keywords are not required if they can be easily guessed.
@@ -119,7 +166,8 @@ def arg(*args, **kwargs):
 
 
 def command(func):
-    """Infers argument specifications from given function. Wraps the function
+    """
+    Infers argument specifications from given function. Wraps the function
     in the :func:`plain_signature` decorator and also in an :func:`arg`
     decorator for every actual argument the function expects.
 
@@ -171,7 +219,8 @@ def command(func):
 
 
 def wrap_errors(*exceptions):
-    """Decorator. Wraps given exceptions into
+    """
+    Decorator. Wraps given exceptions into
     :class:`~argh.exceptions.CommandError`. Usage::
 
         @arg('-x')
