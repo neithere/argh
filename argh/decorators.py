@@ -14,6 +14,7 @@ Command decorators
 """
 import inspect
 
+from argh.six import PY3
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS)
 
@@ -186,13 +187,37 @@ def command(func):
         def foo(args):
             yield args.bar, args.quux
 
+    .. note::
+
+       Python 3 supports annotations (:pep:`3107`). They can be used with Argh
+       as help messages for arguments. These declarations are equivalent::
+
+           @arg('--dry-run', help='do not modify the database', default=False)
+           def save(args):
+               ...
+
+           @command
+           def save(dry_run : 'do not modify the database' = False):
+               ...
+
+
+       Only strings are considered help messages.
+
     """
     # @plain_signature
     func = plain_signature(func)
 
-    # @arg (inferred)
-    spec = inspect.getargspec(func)
+    if PY3:
+        spec = inspect.getfullargspec(func)
+    else:
+        spec = inspect.getargspec(func)
+
     kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+    if PY3:
+        annotations = dict((k,v) for k,v in func.__annotations__.items()
+                           if isinstance(v, str))
+    else:
+        annotations = {}
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
@@ -201,21 +226,23 @@ def command(func):
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
 
-    for a in reversed(spec.args):  # @arg adds specs in reversed order
-        if a in kwargs:
-            if a.startswith(conflicting_opts):
-                func = arg(
-                    '--{0}'.format(a),
-                    default=kwargs.get(a)
-                )(func)
+    for name in reversed(spec.args):  # @arg adds specs in reversed order
+        kw = {}
+        arg_help = annotations.get(name)
+        if arg_help:
+            kw.update(help=arg_help)
+        if name in kwargs:
+            short_name = '-{0}'.format(name[0])
+            long_name = '--{0}'.format(name)
+            kw.update(default=kwargs.get(name))
+            if name.startswith(conflicting_opts):
+                deco = arg(long_name, **kw)
             else:
-                func = arg(
-                    '-{0}'.format(a[0]),
-                    '--{0}'.format(a),
-                    default=kwargs.get(a)
-                )(func)
+                deco = arg(short_name, long_name, **kw)
         else:
-            func = arg(a)(func)
+            deco = arg(name, **kw)
+
+        func = deco(func)
 
     return func
 

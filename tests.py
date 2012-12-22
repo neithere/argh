@@ -547,3 +547,22 @@ class CompletionTestCase(unittest.TestCase):
     def test_inner_options(self):
         self.assert_choices('fixtures dump', '--format')
         self.assert_choices('silly echo', 'text')
+
+
+class AnnotationsTestCase(BaseArghTestCase):
+    """ Tests for extracting argument documentation from function annotations
+    (Python 3 only).
+    """
+    def test_annotation(self):
+        if PY3:
+            # Yes, this looks horrible, but otherwise Python 2 would die
+            # screaming and cursing as it is completely in the dark about the
+            # sweetness of annotations and we can but tolerate its ignorance.
+            ns = {}
+            exec("def cmd(foo : 'quux' = 123):\n    'bar'\npass", None, ns)
+            cmd = ns['cmd']
+            p = ArghParser()
+            p.set_default_command(command(cmd))
+            prog_help = p.format_help()
+            assert 'quux' in prog_help
+
