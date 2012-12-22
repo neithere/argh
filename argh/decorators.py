@@ -24,8 +24,10 @@ __all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
 
 def named(new_name):
     """
-    Defines command name for given function, replacing its original name
-    that would be implicitly . Usage::
+    Sets given string as command name instead of the function name.
+    The string is used verbatim without further processing.
+
+    Usage::
 
         @named('load')
         def do_load_some_stuff_and_keep_the_original_function_name(args):
