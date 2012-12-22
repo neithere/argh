@@ -16,7 +16,8 @@ import inspect
 
 from argh.six import PY3
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
-                            ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS)
+                            ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS,
+                            ATTR_INFER_ARGS_FROM_SIGNATURE)
 
 
 __all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
@@ -88,30 +89,17 @@ def aliases(*names):
 
 def plain_signature(func):
     """
-    Marks that given function expects ordinary positional and named
-    arguments instead of a single positional argument (a
-    :class:`argparse.Namespace` object). Useful for existing functions that you
-    don't want to alter nor write wrappers by hand. Usage::
-
-        @arg('filename')
-        @plain_signature
-        def load(filename):
-            print json.load(filename)
-
-    ...is equivalent to::
-
-        @arg('filename')
-        def load(args):
-            print json.load(args.filename)
-
-    Whether to use the decorator is mostly a matter of taste. Without it the
-    function declaration is more :term:`DRY`. However, it's a pure time saver
-    when it comes to exposing a whole lot of existing :term:`CLI`-agnostic code
-    as a set of commands. You don't need to rename each and every agrument all
-    over the place; instead, you just stick this and some :func:`arg`
-    decorators on top of every function and that's it.
+    .. deprecated:: 0.20
+       Use :func:`command` instead.
     """
+    import warnings
+    warnings.warn('@plain_signature is deprecated, use @command instead',
+                  DeprecationWarning)
+
+    # cannot be replaced with ATTR_INFER_ARGS_FROM_SIGNATURE
+    # until the latter allows merging explicit @arg declarations
     setattr(func, ATTR_NO_NAMESPACE, True)
+
     return func
 
 
@@ -204,46 +192,7 @@ def command(func):
        Only strings are considered help messages.
 
     """
-    # @plain_signature
-    func = plain_signature(func)
-
-    if PY3:
-        spec = inspect.getfullargspec(func)
-    else:
-        spec = inspect.getargspec(func)
-
-    kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
-    if PY3:
-        annotations = dict((k,v) for k,v in func.__annotations__.items()
-                           if isinstance(v, str))
-    else:
-        annotations = {}
-
-    # define the list of conflicting option strings
-    # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args]
-    char_counts = dict((char, chars.count(char)) for char in set(chars))
-    conflicting_opts = tuple(char for char in char_counts
-                             if 1 < char_counts[char])
-
-    for name in reversed(spec.args):  # @arg adds specs in reversed order
-        kw = {}
-        arg_help = annotations.get(name)
-        if arg_help:
-            kw.update(help=arg_help)
-        if name in kwargs:
-            short_name = '-{0}'.format(name[0])
-            long_name = '--{0}'.format(name)
-            kw.update(default=kwargs.get(name))
-            if name.startswith(conflicting_opts):
-                deco = arg(long_name, **kw)
-            else:
-                deco = arg(short_name, long_name, **kw)
-        else:
-            deco = arg(name, **kw)
-
-        func = deco(func)
-
+    setattr(func, ATTR_INFER_ARGS_FROM_SIGNATURE, True)
     return func
 
 
