@@ -58,7 +58,7 @@ def howdy(args):
 def alias1(args):
     return 'ok'
 
-@argh.name('new-name')
+@argh.named('new-name')
 def orig_name(args):
     return 'ok'
 
