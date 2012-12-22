@@ -76,7 +76,7 @@ def _get_args_from_signature(function):
             okwargs.update(help=annotations.get(name))
 
         if name in kwargs:
-            okwargs = {'default': kwargs.get(name)}
+            okwargs.update(default=kwargs.get(name))
             oargs = ['-{0}'.format(name[0]), '--{0}'.format(name)]
             if name.startswith(conflicting_opts):
                 # remove short name
