@@ -25,5 +25,8 @@ ATTR_ARGS = 'argh_args'
 # forcing plain signature (instead of an argparse.Namespace object)
 ATTR_NO_NAMESPACE = 'argh_no_namespace'
 
+# forcing plain signature (instead of an argparse.Namespace object)
+ATTR_INFER_ARGS_FROM_SIGNATURE = 'argh_infer_args_from_signature'
+
 # list of exception classes that should be wrapped and printed as results
 ATTR_WRAPPED_EXCEPTIONS = 'argh_wrap_errors'

@@ -298,6 +298,20 @@ class CommandDecoratorTests(BaseArghTestCase):
         self.assert_cmd_returns('command-deco-issue12 --fox 3', 'foo 1, fox 3\n')
         self.assert_cmd_fails('command-deco-issue12 -f 3', 'unrecognized')
 
+    def test_declared_vs_inferred(self):
+        """ @command cannot be combined with @arg.
+        """
+        self.parser = DebugArghParser('PROG')
+
+        @command
+        @arg('bogus-argument')
+        def cmd(foo=123):
+            return foo
+
+        with self.assertRaises(RuntimeError) as cm:
+            self.parser.set_default_command(cmd)
+        assert 'cannot be combined' in str(cm.exception)
+
 
 class ErrorWrappingTestCase(BaseArghTestCase):
     commands = {None: [strict_hello, strict_hello_smart]}

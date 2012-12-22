@@ -15,9 +15,12 @@ Assembling
 Functions and classes to properly assemble your commands in a parser.
 """
 import argparse
+from itertools import chain
+import inspect
 
 from argh.six import string_types
-from argh.constants import ATTR_ALIASES, ATTR_ARGS, ATTR_NAME
+from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
+                            ATTR_INFER_ARGS_FROM_SIGNATURE)
 from argh.utils import get_subparsers
 
 
@@ -41,6 +44,39 @@ alternative command names (can be set via :func:`~argh.decorators.aliases`).
 """
 
 
+def _get_args_from_signature(function):
+    if not getattr(function, ATTR_INFER_ARGS_FROM_SIGNATURE, False):
+        return
+
+    # @arg (inferred)
+    spec = inspect.getargspec(function)
+    kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+
+    # define the list of conflicting option strings
+    # (short forms, i.e. single-character ones)
+    chars = [a[0] for a in spec.args]
+    char_counts = dict((char, chars.count(char)) for char in set(chars))
+    conflicting_opts = tuple(char for char in char_counts
+                             if 1 < char_counts[char])
+
+    for a in spec.args:
+        oargs = []
+        okwargs = {}
+
+        if a in kwargs:
+            if a.startswith(conflicting_opts):
+                oargs = ['--{0}'.format(a)]
+                okwargs = {'default': kwargs.get(a)}
+            else:
+                oargs = ['-{0}'.format(a[0]),
+                         '--{0}'.format(a)]
+                okwargs = {'default': kwargs.get(a)}
+        else:
+            oargs = [a]
+        yield oargs, okwargs
+
+
+
 def set_default_command(parser, function):
     """ Sets default command (i.e. a function) for given parser.
 
@@ -58,8 +94,27 @@ def set_default_command(parser, function):
         raise RuntimeError('Cannot set default command to a parser with '
                            'existing subparsers')
 
-    for a_args, a_kwargs in getattr(function, ATTR_ARGS, []):
+    declared_args = getattr(function, ATTR_ARGS, [])
+    inferred_args = list(_get_args_from_signature(function))
+    if inferred_args:
+        #
+        # TODO issue #20
+        #
+        # 1) make sure that all declared args are subset of inferred ones, i.e:
+        #   @arg('foo')    maps to  func(foo)
+        #   @arg('--bar')  maps to  func(bar=...)
+        #
+        # 2) merge declared args into inferred (e.g. help=...)
+        #
+        if declared_args:
+            raise RuntimeError('@arg cannot be combined with @command '
+                               'in {0}'.format(function.__name__))
+
+    command_args = inferred_args or declared_args
+
+    for a_args, a_kwargs in command_args:
         parser.add_argument(*a_args, **a_kwargs)
+
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__
     parser.set_defaults(function=function)

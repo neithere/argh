@@ -12,10 +12,9 @@
 Command decorators
 ==================
 """
-import inspect
-
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
-                            ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS)
+                            ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS,
+                            ATTR_INFER_ARGS_FROM_SIGNATURE)
 
 
 __all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
@@ -87,30 +86,17 @@ def aliases(*names):
 
 def plain_signature(func):
     """
-    Marks that given function expects ordinary positional and named
-    arguments instead of a single positional argument (a
-    :class:`argparse.Namespace` object). Useful for existing functions that you
-    don't want to alter nor write wrappers by hand. Usage::
-
-        @arg('filename')
-        @plain_signature
-        def load(filename):
-            print json.load(filename)
-
-    ...is equivalent to::
-
-        @arg('filename')
-        def load(args):
-            print json.load(args.filename)
-
-    Whether to use the decorator is mostly a matter of taste. Without it the
-    function declaration is more :term:`DRY`. However, it's a pure time saver
-    when it comes to exposing a whole lot of existing :term:`CLI`-agnostic code
-    as a set of commands. You don't need to rename each and every agrument all
-    over the place; instead, you just stick this and some :func:`arg`
-    decorators on top of every function and that's it.
+    .. deprecated:: 0.20
+       Use :func:`command` instead.
     """
+    import warnings
+    warnings.warn('@plain_signature is deprecated, use @command instead',
+                 DeprecationWarning)
+
+    # cannot be replaced with ATTR_INFER_ARGS_FROM_SIGNATURE
+    # until the latter allows merging explicit @arg declarations
     setattr(func, ATTR_NO_NAMESPACE, True)
+
     return func
 
 
@@ -187,36 +173,7 @@ def command(func):
             yield args.bar, args.quux
 
     """
-    # @plain_signature
-    func = plain_signature(func)
-
-    # @arg (inferred)
-    spec = inspect.getargspec(func)
-    kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
-
-    # define the list of conflicting option strings
-    # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args]
-    char_counts = dict((char, chars.count(char)) for char in set(chars))
-    conflicting_opts = tuple(char for char in char_counts
-                             if 1 < char_counts[char])
-
-    for a in reversed(spec.args):  # @arg adds specs in reversed order
-        if a in kwargs:
-            if a.startswith(conflicting_opts):
-                func = arg(
-                    '--{0}'.format(a),
-                    default=kwargs.get(a)
-                )(func)
-            else:
-                func = arg(
-                    '-{0}'.format(a[0]),
-                    '--{0}'.format(a),
-                    default=kwargs.get(a)
-                )(func)
-        else:
-            func = arg(a)(func)
-
+    setattr(func, ATTR_INFER_ARGS_FROM_SIGNATURE, True)
     return func
 
 

@@ -18,7 +18,8 @@ from types import GeneratorType
 
 from argh.six import text_type, BytesIO, StringIO, PY3
 
-from argh.constants import ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS
+from argh.constants import (ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS,
+                            ATTR_INFER_ARGS_FROM_SIGNATURE)
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
@@ -140,7 +141,9 @@ def _execute_command(args):
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
-        if getattr(args.function, ATTR_NO_NAMESPACE, False):
+        infer = getattr(args.function, ATTR_INFER_ARGS_FROM_SIGNATURE, False)
+        infer_deprecated = getattr(args.function, ATTR_NO_NAMESPACE, False)
+        if infer or infer_deprecated:
             # filter the namespace variables so that only those expected by the
             # actual function will pass
             f = args.function
