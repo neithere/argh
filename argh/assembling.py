@@ -103,6 +103,14 @@ def set_default_command(parser, function):
        subparsers (e.g. added with :func:`~argh.assembling.add_commands`)
        results in a `RuntimeError`.
 
+    .. note::
+
+       If there are both explicitly declared arguments (e.g. via
+       :func:`~argh.decorators.arg`) and ones inferred from the function
+       signature (e.g. via :func:`~argh.decorators.command`), declared ones
+       will be merged into inferred ones. If an argument does not conform
+       function signature, `ValueError` is raised.
+
     """
     if parser._subparsers:
         raise RuntimeError('Cannot set default command to a parser with '
