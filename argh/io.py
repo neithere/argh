@@ -10,7 +10,7 @@
 #
 """
 Output Processing
-=================
+~~~~~~~~~~~~~~~~~
 """
 import locale
 

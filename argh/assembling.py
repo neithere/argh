@@ -10,7 +10,7 @@
 #
 """
 Assembling
-==========
+~~~~~~~~~~
 
 Functions and classes to properly assemble your commands in a parser.
 """

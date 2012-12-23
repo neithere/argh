@@ -10,7 +10,7 @@
 #
 """
 Exceptions
-==========
+~~~~~~~~~~
 """
 
 class CommandError(Exception):

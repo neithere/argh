@@ -10,11 +10,8 @@
 #
 """
 Command decorators
-==================
+~~~~~~~~~~~~~~~~~~
 """
-import inspect
-
-from argh.six import PY3
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_INFER_ARGS_FROM_SIGNATURE)

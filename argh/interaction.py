@@ -10,7 +10,7 @@
 #
 """
 Interaction
-===========
+~~~~~~~~~~~
 """
 from argh.six import text_type
 from argh.io import safe_input

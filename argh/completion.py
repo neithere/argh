@@ -10,7 +10,7 @@
 #
 """
 Shell completion
-================
+~~~~~~~~~~~~~~~~
 
 .. warning:: TODO: describe how to install
 
