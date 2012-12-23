@@ -146,8 +146,8 @@ class BaseArghTestCase(unittest.TestCase):
     def assert_cmd_exits(self, command_string, message_regex=None):
         "When a command forces exit, it *may* fail, but may just print help."
         message_regex = text_type(message_regex)  # make sure None -> "None"
-        f = lambda: self.parser.dispatch(command_string.split())
-        self.assertRaisesRegexp(SystemExit, message_regex, f)
+        with self.assertRaisesRegexp(SystemExit, message_regex):
+            self.parser.dispatch(command_string.split())
 
     def assert_cmd_fails(self, command_string, message_regex):
         "exists with a message = fails"
@@ -367,8 +367,8 @@ class CommandDecoratorTests(BaseArghTestCase):
 class ErrorWrappingTestCase(BaseArghTestCase):
     commands = {None: [strict_hello, strict_hello_smart]}
     def test_error_raised(self):
-        f = lambda: self.parser.dispatch(['strict-hello', 'John'])
-        self.assertRaisesRegexp(AssertionError, 'Do it yourself', f)
+        with self.assertRaisesRegexp(AssertionError, 'Do it yourself'):
+            self.parser.dispatch(['strict-hello', 'John'])
 
     def test_error_wrapped(self):
         self.assert_cmd_returns('strict-hello-smart John', 'Do it yourself\n')
@@ -405,7 +405,7 @@ class DefaultCommandTestCase(BaseArghTestCase):
         p = DebugArghParser('PROG')
         p.set_default_command(one)
         with self.assertRaisesRegexp(RuntimeError,
-                               'Cannot add commands to a single-command parser'):
+               'Cannot add commands to a single-command parser'):
             p.add_commands([two])
 
     def test_prevent_conflict_with_subparsers(self):
@@ -415,8 +415,8 @@ class DefaultCommandTestCase(BaseArghTestCase):
         p = DebugArghParser('PROG')
         p.add_commands([one])
         with self.assertRaisesRegexp(RuntimeError,
-                               'Cannot set default command to a parser with '
-                               'existing subparsers'):
+               'Cannot set default command to a parser with '
+               'existing subparsers'):
             p.set_default_command(two)
 
 
