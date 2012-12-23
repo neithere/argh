@@ -153,9 +153,15 @@ def _execute_command(args):
             else:
                 # Python 3
                 expected_args = f.__code__.co_varnames[:f.__code__.co_argcount]
+
+            def _normalize_keys(pairs):
+                return dict((k.replace('-','_'),v) for k,v in pairs)
+            normalized_kwargs = _normalize_keys(args._get_kwargs())
+
             ok_args = [x for x in args._get_args() if x in expected_args]
-            ok_kwargs = dict((k,v) for k,v in args._get_kwargs()
+            ok_kwargs = dict((k,v) for k,v in normalized_kwargs.items()
                              if k in expected_args)
+
             result = args.function(*ok_args, **ok_kwargs)
         else:
             result = args.function(args)

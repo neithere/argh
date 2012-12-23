@@ -278,6 +278,17 @@ class ArghTestCase(BaseArghTestCase):
         self.assert_cmd_returns('custom-namespace', 'foo\n',
                                 namespace=namespace)
 
+    def test_normalized_keys(self):
+        """ Underscores in function args are converted to dashes and back.
+        """
+        @command
+        def cmd(a_b):
+            return a_b
+
+        self.parser = DebugArghParser()
+        self.parser.set_default_command(cmd)
+        self.assert_cmd_returns('hello', 'hello\n')
+
 
 class CommandDecoratorTests(BaseArghTestCase):
     commands = {None: [command_deco, command_deco_issue12]}
