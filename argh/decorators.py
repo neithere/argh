@@ -15,6 +15,7 @@ Command decorators
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_INFER_ARGS_FROM_SIGNATURE)
+from argh.utils import Arg
 
 
 __all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
@@ -147,7 +148,7 @@ def arg(*args, **kwargs):
         # The innermost decorator is called first but appears last in the code.
         # We need to preserve the expected order of positional arguments, so
         # the outermost decorator inserts its value before the innermost's:
-        declared_args.insert(0, (args, kwargs))
+        declared_args.insert(0, Arg(args, kwargs))
         setattr(func, ATTR_ARGS, declared_args)
         return func
     return wrapper

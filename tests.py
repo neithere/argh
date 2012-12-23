@@ -298,19 +298,51 @@ class CommandDecoratorTests(BaseArghTestCase):
         self.assert_cmd_returns('command-deco-issue12 --fox 3', 'foo 1, fox 3\n')
         self.assert_cmd_fails('command-deco-issue12 -f 3', 'unrecognized')
 
-    def test_declared_vs_inferred(self):
-        """ @command cannot be combined with @arg.
+    def test_declared_vs_inferred_merging(self):
+        """ @arg merges into function signature if @command is applied.
         """
-        self.parser = DebugArghParser('PROG')
+        @command
+        @arg('my', help='a moose once bit my sister')
+        @arg('-b', '--brain', help='i am made entirely of wood')
+        def gumby(my, brain=None):
+            return my, brain, 'hurts'
 
+        self.parser = DebugArghParser('PROG')
+        self.parser.set_default_command(gumby)
+
+        help_msg = self.parser.format_help()
+        assert 'a moose once bit my sister' in help_msg
+        assert 'i am made entirely of wood' in help_msg
+
+    def test_declared_vs_inferred_mismatch_positional(self):
+        """ @arg must match function signature if @command is applied.
+        """
         @command
         @arg('bogus-argument')
-        def cmd(foo=123):
-            return foo
+        def confuse_a_cat(vet, funny_things=123):
+            return vet, funny_things
 
-        with self.assertRaises(RuntimeError) as cm:
-            self.parser.set_default_command(cmd)
-        assert 'cannot be combined' in str(cm.exception)
+        self.parser = DebugArghParser('PROG')
+        with self.assertRaises(ValueError) as cm:
+            self.parser.set_default_command(confuse_a_cat)
+        msg = ("Argument bogus-argument does not fit signature "
+               "of function confuse_a_cat: -f/--funny-things, vet")
+        assert msg in str(cm.exception)
+
+    def test_declared_vs_inferred_mismatch_flag(self):
+        """ @arg must match function signature if @command is applied.
+        """
+        @command
+        @arg('--bogus-argument')
+        def confuse_a_cat(vet, funny_things=123):
+            return vet, funny_things
+
+        self.parser = DebugArghParser('PROG')
+        with self.assertRaises(ValueError) as cm:
+            self.parser.set_default_command(confuse_a_cat)
+        msg = ("Argument --bogus-argument does not fit signature "
+               "of function confuse_a_cat: -f/--funny-things, vet")
+        assert msg in str(cm.exception)
 
 
 class ErrorWrappingTestCase(BaseArghTestCase):

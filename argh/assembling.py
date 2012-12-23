@@ -20,7 +20,7 @@ import inspect
 from argh.six import PY3, string_types
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE)
-from argh.utils import get_subparsers
+from argh.utils import Arg, get_subparsers
 
 
 __all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
@@ -68,24 +68,27 @@ def _get_args_from_signature(function):
                              if 1 < char_counts[char])
 
     for name in spec.args:
-        oargs = []
-        okwargs = {}
+        flags = []    # name_or_flags
+        akwargs = {}  # keyword arguments for add_argument()
 
         if name in annotations:
             # help message:  func(a : "b")  ->  add_argument("a", help="b")
-            okwargs.update(help=annotations.get(name))
+            akwargs.update(help=annotations.get(name))
 
         if name in kwargs:
-            okwargs.update(default=kwargs.get(name))
-            oargs = ['-{0}'.format(name[0]), '--{0}'.format(name)]
+            akwargs.update(default=kwargs.get(name))
+            flags = ('-{0}'.format(name[0]), '--{0}'.format(name))
             if name.startswith(conflicting_opts):
                 # remove short name
-                oargs = oargs[1:]
+                flags = flags[1:]
         else:
             # positional argument
-            oargs = [name]
-        yield oargs, okwargs
+            flags = (name,)
 
+        # cmd(foo_bar)  ->  add_argument('foo-bar')
+        flags = tuple(x.replace('_', '-') for x in flags)
+
+        yield Arg(flags=flags, kwargs=akwargs)
 
 
 def set_default_command(parser, function):
@@ -107,19 +110,31 @@ def set_default_command(parser, function):
 
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))
-    if inferred_args:
-        #
-        # TODO issue #20
-        #
-        # 1) make sure that all declared args are subset of inferred ones, i.e:
-        #   @arg('foo')    maps to  func(foo)
-        #   @arg('--bar')  maps to  func(bar=...)
-        #
-        # 2) merge declared args into inferred (e.g. help=...)
-        #
-        if declared_args:
-            raise RuntimeError('@arg cannot be combined with @command '
-                               'in {0}'.format(function.__name__))
+    if inferred_args and declared_args:
+        # We've got a mixture of declared and inferred arguments
+
+        inferred_dict = dict((x.flags, x.kwargs) for x in inferred_args)
+        declared_dict = dict(declared_args)
+
+        for flags, kw in declared_dict.items():
+            # 1) make sure that this declared arg conforms to the function
+            #    signature and therefore only refines an inferred arg:
+            #
+            #      @arg('foo')    maps to  func(foo)
+            #      @arg('--bar')  maps to  func(bar=...)
+            #
+            if flags not in inferred_dict:
+                raise ValueError('Argument {flags} does not fit signature '
+                                 'of function {func}: {sig}'.format(
+                                    flags=', '.join(flags),
+                                    func=function.__name__,
+                                    sig=', '.join('/'.join(x) for x in sorted(inferred_dict))))
+
+            # 2) merge declared args into inferred ones (e.g. help=...)
+            inferred_dict[flags].update(**kw)
+
+        # pack the modified data back into a list
+        inferred_args = [Arg(k,v) for k,v in inferred_dict.items()]
 
     command_args = inferred_args or declared_args
 
