@@ -111,6 +111,11 @@ def set_default_command(parser, function):
        will be merged into inferred ones. If an argument does not conform
        function signature, `ValueError` is raised.
 
+    .. note::
+
+       If the parser was created with ``add_help=True`` (which is by default),
+       option name ``-h`` is silently removed from any argument.
+
     """
     if parser._subparsers:
         raise RuntimeError('Cannot set default command to a parser with '
@@ -147,6 +152,8 @@ def set_default_command(parser, function):
     command_args = inferred_args or declared_args
 
     for a_args, a_kwargs in command_args:
+        if parser.add_help and '-h' in a_args:
+            a_args = [x for x in a_args if x != '-h']
         parser.add_argument(*a_args, **a_kwargs)
 
     if function.__doc__ and not parser.description:

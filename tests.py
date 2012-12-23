@@ -298,7 +298,6 @@ class CommandDecoratorTests(BaseArghTestCase):
         self.assert_cmd_returns('command-deco-issue12 --fox 3', 'foo 1, fox 3\n')
         self.assert_cmd_fails('command-deco-issue12 -f 3', 'unrecognized')
 
-    @unittest.expectedFailure
     def test_regression_issue12_help_flag(self):
         """Issue #12: if an argument starts with "h", e.g. "--host",
         ArgumentError is raised because "--help" is always added by argh
@@ -306,10 +305,17 @@ class CommandDecoratorTests(BaseArghTestCase):
         """
         @command
         def ddos(host='localhost'):
-            print 'so be it!'
+            return 'so be it, {0}!'.format(host)
 
-        self.parser = DebugArghParser('PROG')
+        # no help → no conflict
+        self.parser = DebugArghParser('PROG', add_help=False)
         self.parser.set_default_command(ddos)
+        self.assert_cmd_returns('-h 127.0.0.1', 'so be it, 127.0.0.1!\n')
+
+        # help added → conflict → short name ignored
+        self.parser = DebugArghParser('PROG', add_help=True)
+        self.parser.set_default_command(ddos)
+        self.assert_cmd_fails('-h 127.0.0.1', '')
 
     def test_declared_vs_inferred_merging(self):
         """ @arg merges into function signature if @command is applied.
