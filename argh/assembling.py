@@ -154,7 +154,11 @@ def set_default_command(parser, function):
     for a_args, a_kwargs in command_args:
         if parser.add_help and '-h' in a_args:
             a_args = [x for x in a_args if x != '-h']
-        parser.add_argument(*a_args, **a_kwargs)
+        try:
+            parser.add_argument(*a_args, **a_kwargs)
+        except Exception as e:
+            raise type(e)('cannot add arg {args} to {func}: {msg}'.format(
+                args='/'.join(a_args), func=function.__name__, msg=e))
 
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__

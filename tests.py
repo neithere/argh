@@ -631,3 +631,16 @@ class AnnotationsTestCase(BaseArghTestCase):
             prog_help = p.format_help()
             assert 'quux' in prog_help
 
+
+class AssemblingTests(BaseArghTestCase):
+    def test_command_decorator(self):
+        """The @command decorator creates arguments from function signature.
+        """
+        @arg('x', '--y')
+        def cmd(args):
+            return
+
+        with self.assertRaises(ValueError) as cm:
+            self.parser.set_default_command(cmd)
+        msg = "cannot add arg x/--y to cmd: invalid option string"
+        assert msg in str(cm.exception)
