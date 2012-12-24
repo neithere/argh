@@ -1,4 +1,4 @@
-Agrh, argparse!
+Argh, argparse!
 ===============
 
 Did you ever say "argh" trying to remember the details of `optparse` or
@@ -74,9 +74,9 @@ Links
 
 * `Project home page`_ (Bitbucket)
 * `Documentation`_ (Read the Docs)
-* `Package distribution` (PyPI)
+* `Package distribution`_ (PyPI)
 * Questions, requests, bug reports, etc.:
-  
+
   * `Issue tracker`_
   * `Mailing list`_ (subscribe to get important announcements)
   * Direct e-mail (neithere at gmail com)
@@ -86,7 +86,6 @@ Links
 .. _package distribution: http://pypi.python.org/pypi/argh
 .. _issue tracker: http://bitbucket.org/neithere/argh/issues/
 .. _mailing list: http://groups.google.com/group/argh-users
-
 
 Author
 ------
