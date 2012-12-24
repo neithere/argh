@@ -69,7 +69,7 @@ def dispatch(parser, argv=None, add_help_command=True,
     :param completion:
 
         If `True`, shell tab completion is enabled. Default is `True`. (You
-        will also need to install it.)
+        will also need to install it.)  See :mod:`argh.completion`.
 
     By default the exceptions are not wrapped and will propagate. The only
     exception that is always wrapped is :class:`~argh.exceptions.CommandError`

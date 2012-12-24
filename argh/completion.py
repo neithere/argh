@@ -12,69 +12,57 @@
 Shell completion
 ~~~~~~~~~~~~~~~~
 
-.. warning:: TODO: describe how to install
+Command and argument completion is a great way to reduce the number of
+keystrokes and improve user experience.
 
+To display suggestions when you press :kbd:`tab`, a shell must obtain choices
+from your program.  It calls the program in a specific environment and expects
+it to return a list of relevant choices.
+
+`Argparse` does not support completion out of the box.  However, there are
+3rd-party apps that do the job, such as argcomplete_ and
+python-selfcompletion_.
+
+`Argh` supports only argcomplete_ which doesn't require subclassing
+the parser and monkey-patches it instead.  Combining `Argh`
+with python-selfcompletion_ isn't much harder though: simply use
+`SelfCompletingArgumentParser` instead of vanilla `ArgumentParser`.
+
+See installation details and gotchas in the documentation of the 3rd-party app
+you've chosen for the completion backend.
+
+`Argh` automatically enables completion if argcomplete_ is available
+(see :attr:`COMPLETION_ENABLED`).  If completion is undesirable in given app by
+design, it can be turned off by setting ``completion=False``
+in :func:`argh.dispatching.dispatch`.
+
+Note that you don't *have* to add completion via `Argh`; it doesn't matter
+whether you let it do it for you or use the underlying API.
+
+.. _argcomplete: https://github.com/kislyuk/argcomplete
+.. _python-selfcompletion: https://github.com/dbarnett/python-selfcompletion
 """
-import sys
-import os
 
-from argh.utils import get_subparsers
+COMPLETION_ENABLED = False
+"Dynamically set to `True` on load if argcomplete_ was successfully imported."
+
+try:
+    import argcomplete
+except ImportError:
+    pass
+else:
+    COMPLETION_ENABLED = True
 
 
-__all__ = ['autocomplete']
+__all__ = ['autocomplete', 'COMPLETION_ENABLED']
 
 
-def autocomplete(root_parser):
-    """ Prints shell completion choices.
+def autocomplete(parser):
+    """ Adds support for shell completion by patching given
+    `argparse.ArgumentParser` (sub)class.
     """
-    if not os.environ.get('ARGH_AUTO_COMPLETE'):
-        return
-
-    cwords = os.environ['COMP_WORDS'].split()[1:]
-
-    # this is obviously needed when user edits a word in the middle of the
-    # sentence. We don't support it yet but should:
-    cword = int(os.environ['COMP_CWORD'])
-
-    choices = _autocomplete(root_parser, cwords, cword)
-
-    print(' '.join(choices))
-
-    sys.exit(1)
-
-
-def _autocomplete(root_parser, cwords, cword):
-
-    def _collect_choices(parser, word):
-        for a in parser._actions:
-            if a.choices:
-                for choice in a.choices:
-                    if word:
-                        if choice.startswith(word):
-                            yield choice
-                    else:
-                        yield choice
-
-    choices = []
-
-    # dig into the tree of parsers until we can yield no more choices
-
-    # 1 ['']                      root parser  -> 'help fixtures'
-    # 2 ['', 'fi']                root parser  -> 'fixtures'
-    # 2 ['', 'fixtures']          subparser    -> 'load dump'
-    # 3 ['', 'fixtures', 'lo']    subparser    -> 'load'
-    # 3 ['', 'fixtures', 'load']  subparser    -> ''
-
-    parser = root_parser
-    choices = _collect_choices(parser, '')
-    for word in cwords:
-        # find the subparser and switch to it
-        subparsers = get_subparsers(parser)
-        if not subparsers:
-            break
-        if word in subparsers.choices:
-            parser = subparsers.choices[word]
-            word = ''
-        choices = _collect_choices(parser, word)
-
-    return choices
+    if COMPLETION_ENABLED:
+        argcomplete.autocomplete(parser)
+    else:
+        import warnings
+        warnings.warn('Bash completion not available. Install argcomplete.')
