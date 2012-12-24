@@ -1,10 +1,11 @@
 Agrh, argparse!
 ===============
 
-Did you ever say "argh" trying to remember the details of optparse or argparse
-API? If yes, this package may be useful for you. It provides a very simple
-wrapper for argparse with support for hierarchical commands that can be bound
-to modules or classes. Argparse can do it; argh makes it easy.
+Did you ever say "argh" trying to remember the details of `optparse` or
+`argparse` API?  If yes, this package may be useful for you.
+
+`Argh` provides a wrapper for `argparse`.  `Argparse` is a very powerful tool;
+`argh` just makes it easy to use.
 
 In a nutshell
 -------------
@@ -15,20 +16,22 @@ Here's a list of features that `argh` adds to `argparse`:
   is instantiated;
 * nested commands made easy: no messing with subparsers (though they are of
   course used under the hood);
-* infer agrument type from the default value;
 * infer command name from function name;
+* infer agrument type from the default value;
+* infer argument action from the default value (for booleans);
+* infer arguments from function signature;
 * add an alias root command ``help`` for the ``--help`` argument;
 * enable passing unwrapped arguments to certain functions instead of a
   `argparse.Namespace` object.
 
-`Argh` is fully compatible with `argparse`. You can mix `argh`-agnostic and
-`argh`-aware code. Just keep in mind that `argh.dispatch` does some extra
-work that a custom dispatcher may not do.
+`Argh` is fully compatible with `argparse`.  You can mix `argh`-agnostic and
+`argh`-aware code.  Just keep in mind that the dispatcher does some extra work
+that a custom dispatcher may not do.
 
 Installation
 ------------
 
-    $  pip install argh
+    $ pip install argh
 
 Example
 -------
@@ -66,49 +69,31 @@ The powerful API of `argparse` is also available::
 
 The approaches can be safely combined.
 
-Dependencies
-------------
+Links
+-----
 
-`Argh` runs on Python 2.x (since 2.6, incl. PyPy) and 3.x. See documentation.
+* `Project home page`_ (Bitbucket)
+* `Documentation`_ (Read the Docs)
+* `Package distribution` (PyPI)
+* Questions, requests, bug reports, etc.:
+  
+  * `Issue tracker`_
+  * `Mailing list`_ (subscribe to get important announcements)
+  * Direct e-mail (neithere at gmail com)
 
-Documentation
--------------
+.. _project home page: http://bitbucket.org/neithere/argh/
+.. _documentation: http://argh.readthedocs.org
+.. _package distribution: http://pypi.python.org/pypi/argh
+.. _issue tracker: http://bitbucket.org/neithere/argh/issues/
+.. _mailing list: http://groups.google.com/group/argh-users
 
-See the `complete documentation`_ for details. If it's not complete enough,
-feel free to ask your questions or submit bugs.
-
-.. _complete documentation: http://packages.python.org/argh
 
 Author
 ------
 
-Originally written by Andrey Mikhaylenko in 2010.
+Developed by Andrey Mikhaylenko since 2010.
 
-See file `AUTHORS` for a complete authors list of this application.
-
-Please feel free to submit patches, report bugs or request features:
-
-    http://bitbucket.org/neithere/argh/issues/
-
-Here's the discussion group:
-
-    http://groups.google.com/group/argh-users
-
-Real-life usage
----------------
-
-Among applications that use `argh` are Tool_, OrgTool_, Watchdog_, Poni_, Pyg_,
-Barman_ and more. Well, there's probably no need to keep a complete
-and up-to-date list.
-Still, please let me know anyway if you use `argh` in your project.
-I'll be glad to know. :-)
-
-.. _Tool: http://pypi.python.org/pypi/tool
-.. _OrgTool: http://pypi.python.org/pypi/orgtool
-.. _Watchdog: https://github.com/gorakhargosh/watchdog/
-.. _Poni: https://github.com/melor/poni/commit/14e8ccbb50e9e17b95a2f2a0d2cd0af5d90ca22b
-.. _Pyg: https://github.com/rubik/pyg/commit/a201de1d70536e7e4637a6079f03174b7b493ffa
-.. _Barman: http://pgbarman.org
+See file `AUTHORS` for a complete list of contributors to this library.
 
 Licensing
 ---------
