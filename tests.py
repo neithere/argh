@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-
+"""
+Argh Tests
+~~~~~~~~~~
+"""
 import sys
 import re
 from argh.six import (
     PY3, BytesIO, StringIO, u, string_types, text_type, binary_type,
     iteritems
 )
-import unittest2 as unittest
+import pytest
 import argparse
 import argh
 import argh.helpers
@@ -96,10 +99,10 @@ def command_deco_issue12(foo=1, fox=2):
     yield u('foo {0}, fox {1}').format(foo, fox)
 
 
-class BaseArghTestCase(unittest.TestCase):
+class BaseArghTestCase(object):
     commands = {}
 
-    def setUp(self):
+    def setup_method(self, method):
         self.parser = DebugArghParser('PROG')
         for namespace, commands in iteritems(self.commands):
             self.parser.add_commands(commands, namespace=namespace)
@@ -134,19 +137,20 @@ class BaseArghTestCase(unittest.TestCase):
                 command_string, error))
 
         if isinstance(expected_result, re._pattern_type):
-            self.assertRegex(result, expected_result)
+            assert expected_result.match(result), \
+                '/{0}/ !~ {1!r}'.format(expected_result.pattern, result)
         else:
-            self.assertEqual(result, expected_result)
+            assert expected_result == result
 
     def assert_cmd_regex(self, command_string, pattern, **kwargs):
         return self.assert_cmd_returns(command_string, re.compile(pattern),
                                        **kwargs)
 
-    def assert_cmd_exits(self, command_string, message_regex=None):
+    def assert_cmd_exits(self, command_string, message_regex=''):
         "When a command forces exit, it *may* fail, but may just print help."
-        message_regex = text_type(message_regex)  # make sure None -> "None"
-        with self.assertRaisesRegexp(SystemExit, message_regex):
+        with pytest.raises(SystemExit) as excinfo:
             self.parser.dispatch(command_string.split())
+        assert re.match(message_regex, text_type(excinfo.value))
 
     def assert_cmd_fails(self, command_string, message_regex):
         "exists with a message = fails"
@@ -159,7 +163,7 @@ class BaseArghTestCase(unittest.TestCase):
         self.assert_cmd_exits(command_string)
 
 
-class ArghTestCase(BaseArghTestCase):
+class TestArgh(BaseArghTestCase):
     commands = {
         None: [echo, plain_echo, foo_bar, alias1, orig_name,
                whiner_plain, whiner_iterable, custom_namespace],
@@ -289,7 +293,7 @@ class ArghTestCase(BaseArghTestCase):
         self.assert_cmd_returns('hello', 'hello\n')
 
 
-class CommandDecoratorTests(BaseArghTestCase):
+class TestCommandDecorator(BaseArghTestCase):
     commands = {None: [command_deco, command_deco_issue12]}
 
     def test_command_decorator(self):
@@ -384,11 +388,11 @@ class CommandDecoratorTests(BaseArghTestCase):
             return vet, funny_things
 
         self.parser = DebugArghParser('PROG')
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as excinfo:
             self.parser.set_default_command(confuse_a_cat)
         msg = ("confuse_a_cat: argument bogus-argument does not fit "
                "function signature: -f/--funny-things, vet")
-        assert msg in str(cm.exception), cm.exception
+        assert msg in str(excinfo.value)
 
     def test_declared_vs_inferred_mismatch_flag(self):
         """ @arg must match function signature if @command is applied.
@@ -399,25 +403,26 @@ class CommandDecoratorTests(BaseArghTestCase):
             return vet, funny_things
 
         self.parser = DebugArghParser('PROG')
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as excinfo:
             self.parser.set_default_command(confuse_a_cat)
         msg = ("confuse_a_cat: argument --bogus-argument does not fit "
                "function signature: -f/--funny-things, vet")
-        assert msg in str(cm.exception), cm.exception
+        assert msg in str(excinfo.value)
 
 
-class ErrorWrappingTestCase(BaseArghTestCase):
+class TestErrorWrapping(BaseArghTestCase):
     commands = {None: [strict_hello, strict_hello_smart]}
     def test_error_raised(self):
-        with self.assertRaisesRegexp(AssertionError, 'Do it yourself'):
+        with pytest.raises(AssertionError) as excinfo:
             self.parser.dispatch(['strict-hello', 'John'])
+        assert re.match('Do it yourself', text_type(excinfo.value))
 
     def test_error_wrapped(self):
         self.assert_cmd_returns('strict-hello-smart John', 'Do it yourself\n')
         self.assert_cmd_returns('strict-hello-smart world', 'Hello world\n')
 
 
-class NoCommandsTestCase(BaseArghTestCase):
+class TestNoCommands(BaseArghTestCase):
     "Edge case: no commands defined"
     commands = {}
     def test_no_command(self):
@@ -425,8 +430,8 @@ class NoCommandsTestCase(BaseArghTestCase):
         self.assert_cmd_returns('', self.parser.format_usage()+'\n')
 
 
-class DefaultCommandTestCase(BaseArghTestCase):
-    def setUp(self):
+class TestDefaultCommand(BaseArghTestCase):
+    def setup_method(self, method):
         self.parser = DebugArghParser('PROG')
 
         @arg('--foo', default=1)
@@ -446,9 +451,10 @@ class DefaultCommandTestCase(BaseArghTestCase):
 
         p = DebugArghParser('PROG')
         p.set_default_command(one)
-        with self.assertRaisesRegexp(RuntimeError,
-               'Cannot add commands to a single-command parser'):
+        with pytest.raises(RuntimeError) as excinfo:
             p.add_commands([two])
+        assert re.match('Cannot add commands to a single-command parser',
+                        text_type(excinfo.value))
 
     def test_prevent_conflict_with_subparsers(self):
         def one(args): return 1
@@ -456,13 +462,14 @@ class DefaultCommandTestCase(BaseArghTestCase):
 
         p = DebugArghParser('PROG')
         p.add_commands([one])
-        with self.assertRaisesRegexp(RuntimeError,
-               'Cannot set default command to a parser with '
-               'existing subparsers'):
+        with pytest.raises(RuntimeError) as excinfo:
             p.set_default_command(two)
+        assert re.match('Cannot set default command to a parser with '
+                        'existing subparsers',
+                        text_type(excinfo.value))
 
 
-class DispatchCommandTestCase(BaseArghTestCase):
+class TestDispatchCommand(BaseArghTestCase):
     "Tests for :func:`argh.helpers.dispatch_command`"
 
     def _dispatch_and_capture(self, func, command_string, **kwargs):
@@ -492,7 +499,7 @@ class DispatchCommandTestCase(BaseArghTestCase):
         except SystemExit as error:
             self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
                 command_string, error))
-        self.assertEqual(result, expected_result)
+        assert expected_result == result
 
     def test_dispatch_command_shortcut(self):
 
@@ -504,7 +511,7 @@ class DispatchCommandTestCase(BaseArghTestCase):
         self.assert_cmd_returns(main, '--foo 2', '2\n')
 
 
-class DispatchCommandsTestCase(BaseArghTestCase):
+class TestDispatchCommands(BaseArghTestCase):
     "Tests for :func:`argh.helpers.dispatch_commands`"
 
     def _dispatch_and_capture(self, funcs, command_string, **kwargs):
@@ -534,7 +541,7 @@ class DispatchCommandsTestCase(BaseArghTestCase):
         except SystemExit as error:
             self.fail('Argument parsing failed for {0!r}: {1!r}'.format(
                 command_string, error))
-        self.assertEqual(result, expected_result)
+        assert expected_result == result
 
     def test_dispatch_commands_shortcut(self):
 
@@ -551,10 +558,10 @@ class DispatchCommandsTestCase(BaseArghTestCase):
         self.assert_cmd_returns([foo, bar], 'bar', '2\n')
 
 
-class ConfirmTestCase(unittest.TestCase):
+class TestConfirm(object):
     def assert_choice(self, choice, expected, **kwargs):
         argh.io._input = lambda prompt: choice
-        self.assertEqual(argh.confirm('test', **kwargs), expected)
+        assert argh.confirm('test', **kwargs) == expected
 
     def test_simple(self):
         self.assert_choice('', None)
@@ -583,16 +590,16 @@ class ConfirmTestCase(unittest.TestCase):
         argh.io._input = raw_input_mock
 
         argh.confirm('do smth')
-        self.assertEqual(prompts[-1], 'do smth? (y/n)')
+        assert prompts[-1] == 'do smth? (y/n)'
 
         argh.confirm('do smth', default=None)
-        self.assertEqual(prompts[-1], 'do smth? (y/n)')
+        assert prompts[-1] == 'do smth? (y/n)'
 
         argh.confirm('do smth', default=True)
-        self.assertEqual(prompts[-1], 'do smth? (Y/n)')
+        assert prompts[-1] == 'do smth? (Y/n)'
 
         argh.confirm('do smth', default=False)
-        self.assertEqual(prompts[-1], 'do smth? (y/N)')
+        assert prompts[-1] == 'do smth? (y/N)'
 
     def test_encoding(self):
         "Unicode and bytes are accepted as prompt message"
@@ -603,7 +610,7 @@ class ConfirmTestCase(unittest.TestCase):
         argh.confirm(u('привет'))
 
 
-class AnnotationsTestCase(BaseArghTestCase):
+class TestAnnotations(BaseArghTestCase):
     """ Tests for extracting argument documentation from function annotations
     (Python 3 only).
     """
@@ -621,7 +628,7 @@ class AnnotationsTestCase(BaseArghTestCase):
             assert 'quux' in prog_help
 
 
-class AssemblingTests(BaseArghTestCase):
+class TestAssembling(BaseArghTestCase):
     def test_command_decorator(self):
         """The @command decorator creates arguments from function signature.
         """
@@ -629,7 +636,7 @@ class AssemblingTests(BaseArghTestCase):
         def cmd(args):
             return
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as excinfo:
             self.parser.set_default_command(cmd)
         msg = "cmd: cannot add arg x/--y: invalid option string"
-        assert msg in str(cm.exception), cm.exception
+        assert msg in str(excinfo.value)
