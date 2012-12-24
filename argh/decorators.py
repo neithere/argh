@@ -47,6 +47,7 @@ def named(new_name):
 def alias(new_name):
     """
     .. deprecated:: 0.19
+
        Use :func:`named` or :func:`aliases` instead.
     """
     import warnings
@@ -88,6 +89,7 @@ def aliases(*names):
 def plain_signature(func):
     """
     .. deprecated:: 0.20
+
        Use :func:`command` instead.
     """
     import warnings
