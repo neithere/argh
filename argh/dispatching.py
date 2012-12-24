@@ -196,9 +196,9 @@ def dispatch_command(function, *args, **kwargs):
 
     ...is a shortcut for::
 
-        parser = ArghParser()
-        parser.set_default_command(foo)
-        parser.dispatch()
+        parser = ArgumentParser()
+        set_default_command(parser, foo)
+        dispatch(parser)
 
     This function can be also used as a decorator.
     """
@@ -218,8 +218,8 @@ def dispatch_commands(functions, *args, **kwargs):
     ...is a shortcut for::
 
         parser = ArgumentParser()
-        parser.add_commands(parser, [foo, bar])
-        parser.dispatch(parser)
+        add_commands(parser, [foo, bar])
+        dispatch(parser)
 
     """
     parser = argparse.ArgumentParser()
