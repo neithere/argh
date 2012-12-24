@@ -328,6 +328,38 @@ class CommandDecoratorTests(BaseArghTestCase):
         self.parser.set_default_command(ddos)
         self.assert_cmd_fails('-h 127.0.0.1', '')
 
+    def test_regression_issue27(self):
+        """Issue #27: store_true is not set for inferred bool argument.
+
+        Reason: when @command was refactored, it stopped using @arg, but it is
+        it was there that guesses (choices→type, default→type and
+        default→action) were made.
+        """
+        @command
+        def parrot(dead=False):
+            return 'this parrot is no more' if dead else 'beautiful plumage'
+
+        @command
+        def grenade(count=3):
+            if count == 3:
+                return 'Three shall be the number thou shalt count'
+            else:
+                return '{0!r} is right out'.format(count)
+
+        self.parser = DebugArghParser()
+        self.parser.add_commands([parrot, grenade])
+
+        # default → type (int)
+        self.assert_cmd_returns('grenade', 'Three shall be the number '
+                                           'thou shalt count\n')
+        self.assert_cmd_returns('grenade --count 5', '5 is right out\n')
+
+        # default → action (store_true)
+        self.assert_cmd_returns('parrot', 'beautiful plumage\n')
+        self.assert_cmd_returns('parrot --dead', 'this parrot is no more\n')
+
+
+
     def test_declared_vs_inferred_merging(self):
         """ @arg merges into function signature if @command is applied.
         """

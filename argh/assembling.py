@@ -91,6 +91,30 @@ def _get_args_from_signature(function):
         yield Arg(flags=flags, kwargs=akwargs)
 
 
+def _guess(arg):
+    """
+    Adds types, actions, etc. to given argument specification.
+    For example, ``default=3`` implies ``type=int``.
+
+    :param arg: a :class:`argh.utils.Arg` instance
+    """
+    kwargs = arg.kwargs.copy()
+
+    # try guessing some stuff
+    if kwargs.get('choices') and not 'type' in kwargs:
+        kwargs['type'] = type(kwargs['choices'][0])
+    if 'default' in kwargs and not 'action' in kwargs:
+        value = kwargs['default']
+        if isinstance(value, bool):
+            # infer action from default value
+            kwargs['action'] = 'store_false' if value else 'store_true'
+        elif 'type' not in kwargs and value is not None:
+            # infer type from default value
+            kwargs['type'] = type(value)
+
+    return Arg(flags=arg.flags, kwargs=kwargs)
+
+
 def set_default_command(parser, function):
     """ Sets default command (i.e. a function) for given parser.
 
@@ -150,6 +174,9 @@ def set_default_command(parser, function):
         inferred_args = [Arg(k,v) for k,v in inferred_dict.items()]
 
     command_args = inferred_args or declared_args
+
+    # add types, actions, etc. (e.g. default=3 implies type=int)
+    command_args = [_guess(x) for x in command_args]
 
     for a_args, a_kwargs in command_args:
         if parser.add_help and '-h' in a_args:

@@ -129,20 +129,6 @@ def arg(*args, **kwargs):
     * you didn't have to specify ``type=int`` for ``--verbosity``.
 
     """
-    kwargs = kwargs.copy()
-
-    # try guessing some stuff
-    if kwargs.get('choices') and not 'type' in kwargs:
-        kwargs['type'] = type(kwargs['choices'][0])
-    if 'default' in kwargs and not 'action' in kwargs:
-        value = kwargs['default']
-        if isinstance(value, bool):
-            # infer action from default value
-            kwargs['action'] = 'store_false' if value else 'store_true'
-        elif 'type' not in kwargs and value is not None:
-            # infer type from default value
-            kwargs['type'] = type(value)
-
     def wrapper(func):
         declared_args = getattr(func, ATTR_ARGS, [])
         # The innermost decorator is called first but appears last in the code.
