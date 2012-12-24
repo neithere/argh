@@ -302,7 +302,7 @@ encoding::
     <argh.helpers.dispatch>` works.
 
 This is fine, but what about non-linear code with if/else, exceptions and
-interactive promts? Well, you don't need to manage the stack of results within
+interactive prompts? Well, you don't need to manage the stack of results within
 the function. Just convert it to a generator and `Argh` will do the rest::
 
     def foo(args):
