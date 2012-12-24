@@ -14,7 +14,6 @@ from argh import (
     aliases, ArghParser, arg, command, CommandError, dispatch_command,
     dispatch_commands, plain_signature, wrap_errors
 )
-from argh import completion
 
 
 def make_IO():
@@ -387,9 +386,9 @@ class CommandDecoratorTests(BaseArghTestCase):
         self.parser = DebugArghParser('PROG')
         with self.assertRaises(ValueError) as cm:
             self.parser.set_default_command(confuse_a_cat)
-        msg = ("Argument bogus-argument does not fit signature "
-               "of function confuse_a_cat: -f/--funny-things, vet")
-        assert msg in str(cm.exception)
+        msg = ("confuse_a_cat: argument bogus-argument does not fit "
+               "function signature: -f/--funny-things, vet")
+        assert msg in str(cm.exception), cm.exception
 
     def test_declared_vs_inferred_mismatch_flag(self):
         """ @arg must match function signature if @command is applied.
@@ -402,9 +401,9 @@ class CommandDecoratorTests(BaseArghTestCase):
         self.parser = DebugArghParser('PROG')
         with self.assertRaises(ValueError) as cm:
             self.parser.set_default_command(confuse_a_cat)
-        msg = ("Argument --bogus-argument does not fit signature "
-               "of function confuse_a_cat: -f/--funny-things, vet")
-        assert msg in str(cm.exception)
+        msg = ("confuse_a_cat: argument --bogus-argument does not fit "
+               "function signature: -f/--funny-things, vet")
+        assert msg in str(cm.exception), cm.exception
 
 
 class ErrorWrappingTestCase(BaseArghTestCase):
@@ -632,5 +631,5 @@ class AssemblingTests(BaseArghTestCase):
 
         with self.assertRaises(ValueError) as cm:
             self.parser.set_default_command(cmd)
-        msg = "cannot add arg x/--y to cmd: invalid option string"
-        assert msg in str(cm.exception)
+        msg = "cmd: cannot add arg x/--y: invalid option string"
+        assert msg in str(cm.exception), cm.exception

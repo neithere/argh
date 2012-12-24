@@ -161,8 +161,8 @@ def set_default_command(parser, function):
             #      @arg('--bar')  maps to  func(bar=...)
             #
             if flags not in inferred_dict:
-                raise ValueError('Argument {flags} does not fit signature '
-                                 'of function {func}: {sig}'.format(
+                raise ValueError('{func}: argument {flags} does not fit '
+                                 'function signature: {sig}'.format(
                                     flags=', '.join(flags),
                                     func=function.__name__,
                                     sig=', '.join('/'.join(x) for x in sorted(inferred_dict))))
@@ -184,7 +184,7 @@ def set_default_command(parser, function):
         try:
             parser.add_argument(*a_args, **a_kwargs)
         except Exception as e:
-            raise type(e)('cannot add arg {args} to {func}: {msg}'.format(
+            raise type(e)('{func}: cannot add arg {args}: {msg}'.format(
                 args='/'.join(a_args), func=function.__name__, msg=e))
 
     if function.__doc__ and not parser.description:
