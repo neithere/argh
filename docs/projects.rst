@@ -18,6 +18,7 @@ Python 2:
     * Poni_
     * Pyg_
     * Barman_
+    * Timetra_
 
 ...and more.  Well, there's probably no need to keep a complete
 and up-to-date list.  Still, please let me know anyway if you use `argh`
@@ -29,3 +30,4 @@ in your project.  I'll be glad to know. :-)
 .. _Pyg: https://github.com/rubik/pyg/commit/a201de1d70536e7e4637a6079f03174b7b493ffa
 .. _Barman: http://pgbarman.org
 .. _Aurifere: https://github.com/madjar/aurifere
+.. _Timetra: https://bitbucket.org/timetra/timetra
