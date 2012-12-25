@@ -5,7 +5,7 @@ Dispatching tests
 """
 import argh
 
-from base import make_IO
+from .base import make_IO
 
 
 def _dispatch_and_capture(func, command_string, **kwargs):

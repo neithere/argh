@@ -4,7 +4,7 @@ Regression tests
 ~~~~~~~~~~~~~~~~
 """
 from argh import command
-from base import DebugArghParser, assert_cmd_fails, assert_cmd_exits, run
+from .base import DebugArghParser, assert_cmd_fails, assert_cmd_exits, run
 
 
 def test_regression_issue12():

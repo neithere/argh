@@ -6,13 +6,10 @@ Interaction Tests
 import argh
 
 
-def assert_choice(choice, expected, **kwargs):
-    argh.io._input = lambda prompt: choice
-    assert expected == argh.confirm('test', **kwargs)
-
 def parse_choice(choice, **kwargs):
     argh.io._input = lambda prompt: choice
     return argh.confirm('test', **kwargs)
+
 
 def test_simple():
     assert None == parse_choice('')
@@ -31,6 +28,7 @@ def test_simple():
     assert False == parse_choice('n', default=None)
 
     assert None == parse_choice('x') == None
+
 
 def test_prompt():
     "Prompt is properly formatted"
@@ -51,6 +49,7 @@ def test_prompt():
 
     argh.confirm('do smth', default=False)
     assert prompts[-1] == 'do smth? (y/N)'
+
 
 def test_encoding():
     "Unicode and bytes are accepted as prompt message"

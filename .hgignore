@@ -12,6 +12,7 @@
 ^\.coverage
 ^cover/
 ,cover$
+^htmlcov/
 
 ^\.tox/
 

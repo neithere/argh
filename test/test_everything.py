@@ -8,8 +8,8 @@ import argparse
 
 import argh
 
-from base import (DebugArghParser, assert_cmd_regex,
-                  assert_cmd_fails, assert_cmd_doesnt_fail, run)
+from .base import (DebugArghParser, assert_cmd_regex,
+                   assert_cmd_fails, assert_cmd_doesnt_fail, run)
 
 
 def test_argv():

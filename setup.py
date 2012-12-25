@@ -81,7 +81,4 @@ setup(
         'Topic :: Software Development :: User Interfaces',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-
-    # release sanity check
-    test_suite = 'nose.collector',
 )

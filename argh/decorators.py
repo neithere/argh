@@ -44,7 +44,7 @@ def named(new_name):
     return wrapper
 
 
-def alias(new_name):
+def alias(new_name):  # pragma: nocover
     """
     .. deprecated:: 0.19
 
@@ -86,7 +86,7 @@ def aliases(*names):
     return wrapper
 
 
-def plain_signature(func):
+def plain_signature(func):  # pragma: nocover
     """
     .. deprecated:: 0.20
 

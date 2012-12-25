@@ -9,7 +9,7 @@ import pytest
 
 import argh
 
-from base import DebugArghParser, run
+from .base import DebugArghParser, run
 
 
 def test_command_decorator():
