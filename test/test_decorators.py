@@ -46,7 +46,7 @@ def test_command():
     assert attr == True
 
 
-def wrap_errors():
+def test_wrap_errors():
     @argh.wrap_errors(KeyError, ValueError)
     def func():
         pass
