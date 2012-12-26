@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Assembling Tests
-~~~~~~~~~~~~~~~~
+Unit Tests For Assembling Phase
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import mock
 import pytest
@@ -9,12 +9,6 @@ import pytest
 import argh
 from argh.utils import Arg
 
-from .base import DebugArghParser, run
-
-#------------------------------------------------------------------------------
-#
-# UNIT TESTS
-#
 
 def test_guess_type_from_choices():
     old = Arg(('foo',), {'choices': [1,2]})
@@ -141,27 +135,3 @@ def test_annotation():
     p.set_default_command(argh.command(cmd))
     prog_help = p.format_help()
     assert 'quux' in prog_help
-
-
-#------------------------------------------------------------------------------
-#
-# INTEGRATION TESTS
-#
-
-@pytest.mark.xfail(reason='TODO')
-def test_guessing_integration():
-    "guessing is used in dispatching"
-    pass
-
-
-def test_set_default_command_integration():
-    @argh.arg('--foo', default=1)
-    def cmd(args):
-        return args.foo
-
-    p = DebugArghParser()
-    p.set_default_command(cmd)
-
-    assert run(p, '') == '1\n'
-    assert run(p, '--foo 2') == '2\n'
-    assert run(p, '--help', exit=True)
