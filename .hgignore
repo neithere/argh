@@ -1,27 +1,27 @@
+## Ignored stuff
+
+# temp files
+~$
+\.py[co]$
+\.sw[op]$
+
+# testing
+^\.tox/
+
+# coverage
+^\.coverage
+^cover/
+,cover$
+^htmlcov/
+
+# packaging
 ^build/
 ^dist/
 ^docs/_build
 ^nbproject/
 \.egg-info
 \.directory
-\.pyc$
-\.pyo$
-~$
-\.swo$
-\.swp$
-^\.coverage
-^cover/
-,cover$
-^htmlcov/
 
-^\.tox/
-
-# Arch Linux: makepkg
-^src/
-^pkg/
-^.PKGINFO$
-^archlinux-python.?/.+(gz|xz)$
-
-# Debian
+# packaging: Debian
 ^debian/python-argh
 ^debian/python-module-stampdir
