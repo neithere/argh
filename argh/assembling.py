@@ -100,17 +100,20 @@ def _guess(arg):
     """
     kwargs = arg.kwargs.copy()
 
-    # try guessing some stuff
-    if kwargs.get('choices') and not 'type' in kwargs:
-        kwargs['type'] = type(kwargs['choices'][0])
-    if 'default' in kwargs and not 'action' in kwargs:
-        value = kwargs['default']
+    # guess type/action from default value
+    value = kwargs.get('default')
+    if value is not None:
         if isinstance(value, bool):
-            # infer action from default value
-            kwargs['action'] = 'store_false' if value else 'store_true'
-        elif 'type' not in kwargs and value is not None:
+            if 'action' not in kwargs:
+                # infer action from default value
+                kwargs['action'] = 'store_false' if value else 'store_true'
+        elif 'type' not in kwargs:
             # infer type from default value
             kwargs['type'] = type(value)
+
+    # guess type from choices (first item)
+    if kwargs.get('choices') and 'type' not in kwargs:
+        kwargs['type'] = type(kwargs['choices'][0])
 
     return Arg(flags=arg.flags, kwargs=kwargs)
 
