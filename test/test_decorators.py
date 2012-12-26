@@ -11,10 +11,38 @@ import argh
 
 from .base import DebugArghParser, run
 
+def test_aliases():
+    @argh.aliases('one', 'two')
+    def func():
+        pass
 
 def test_command_decorator():
     """The @command decorator creates arguments from function signature.
     """
+
+
+def test_arg():
+    @argh.arg('foo', help='help', nargs='+')
+    @argh.arg('--bar', default=1)
+    def func():
+        pass
+
+    attrs = getattr(func, argh.constants.ATTR_ARGS)
+    assert attrs == [
+        argh.utils.Arg(('foo',), {'help': 'help', 'nargs': '+'}),
+        argh.utils.Arg(('--bar',), {'default': 1}),
+    ]
+
+
+def test_named():
+    @argh.named('new-name')
+    def func():
+        pass
+
+    attr = getattr(func, argh.constants.ATTR_NAME)
+    assert attr == 'new-name'
+
+
     @argh.command
     def cmd(text='Hello'):
         yield text
