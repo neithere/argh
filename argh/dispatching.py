@@ -13,6 +13,7 @@ Dispatching
 ~~~~~~~~~~~
 """
 import argparse
+import inspect
 import sys
 from types import GeneratorType
 
@@ -147,20 +148,21 @@ def _execute_command(args):
             # filter the namespace variables so that only those expected by the
             # actual function will pass
             f = args.function
-            if hasattr(f, 'func_code'):
-                # Python 2
-                expected_args = f.func_code.co_varnames[:f.func_code.co_argcount]
+            if PY3:
+                spec = inspect.getfullargspec(f)
             else:
-                # Python 3
-                expected_args = f.__code__.co_varnames[:f.__code__.co_argcount]
+                spec = inspect.getargspec(f)
 
             def _normalize_keys(pairs):
                 return dict((k.replace('-','_'),v) for k,v in pairs)
             normalized_kwargs = _normalize_keys(args._get_kwargs())
 
-            ok_args = [x for x in args._get_args() if x in expected_args]
+            ok_args = [x for x in args._get_args() if x in spec.args]
             ok_kwargs = dict((k,v) for k,v in normalized_kwargs.items()
-                             if k in expected_args)
+                             if k in spec.args)
+
+            if spec.varargs:
+                ok_args += getattr(args, spec.varargs)
 
             result = args.function(*ok_args, **ok_kwargs)
 

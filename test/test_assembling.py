@@ -65,6 +65,9 @@ def test_set_default_command():
         mock.call('foo', nargs='+', choices=[1,2], help='me', type=int),
         mock.call('-b', '--bar', default=False, action='store_true')
     ]
+    assert parser.set_defaults.mock_calls == [
+        mock.call(function=func)
+    ]
 
 
 def test_set_default_command_docstring():
@@ -119,6 +122,21 @@ def test_set_default_command_mixed_arg_types():
         p.set_default_command(func)
     msg = "func: cannot add arg x/--y: invalid option string"
     assert msg in str(excinfo.value)
+
+
+def test_set_default_command_varargs():
+    def func(*file_paths):
+        yield ', '.join(file_paths)
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = mock.MagicMock()
+
+    argh.set_default_command(parser, func)
+
+    assert parser.add_argument.mock_calls == [
+        mock.call('file_paths', nargs='*'),
+    ]
 
 
 def test_annotation():

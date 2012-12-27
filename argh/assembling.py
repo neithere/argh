@@ -91,6 +91,10 @@ def _get_args_from_signature(function):
 
         yield dict(option_strings=flags, **akwargs)
 
+    if spec.varargs:
+        # *args
+        yield dict(option_strings=[spec.varargs], nargs='*')
+
 
 def _guess(kwargs):
     """

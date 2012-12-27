@@ -74,16 +74,14 @@ def test_simple_function_defaults():
     assert run(p, '--x bar') == 'bar\n'
 
 
-@pytest.mark.xfail(reason='TODO')
 def test_simple_function_varargs():
-    # XXX should be a separate RFC
 
-    def cmd(*paths):
-        # `paths` is the single positional argument with nargs='+'
-        yield ', '.join(paths)
+    def func(*file_paths):
+        # `paths` is the single positional argument with nargs='*'
+        yield ', '.join(file_paths)
 
     p = DebugArghParser()
-    p.set_default_command(cmd)
+    p.set_default_command(func)
 
     assert run(p, '') == '\n'
     assert run(p, 'foo') == 'foo\n'
