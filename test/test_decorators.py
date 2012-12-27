@@ -53,3 +53,12 @@ def test_wrap_errors():
 
     attr = getattr(func, argh.constants.ATTR_WRAPPED_EXCEPTIONS)
     assert attr == (KeyError, ValueError)
+
+
+def test_expects_obj():
+    @argh.expects_obj
+    def func(args):
+        pass
+
+    attr = getattr(func, argh.constants.ATTR_EXPECTS_NAMESPACE_OBJECT)
+    assert attr == True

@@ -3,7 +3,6 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
-from argh import command
 from .base import DebugArghParser, assert_cmd_fails, assert_cmd_exits, run
 
 
@@ -13,7 +12,6 @@ def test_regression_issue12():
     incorrectly).
     """
 
-    @command
     def cmd(foo=1, fox=2):
         yield 'foo {0}, fox {1}'.format(foo, fox)
 
@@ -31,7 +29,6 @@ def test_regression_issue12_help_flag():
     ArgumentError is raised because "--help" is always added by argh
     without decorators.
     """
-    @command
     def ddos(host='localhost'):
         return 'so be it, {0}!'.format(host)
 
@@ -53,11 +50,9 @@ def test_regression_issue27():
     it was there that guesses (choices→type, default→type and
     default→action) were made.
     """
-    @command
     def parrot(dead=False):
         return 'this parrot is no more' if dead else 'beautiful plumage'
 
-    @command
     def grenade(count=3):
         if count == 3:
             return 'Three shall be the number thou shalt count'

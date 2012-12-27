@@ -13,12 +13,13 @@ Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
-                            ATTR_NO_NAMESPACE, ATTR_WRAPPED_EXCEPTIONS,
-                            ATTR_INFER_ARGS_FROM_SIGNATURE)
+                            ATTR_WRAPPED_EXCEPTIONS,
+                            ATTR_INFER_ARGS_FROM_SIGNATURE,
+                            ATTR_EXPECTS_NAMESPACE_OBJECT)
 
 
 __all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
-           'wrap_errors']
+           'wrap_errors', 'expects_obj']
 
 
 def named(new_name):
@@ -89,16 +90,13 @@ def plain_signature(func):  # pragma: nocover
     """
     .. deprecated:: 0.20
 
-       Use :func:`command` instead.
+       Function signature is now introspected by default.
+       Use :func:`expects_obj` for inverted behaviour.
     """
     import warnings
-    warnings.warn('@plain_signature is deprecated, use @command instead',
+    warnings.warn('Decorator @plain_signature is deprecated. '
+                  'Function signature is now introspected by default.',
                   DeprecationWarning)
-
-    # cannot be replaced with ATTR_INFER_ARGS_FROM_SIGNATURE
-    # until the latter allows merging explicit @arg declarations
-    setattr(func, ATTR_NO_NAMESPACE, True)
-
     return func
 
 
@@ -143,40 +141,15 @@ def arg(*args, **kwargs):
 
 def command(func):
     """
-    Infers argument specifications from given function. Wraps the function
-    in the :func:`plain_signature` decorator and also in an :func:`arg`
-    decorator for every actual argument the function expects.
+    .. deprecated:: 0.21
 
-    Usage::
-
-        @command
-        def foo(bar, quux=123):
-            yield bar, quux
-
-    This is equivalent to::
-
-        @arg('-b', '--bar')
-        @arg('-q', '--quux', default=123)
-        def foo(args):
-            yield args.bar, args.quux
-
-    .. note::
-
-       Python 3 supports annotations (:pep:`3107`). They can be used with Argh
-       as help messages for arguments. These declarations are equivalent::
-
-           @arg('--dry-run', help='do not modify the database', default=False)
-           def save(args):
-               ...
-
-           @command
-           def save(dry_run : 'do not modify the database' = False):
-               ...
-
-
-       Only strings are considered help messages.
-
+       Function signature is now introspected by default.
+       Use :func:`expects_obj` for inverted behaviour.
     """
+    import warnings
+    warnings.warn('Decorator @command is deprecated. '
+                  'Function signature is now introspected by default.',
+                  DeprecationWarning)
     setattr(func, ATTR_INFER_ARGS_FROM_SIGNATURE, True)
     return func
 
@@ -199,3 +172,26 @@ def wrap_errors(*exceptions):
         setattr(func, ATTR_WRAPPED_EXCEPTIONS, exceptions)
         return func
     return wrapper
+
+
+def expects_obj(func):
+    """
+    Marks given function as expecting a namespace object.
+
+    Usage::
+
+        @arg('bar')
+        @arg('--quux', default=123)
+        @expects_obj
+        def foo(args):
+            yield args.bar, args.quux
+
+    This is equivalent to::
+
+        def foo(bar, quux=123):
+            yield bar, quux
+
+    In most cases you don't need this decorator.
+    """
+    setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
+    return func

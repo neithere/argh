@@ -19,7 +19,8 @@ import inspect
 
 from argh.six import PY3, string_types
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
-                            ATTR_INFER_ARGS_FROM_SIGNATURE)
+                            ATTR_INFER_ARGS_FROM_SIGNATURE,
+                            ATTR_EXPECTS_NAMESPACE_OBJECT)
 from argh.utils import get_subparsers
 
 
@@ -44,7 +45,7 @@ alternative command names (can be set via :func:`~argh.decorators.aliases`).
 
 
 def _get_args_from_signature(function):
-    if not getattr(function, ATTR_INFER_ARGS_FROM_SIGNATURE, False):
+    if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
 
     if PY3:
@@ -118,6 +119,40 @@ def _guess(kwargs):
     return dict(kwargs, **guessed)
 
 
+def _fix_compat_issue29(function):
+    #
+    # TODO: remove before 1.0 release (will break backwards compatibility)
+    #
+    if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
+        # a modern decorator is used, no compatibility issues
+        return function
+
+    if getattr(function, ATTR_INFER_ARGS_FROM_SIGNATURE, False):
+        # wrapped in outdated decorator but it implies modern behaviour
+        return function
+
+    # Okay, now we've got either a modern-style function (plain signature)
+    # or an old-style function which implicitly expects a namespace object.
+    # It's very likely that in the latter case the function accepts one and
+    # only argument named "args".  If so, we simply wrap this function in
+    # @expects_obj and issue a warning.
+    if PY3:
+        spec = inspect.getfullargspec(function)
+    else:
+        spec = inspect.getargspec(function)
+    if spec.args == ['args']:
+        # this is it -- a classic old-style function, goddamnit.
+        # no checking *args and **kwargs because they are unlikely to matter.
+        import warnings
+        warnings.warn('Function {0} is very likely to be old-style, i.e. '
+                      'implicitly expects a namespace object.  This behaviour '
+                      'is deprecated.  Wrap it in @expects_obj decorator or '
+                      'convert to plain signature.'.format(function.__name__),
+                      DeprecationWarning)
+        setattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
+    return function
+
+
 def set_default_command(parser, function):
     """ Sets default command (i.e. a function) for given parser.
 
@@ -147,6 +182,8 @@ def set_default_command(parser, function):
     if parser._subparsers:
         raise RuntimeError('Cannot set default command to a parser with '
                            'existing subparsers')
+
+    function = _fix_compat_issue29(function)
 
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))

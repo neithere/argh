@@ -298,7 +298,6 @@ def test_custom_namespace():
 def test_normalized_keys():
     """ Underscores in function args are converted to dashes and back.
     """
-    @argh.command
     def cmd(a_b):
         return a_b
 

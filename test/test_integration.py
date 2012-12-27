@@ -3,6 +3,7 @@
 Integration Tests
 ~~~~~~~~~~~~~~~~~
 """
+import sys
 import re
 
 import pytest
@@ -31,10 +32,99 @@ def test_set_default_command_integration():
     assert run(p, '--help', exit=True)
 
 
+#
+# Function can be added to parser as is
+#
+
+
+def test_simple_function_no_args():
+    def cmd():
+        yield 1
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == '1\n'
+
+
+def test_simple_function_positional():
+    def cmd(x):
+        yield x
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    if sys.version_info < (3,3):
+        msg = 'too few arguments'
+    else:
+        msg = 'the following arguments are required: x'
+    assert run(p, '', exit=True) == msg
+    assert run(p, 'foo') == 'foo\n'
+
+
+def test_simple_function_defaults():
+    def cmd(x='foo'):
+        yield x
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == 'foo\n'
+    assert run(p, 'bar', exit=True) == 'unrecognized arguments: bar'
+    assert run(p, '--x bar') == 'bar\n'
+
+
+@pytest.mark.xfail(reason='TODO')
+def test_simple_function_varargs():
+    # XXX should be a separate RFC
+
+    def cmd(*paths):
+        # `paths` is the single positional argument with nargs='+'
+        yield ', '.join(paths)
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == '\n'
+    assert run(p, 'foo') == 'foo\n'
+    assert run(p, 'foo bar') == 'foo, bar\n'
+
+
+@pytest.mark.xfail(reason='TODO')
+def test_simple_function_kwargs():
+    # XXX should be a separate RFC
+    @argh.arg('foo')
+    @argh.arg('--bar')
+    def cmd(**kwargs):
+        # `kwargs` contain all arguments not fitting ArgSpec.args and .varargs.
+        # if ArgSpec.keywords in None, all @arg()'s will have to fit ArgSpec.args
+        for k,v in kwargs:
+            yield '{0}: {1}'.format(k,v)
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == '\n'
+    assert run(p, 'hello') == 'foo: hello\n'
+    assert run(p, '--bar 123') == 'bar: 123\n'
+    assert run(p, 'hello --bar 123') == 'foo: hello\nbar: 123\n'
+
+
+def test_simple_function_multiple():
+    pass
+
+
+def test_simple_function_nested():
+    pass
+
+
+def test_class_method_as_command():
+    pass
+
+
 def test_arg_merged():
     """ @arg merges into function signature.
     """
-    @argh.command
     @argh.arg('my', help='a moose once bit my sister')
     @argh.arg('-b', '--brain', help='i am made entirely of wood')
     def gumby(my, brain=None):
@@ -51,7 +141,6 @@ def test_arg_merged():
 def test_arg_mismatch_positional():
     """ @arg must match function signature if @command is applied.
     """
-    @argh.command
     @argh.arg('bogus-argument')
     def confuse_a_cat(vet, funny_things=123):
         return vet, funny_things
@@ -68,7 +157,6 @@ def test_arg_mismatch_positional():
 def test_arg_mismatch_flag():
     """ @arg must match function signature if @command is applied.
     """
-    @argh.command
     @argh.arg('--bogus-argument')
     def confuse_a_cat(vet, funny_things=123):
         return vet, funny_things
@@ -80,6 +168,32 @@ def test_arg_mismatch_flag():
     msg = ("confuse_a_cat: argument --bogus-argument does not fit "
            "function signature: -f/--funny-things, vet")
     assert msg in str(excinfo.value)
+
+
+def test_backwards_compatibility_issue29():
+    @argh.arg('foo')
+    @argh.arg('--bar', default=1)
+    def old(args):
+        yield '{0} {1}'.format(args.foo, args.bar)
+
+    @argh.command
+    def old_marked(foo, bar=1):
+        yield '{0} {1}'.format(foo, bar)
+
+    def new(foo, bar=1):
+        yield '{0} {1}'.format(foo, bar)
+
+    p = DebugArghParser('PROG')
+    p.add_commands([old, old_marked, new])
+
+    assert 'ok 1\n' == run(p, 'old ok')
+    assert 'ok 5\n' == run(p, 'old ok --bar 5')
+
+    assert 'ok 1\n' == run(p, 'old-marked ok')
+    assert 'ok 5\n' == run(p, 'old-marked ok --bar 5')
+
+    assert 'ok 1\n' == run(p, 'new ok')
+    assert 'ok 5\n' == run(p, 'new ok --bar 5')
 
 
 class TestErrorWrapping:
