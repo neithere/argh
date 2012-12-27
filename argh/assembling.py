@@ -20,7 +20,7 @@ import inspect
 from argh.six import PY3, string_types
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE)
-from argh.utils import Arg, get_subparsers
+from argh.utils import get_subparsers
 
 
 __all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
@@ -88,34 +88,34 @@ def _get_args_from_signature(function):
         # cmd(foo_bar)  ->  add_argument('foo-bar')
         flags = tuple(x.replace('_', '-') for x in flags)
 
-        yield Arg(flags=flags, kwargs=akwargs)
+        yield dict(option_strings=flags, **akwargs)
 
 
-def _guess(arg):
+def _guess(kwargs):
     """
     Adds types, actions, etc. to given argument specification.
     For example, ``default=3`` implies ``type=int``.
 
     :param arg: a :class:`argh.utils.Arg` instance
     """
-    kwargs = arg.kwargs.copy()
+    guessed = {}
 
     # guess type/action from default value
     value = kwargs.get('default')
     if value is not None:
         if isinstance(value, bool):
-            if 'action' not in kwargs:
+            if kwargs.get('action') is None:
                 # infer action from default value
-                kwargs['action'] = 'store_false' if value else 'store_true'
-        elif 'type' not in kwargs:
+                guessed['action'] = 'store_false' if value else 'store_true'
+        elif kwargs.get('type') is None:
             # infer type from default value
-            kwargs['type'] = type(value)
+            guessed['type'] = type(value)
 
     # guess type from choices (first item)
-    if kwargs.get('choices') and 'type' not in kwargs:
-        kwargs['type'] = type(kwargs['choices'][0])
+    if kwargs.get('choices') and 'type' not in list(guessed) + list(kwargs):
+        guessed['type'] = type(kwargs['choices'][0])
 
-    return Arg(flags=arg.flags, kwargs=kwargs)
+    return dict(kwargs, **guessed)
 
 
 def set_default_command(parser, function):
@@ -153,42 +153,49 @@ def set_default_command(parser, function):
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
 
-        inferred_dict = dict((x.flags, x.kwargs) for x in inferred_args)
-        declared_dict = dict(declared_args)
+        inferred_dict = dict((x['option_strings'], x) for x in inferred_args)
+        declared_dict = dict((x['option_strings'], x) for x in declared_args)
 
-        for flags, kw in declared_dict.items():
+        for kw in declared_dict.values():
             # 1) make sure that this declared arg conforms to the function
             #    signature and therefore only refines an inferred arg:
             #
             #      @arg('foo')    maps to  func(foo)
             #      @arg('--bar')  maps to  func(bar=...)
             #
-            if flags not in inferred_dict:
+
+            #
+            # TODO: get `dest` from option strings using parser.prefix_chars etc.
+            #
+            dest = kw['option_strings']
+            if dest not in inferred_dict:
                 raise ValueError('{func}: argument {flags} does not fit '
                                  'function signature: {sig}'.format(
-                                    flags=', '.join(flags),
+                                    flags=', '.join(kw['option_strings']),
                                     func=function.__name__,
                                     sig=', '.join('/'.join(x) for x in sorted(inferred_dict))))
 
             # 2) merge declared args into inferred ones (e.g. help=...)
-            inferred_dict[flags].update(**kw)
+            inferred_dict[dest].update(**kw)
 
         # pack the modified data back into a list
-        inferred_args = [Arg(k,v) for k,v in inferred_dict.items()]
+        inferred_args = inferred_dict.values()
 
     command_args = inferred_args or declared_args
 
     # add types, actions, etc. (e.g. default=3 implies type=int)
     command_args = [_guess(x) for x in command_args]
 
-    for a_args, a_kwargs in command_args:
-        if parser.add_help and '-h' in a_args:
-            a_args = [x for x in a_args if x != '-h']
+    for draft in command_args:
+        draft = draft.copy()
+        dest_or_opt_strings = draft.pop('option_strings')
+        if parser.add_help and '-h' in dest_or_opt_strings:
+            dest_or_opt_strings = [x for x in dest_or_opt_strings if x != '-h']
         try:
-            parser.add_argument(*a_args, **a_kwargs)
+            parser.add_argument(*dest_or_opt_strings, **draft)
         except Exception as e:
             raise type(e)('{func}: cannot add arg {args}: {msg}'.format(
-                args='/'.join(a_args), func=function.__name__, msg=e))
+                args='/'.join(dest_or_opt_strings), func=function.__name__, msg=e))
 
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__

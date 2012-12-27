@@ -13,11 +13,6 @@ Utilities
 ~~~~~~~~~
 """
 import argparse
-from collections import namedtuple
-
-
-Arg = namedtuple('Arg', ('flags', 'kwargs'))
-"Easily inspectable argument declaration for ArgumentParser.add_argument()."
 
 
 def get_subparsers(parser, create=False):

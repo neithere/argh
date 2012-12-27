@@ -23,8 +23,8 @@ def test_arg():
 
     attrs = getattr(func, argh.constants.ATTR_ARGS)
     assert attrs == [
-        argh.utils.Arg(('foo',), {'help': 'help', 'nargs': '+'}),
-        argh.utils.Arg(('--bar',), {'default': 1}),
+        dict(option_strings=('foo',), help='help', nargs='+'),
+        dict(option_strings=('--bar',), default=1),
     ]
 
 

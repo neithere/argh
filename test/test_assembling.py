@@ -7,42 +7,41 @@ import mock
 import pytest
 
 import argh
-from argh.utils import Arg
 
 
 def test_guess_type_from_choices():
-    old = Arg(('foo',), {'choices': [1,2]})
-    new = Arg(('foo',), {'choices': [1,2], 'type': int})
+    old = dict(option_strings=('foo',), choices=[1,2])
+    new = dict(option_strings=('foo',), choices=[1,2], type=int)
     assert new == argh.assembling._guess(old)
 
     # ensure no overrides
-    same = Arg(('foo',), {'choices': [1,2], 'type': 'NO_MATTER_WHAT'})
+    same = dict(option_strings=('foo',), choices=[1,2], type='NO_MATTER_WHAT')
     assert same == argh.assembling._guess(same)
 
 
 def test_guess_type_from_default():
-    old = Arg(('foo',), {'default': 1})
-    new = Arg(('foo',), {'default': 1, 'type': int})
+    old = dict(option_strings=('foo',), default=1)
+    new = dict(option_strings=('foo',), default=1, type=int)
     assert new == argh.assembling._guess(old)
 
     # ensure no overrides
-    same = Arg(('foo',), {'default': '1', 'type': 'NO_MATTER_WHAT'})
+    same = dict(option_strings=('foo',), default=1, type='NO_MATTER_WHAT')
     assert same == argh.assembling._guess(same)
 
 
 def test_guess_action_from_default():
     # True → store_false
-    old = Arg(('foo',), {'default': False})
-    new = Arg(('foo',), {'default': False, 'action': 'store_true'})
+    old = dict(option_strings=('foo',), default=False)
+    new = dict(option_strings=('foo',), default=False, action='store_true')
     assert new == argh.assembling._guess(old)
 
     # True → store_false
-    old = Arg(('foo',), {'default': True})
-    new = Arg(('foo',), {'default': True, 'action': 'store_false'})
+    old = dict(option_strings=('foo',), default=True)
+    new = dict(option_strings=('foo',), default=True, action='store_false')
     assert new == argh.assembling._guess(old)
 
     # ensure no overrides
-    same = Arg(('foo',), {'default': False, 'action': 'NO_MATTER_WHAT'})
+    same = dict(option_strings=('foo',), default=False, action='NO_MATTER_WHAT')
     assert same == argh.assembling._guess(same)
 
 
@@ -51,8 +50,8 @@ def test_set_default_command():
         pass
 
     setattr(func, argh.constants.ATTR_ARGS, (
-        Arg(('foo',), dict(nargs='+', choices=[1,2], help='me')),
-        Arg(('-b', '--bar',), dict(default=False)),
+        dict(option_strings=('foo',), nargs='+', choices=[1,2], help='me'),
+        dict(option_strings=('-b', '--bar',), default=False),
     ))
 
     parser = argh.ArghParser()
@@ -110,7 +109,9 @@ def test_set_default_command_mixed_arg_types():
     def func():
         pass
 
-    setattr(func, argh.constants.ATTR_ARGS, [Arg(('x','--y'), {})])
+    setattr(func, argh.constants.ATTR_ARGS, [
+        dict(option_strings=('x','--y'))
+    ])
 
     p = argh.ArghParser()
 
