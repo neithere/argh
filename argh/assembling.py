@@ -189,15 +189,22 @@ def set_default_command(parser, function):
 
     function = _fix_compat_issue29(function)
 
+    if PY3:
+        spec = inspect.getfullargspec(function)
+    else:
+        spec = inspect.getargspec(function)
+
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
 
-        inferred_dict = dict((x['option_strings'], x) for x in inferred_args)
-        declared_dict = dict((x['option_strings'], x) for x in declared_args)
+        # FIXME this is an ugly hack for preserving order
+        dests = [x['option_strings'] for x in inferred_args]
 
-        for kw in declared_dict.values():
+        inferred_dict = dict((x['option_strings'], x) for x in inferred_args)
+
+        for kw in declared_args:
             # 1) make sure that this declared arg conforms to the function
             #    signature and therefore only refines an inferred arg:
             #
@@ -209,18 +216,25 @@ def set_default_command(parser, function):
             # TODO: get `dest` from option strings using parser.prefix_chars etc.
             #
             dest = kw['option_strings']
-            if dest not in inferred_dict:
-                raise ValueError('{func}: argument {flags} does not fit '
-                                 'function signature: {sig}'.format(
-                                    flags=', '.join(kw['option_strings']),
-                                    func=function.__name__,
-                                    sig=', '.join('/'.join(x) for x in sorted(inferred_dict))))
+            if dest in inferred_dict:
+                # 2) merge declared args into inferred ones (e.g. help=...)
+                inferred_dict[dest].update(**kw)
+            else:
+                varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
+                if varkw:
+                    # function accepts **kwargs
+                    dests.append(dest)
+                    inferred_dict[dest] = kw
+                else:
+                    raise ValueError('{func}: argument {flags} does not fit '
+                                     'function signature: {sig}'.format(
+                                        flags=', '.join(kw['option_strings']),
+                                        func=function.__name__,
+                                        sig=', '.join('/'.join(x) for x in sorted(inferred_dict))))
 
-            # 2) merge declared args into inferred ones (e.g. help=...)
-            inferred_dict[dest].update(**kw)
 
         # pack the modified data back into a list
-        inferred_args = inferred_dict.values()
+        inferred_args = [inferred_dict[x] for x in dests]
 
     command_args = inferred_args or declared_args
 

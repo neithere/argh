@@ -164,6 +164,13 @@ def _execute_command(args):
             if spec.varargs:
                 ok_args += getattr(args, spec.varargs)
 
+            varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
+            if varkw:
+                banned = ['function'] + list(ok_args) + list(ok_kwargs)
+                extra = [k for k in vars(args) if k not in banned]
+                for k in extra:
+                    ok_kwargs[k] = getattr(args, k)
+
             result = args.function(*ok_args, **ok_kwargs)
 
         # Yield the results

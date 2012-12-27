@@ -88,24 +88,27 @@ def test_simple_function_varargs():
     assert run(p, 'foo bar') == 'foo, bar\n'
 
 
-@pytest.mark.xfail(reason='TODO')
 def test_simple_function_kwargs():
-    # XXX should be a separate RFC
+
     @argh.arg('foo')
     @argh.arg('--bar')
     def cmd(**kwargs):
         # `kwargs` contain all arguments not fitting ArgSpec.args and .varargs.
         # if ArgSpec.keywords in None, all @arg()'s will have to fit ArgSpec.args
-        for k,v in kwargs:
-            yield '{0}: {1}'.format(k,v)
+        for k in sorted(kwargs):
+            yield '{0}: {1}'.format(k, kwargs[k])
 
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') == '\n'
-    assert run(p, 'hello') == 'foo: hello\n'
-    assert run(p, '--bar 123') == 'bar: 123\n'
-    assert run(p, 'hello --bar 123') == 'foo: hello\nbar: 123\n'
+    if sys.version_info < (3,3):
+        msg = 'too few arguments'
+    else:
+        msg = 'the following arguments are required: foo'
+    assert run(p, '', exit=True) == msg
+    assert run(p, 'hello') == 'bar: None\nfoo: hello\n'
+    assert run(p, '--bar 123', exit=True) == msg
+    assert run(p, 'hello --bar 123') == 'bar: 123\nfoo: hello\n'
 
 
 def test_simple_function_multiple():

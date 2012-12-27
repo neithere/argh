@@ -46,6 +46,7 @@ def test_guess_action_from_default():
 
 
 def test_set_default_command():
+
     def func():
         pass
 
@@ -71,6 +72,7 @@ def test_set_default_command():
 
 
 def test_set_default_command_docstring():
+
     def func():
         "docstring"
         pass
@@ -83,6 +85,7 @@ def test_set_default_command_docstring():
 
 
 def test_set_default_command_vs_multiple():
+
     def one(): return 1
     def two(): return 2
 
@@ -96,6 +99,7 @@ def test_set_default_command_vs_multiple():
 
 
 def test_set_default_command_vs_subparsers():
+
     def one(): return 1
     def two(): return 2
 
@@ -109,6 +113,7 @@ def test_set_default_command_vs_subparsers():
 
 
 def test_set_default_command_mixed_arg_types():
+
     def func():
         pass
 
@@ -125,6 +130,7 @@ def test_set_default_command_mixed_arg_types():
 
 
 def test_set_default_command_varargs():
+
     def func(*file_paths):
         yield ', '.join(file_paths)
 
@@ -136,6 +142,26 @@ def test_set_default_command_varargs():
 
     assert parser.add_argument.mock_calls == [
         mock.call('file_paths', nargs='*'),
+    ]
+
+
+def test_set_default_command_kwargs():
+
+    @argh.arg('foo')
+    @argh.arg('--bar')
+    def func(x, **kwargs):
+        pass
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = mock.MagicMock()
+
+    argh.set_default_command(parser, func)
+
+    assert parser.add_argument.mock_calls == [
+        mock.call('x'),
+        mock.call('foo'),
+        mock.call('--bar'),
     ]
 
 
