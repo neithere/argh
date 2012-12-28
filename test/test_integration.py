@@ -32,6 +32,19 @@ def test_set_default_command_integration():
     assert run(p, '--help', exit=True)
 
 
+def test_set_default_command_integration_merging():
+    @argh.arg('--foo', help='bar')
+    def cmd(foo=1):
+        return foo
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == '1\n'
+    assert run(p, '--foo 2') == '2\n'
+    assert 'bar' in p.format_help()
+
+
 #
 # Function can be added to parser as is
 #
@@ -151,7 +164,7 @@ def test_arg_mismatch_positional():
         p.set_default_command(confuse_a_cat)
 
     msg = ("confuse_a_cat: argument bogus-argument does not fit "
-           "function signature: -f/--funny-things, vet")
+           "function signature: vet, -f/--funny-things")
     assert msg in str(excinfo.value)
 
 
@@ -167,7 +180,7 @@ def test_arg_mismatch_flag():
         p.set_default_command(confuse_a_cat)
 
     msg = ("confuse_a_cat: argument --bogus-argument does not fit "
-           "function signature: -f/--funny-things, vet")
+           "function signature: vet, -f/--funny-things")
     assert msg in str(excinfo.value)
 
 

@@ -157,6 +157,19 @@ def _fix_compat_issue29(function):
     return function
 
 
+def _get_dest(parser, argspec):
+    argspec = argspec.copy()    # parser methods modify source data
+    args = argspec['option_strings']
+    assert args
+
+    if 1 < len(args) or args[0][0].startswith(tuple(parser.prefix_chars)):
+        kwargs = parser._get_optional_kwargs(*args, **argspec)
+    else:
+        kwargs = parser._get_positional_kwargs(*args, **argspec)
+
+    return kwargs['dest']
+
+
 def set_default_command(parser, function):
     """ Sets default command (i.e. a function) for given parser.
 
@@ -200,9 +213,12 @@ def set_default_command(parser, function):
         # We've got a mixture of declared and inferred arguments
 
         # FIXME this is an ugly hack for preserving order
-        dests = [x['option_strings'] for x in inferred_args]
-
-        inferred_dict = dict((x['option_strings'], x) for x in inferred_args)
+        dests = []
+        inferred_dict = {}
+        for x in inferred_args:
+            dest = _get_dest(parser, x)
+            dests.append(dest)
+            inferred_dict[dest] = x
 
         for kw in declared_args:
             # 1) make sure that this declared arg conforms to the function
@@ -212,10 +228,7 @@ def set_default_command(parser, function):
             #      @arg('--bar')  maps to  func(bar=...)
             #
 
-            #
-            # TODO: get `dest` from option strings using parser.prefix_chars etc.
-            #
-            dest = kw['option_strings']
+            dest = _get_dest(parser, kw)
             if dest in inferred_dict:
                 # 2) merge declared args into inferred ones (e.g. help=...)
                 inferred_dict[dest].update(**kw)
@@ -226,12 +239,12 @@ def set_default_command(parser, function):
                     dests.append(dest)
                     inferred_dict[dest] = kw
                 else:
+                    xs = (inferred_dict[x]['option_strings'] for x in dests)
                     raise ValueError('{func}: argument {flags} does not fit '
                                      'function signature: {sig}'.format(
                                         flags=', '.join(kw['option_strings']),
                                         func=function.__name__,
-                                        sig=', '.join('/'.join(x) for x in sorted(inferred_dict))))
-
+                                        sig=', '.join('/'.join(x) for x in xs)))
 
         # pack the modified data back into a list
         inferred_args = [inferred_dict[x] for x in dests]
