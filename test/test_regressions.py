@@ -3,7 +3,7 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
-from .base import DebugArghParser, assert_cmd_fails, assert_cmd_exits, run
+from .base import DebugArghParser, run
 
 
 def test_regression_issue12():
@@ -21,7 +21,7 @@ def test_regression_issue12():
     assert run(p, '') ==  'foo 1, fox 2\n'
     assert run(p, '--foo 3') == 'foo 3, fox 2\n'
     assert run(p, '--fox 3') == 'foo 1, fox 3\n'
-    assert_cmd_fails(p, '-f 3', 'unrecognized')
+    assert 'unrecognized' in run(p, '-f 3', exit=True)
 
 
 def test_regression_issue12_help_flag():
@@ -40,7 +40,7 @@ def test_regression_issue12_help_flag():
     # help added → conflict → short name ignored
     p = DebugArghParser('PROG', add_help=True)
     p.set_default_command(ddos)
-    assert_cmd_exits(p, '-h 127.0.0.1', '')
+    assert None == run(p, '-h 127.0.0.1', exit=True)
 
 
 def test_regression_issue27():
