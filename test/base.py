@@ -69,7 +69,10 @@ def run(parser, command_string, kwargs=None, exit=False):
         return call_cmd(parser, command_string, **kwargs)
     except SystemExit as error:
         if exit:
-            return str(error)
+            if error.args == (None,):
+                return None
+            else:
+                return str(error)
         else:
             raise
     else:
