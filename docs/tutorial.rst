@@ -1,18 +1,18 @@
 Tutorial
-========
+~~~~~~~~
 
-`Argh` is a small library that provides several layers of abstraction on top of
-`argparse`. You are free to use any layer that fits given task best. The layers
-can be mixed. It is always possible to declare a command with the highest
-possible (and least flexible) layer — the :func:`~argh.decorators.command`
-decorator — and then tune the behaviour with any of the lower layers:
-:func:`~argh.decorators.arg`, :func:`~argh.assembling.add_commands`,
-:func:`~argh.dispatching.dispatch` or directly via the `argparse` API.
+`Argh` is a small library that provides several layers of abstraction on top
+of `argparse`.  You are free to use any layer that fits given task best.
+The layers can be mixed.  It is always possible to declare a command with
+the  highest possible (and least flexible) layer and then tune the behaviour
+with any of the lower layers including the native API of `argparse`.
 
-Dive in
+Dive In
 -------
 
-Assume we need a CLI application which output is modulated by arguments::
+Assume we need a CLI application which output is modulated by arguments:
+
+.. code-block:: bash
 
     $ python greet.py
     Hello unknown user!
@@ -20,109 +20,199 @@ Assume we need a CLI application which output is modulated by arguments::
     $ python greet.py John
     Hello John!
 
-This is the whole application::
+This is our business logic:
 
-    # greet.py
+.. code-block:: python
 
-    from argh import *
-
-    @command
     def main(name='unknown user'):
-        return 'Hello ' + name + '!'
+        return 'Hello {0}!'.format(name)
 
-    dispatch_command(main)
+That was plain Python, nothing CLI-specific.
+Let's convert the function into a complete CLI application::
 
-Dead simple.
+    argh.dispatch_command(main)
 
-What if we need multiple commands? Easy::
+Done.  Dead simple.
 
-    from argh import *
+What about multiple commands?  Easy::
 
-    def dump(args):
-        return db.find()
-
-    @command
-    def load(path, format='json'):
-        print loaders[format].load(path)
-
-    if __name__ == '__main__':
-        dispatch_commands([load, dump])
+    argh.dispatch_commands([load, dump])
 
 And then call your script like this::
 
-    $ ./script.py dump
-    $ ./script.py load fixture.json
-    $ ./script.py load fixture.yaml --format=yaml
+    $ ./app.py dump
+    $ ./app.py load fixture.json
+    $ ./app.py load fixture.yaml --format=yaml
 
-I guess you get the picture. Still, there's much more to commands than this.
+I guess you get the picture.  The commands are **ordinary functions**
+with ordinary signatures:
+
+* Declare them somewhere, dispatch them elsewhere.  This ensures **loose
+  coupling** of components in your application.
+* They are **natural** and pythonic. No fiddling with the parser and the related
+  intricacies like ``action='store_true'`` which you could never remember.
+
+Still, there's much more to commands than this.
 
 The examples above raise some questions, including:
 
-* why the ``@command`` decorator for just one of the two functions?
-* do ``return`` and ``print`` behave equally?
+* do we have to ``return``, or ``print`` and ``yield`` are also supported?
 * what's the difference between ``dispatch_command()``
-  and ``dispatch_commands()``? What's going on under the hood?
-
-Then, you'll want to provide help per command and per argument; to specify
-aliases, data types, namespaces and...
+  and ``dispatch_commands()``?  What's going on under the hood?
+* how do I add help for each argument?
+* how do I access the parser to fine-tune its behaviour?
+* how to keep the code as DRY as possible?
+* how do I expose the function under custom name and/or define aliases?
+* how do I get values of given type?
+* can I use a namespace object instead of the natural way?
 
 Just read on.
 
-Declaring commands
+Declaring Commands
 ------------------
 
-Let's start with an almost real-life example where we define some commands.
-First, import :class:`~argh.helpers.ArghParser` (an extended version of the
-standard :class:`argparse.ArgumentParser`) and the decorator
-:func:`~argh.decorators.arg` which we'll use to tell the parser what arguments
-should given function accept::
+The Natural Way
+...............
 
-    # coding: utf-8
-    from argh import arg, ArghParser
+You've already learned the natural way of declaring commands before even
+knowing about `argh`::
 
-Now define a command. It is just a function that may accept arguments. By
-default it should accept a namespace object::
+    def foo(bar, baz=1, flag=False, *quux):
+        return
 
-    def shell(args):
-        "Runs the interactive shell."    # ← the command documentation
-        run_the_interactive_shell()
+This maps to the following CLI signature::
 
-That command didn't actually have any arguments. Let's create another one that
-does::
+    foo [--baz BAZ] -f bar [quux [quux ...]]
 
-    @arg('file', help='fixture to load')  # ← a command argument
-    def load(args):
-        "Loads a JSON fixture from given file."
-        print json.load(args.file)
+...and equals to this chunk of `argparse` code (with the exception that
+in `argh` you don't immediately modify a parser but rather declare what's
+to be added to it later)::
 
-The command ``load`` will now require a positional argument `file`. We'll run
-it later this way::
+    parser.add_argument('bar')
+    parser.add_argument('-b', '--baz', default=1, type=int)
+    parser.add_argument('-f', '--flag', default=False, action='store_true')
+    parser.add_argument('quux', nargs='*')
 
-    $ ./prog.py load fixture.json
+As you see:
 
-Here's another command with a handful of arguments, all of them optional::
+* everything is inferred from the function signature;
+* arguments without default values are interpreted as required positional
+  arguments;
+* arguments with default values are interpreted as options;
 
-    @arg('--host', default='127.0.0.1', help='The host')
-    @arg('--port', default=6060, help='The port')
-    @arg('--noreload', default=False, help='Do not use autoreloader')
-    def serve(args):
-        "Runs a simple webserver."
-        do_something(host=args.host, port=args.port, noreload=args.noreload)
+  * options with a `bool` as default value are considered flags and their
+    presence triggers the action `store_true` (or `store_false`);
+  * values of options that don't trigger actions are coerced to the same type
+    as the default value;
 
-...and the fourth command will follow. It's pretty simple. Note that it too has
-a docstring that will show up when we call our script with the ``--help``
-switch::
+* the ``*args`` entry (function's positional arguments) is interpreted as
+  a single argument with 0..n values.
 
-    def serve_rest(args):
-        "Run some REST service... whatever."
-        do_something()
+Hey, that's a lot for such a simple case!  But then, that's why the API feels
+natural: `argh` does a lot of work for you.
 
-At this point we have four functions: `shell`, `load`, `serve` and
-`serve_rest`. They are not "commands" yet because we don't even have a parser
-or dispatcher. The script must know how to interpret the arguments passed in by
-the user.
+Well, there's nothing more elegant than a simple function.  But simplicity
+comes at a cost in terms of flexibility.  Fortunately, `argh` doesn't stay in
+the way and offers less natural but more powerful tools.
 
-Assembling commands
+Documenting Your Commands
+.........................
+
+The function's docstring is automatically included in the help message.
+When the script is called as ``./app.py my-command --help``, the docstring
+is displayed along with a short overview of the arguments.
+
+However, in many cases it's a good idea do add extra documentation per argument.
+
+In Python 3 it's easy:
+
+.. code-block:: python
+
+    def load(path : 'file to load', format : 'json or yaml' = 'yaml'):
+        "Loads given file as YAML (unless other format is specified)"
+        return loaders[format].load(path)
+
+Python 2 does not support annotations so the above example would raise a
+`SyntaxError`.  You would need to add help via `argparse` API::
+
+    parser.add_argument('path', help='file to load')
+
+...which is far from DRY and very impractical if the functions are dispatched
+in a different place.  This is when extended declarations become useful.
+
+Extended Argument Declaration
+.............................
+
+When function signature isn't enough to fine-tune the argument declarations,
+the :class:`~argh.decorators.arg` decorator comes in handy::
+
+    @arg('path', help='file to load')
+    @arg('--format', help='json or yaml')
+    def load(path, format='yaml'):
+        return loaders[format].load(path)
+
+In this example we have declared a function with arguments `path` and `format`
+and then extended their declarations with help messages.
+
+The decorator mostly mimics `argparse`'s add_argument_.  The `name_or_flags`
+argument must match function signature, that is:
+
+1. ``path`` and ``--format`` map to ``func(path)`` and ``func(format='x')``
+   respectively (short name like ``-f`` can be omitted);
+2. a name that doesn't map to anything in function signature is not allowed.
+
+.. _add_argument: http://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser.add_argument
+
+The decorator doesn't modify the function's behaviour in any way.
+
+Sometimes the function is not likely to be used other than as a CLI command
+and all of its arguments are duplicated with decorators.  Not very DRY.
+In this case ``**kwargs`` can be used as follows::
+
+    @arg('number', default=0, help='the number to increment')
+    def increment(**kwargs):
+        return kwargs['number'] + 1
+
+In other words, if ``**something`` is in the function signature, extra
+arguments are **allowed** to be specified via decorators; they all go into that
+very dictionary.
+
+Mixing ``**kwargs`` with straightforward signatures is also possible::
+
+    @arg('--bingo')
+    def cmd(foo, bar=1, *maybe, **extra):
+        return ...
+
+.. note::
+
+   It is not recommended to mix ``*args`` with extra *positional* arguments
+   declared via decorators because the results can be pretty confusing (though
+   predictable).  See `argh` tests for details.
+
+Namespace Objects
+.................
+
+The default approach of `argparse` is similar to ``**kwargs``: the function
+expects a single object and the CLI arguments are defined elsewhere.
+
+In order to dispatch such "argparse-style" command via `argh`, you need to
+tell the latter that the function expects a namespace object.  This is done by
+wrapping the function into the :func:`~argh.decorators.expects_obj` decorator::
+
+    @expects_obj
+    def cmd(args):
+        return args.foo
+
+This way arguments cannot be defined in the Natural Way but the
+:class:`~argh.decorators.arg` decorator works as usual.
+
+.. note::
+
+   Both in ``**kwargs``-only and `@expects_obj` cases the arguments **must**
+   be declared via decorators or directly via `argparse` API.  Otherwise the
+   command is considered to have zero arguments (apart from ``--help``).
+
+Assembling Commands
 -------------------
 
 .. note::
@@ -130,49 +220,70 @@ Assembling commands
     `Argh` decorators introduce a declarative mode for defining commands. You
     can access the `argparse` API after a parser instance is created.
 
-Our next step is to assemble all the commands — web-related and miscellaneous —
-within a single argument parser. First, create the parser itself::
+After the commands are declared, they should be assembled within a single
+argument parser.  First, create the parser itself::
 
-    parser = ArghParser()  # ← this is an ArgumentParser subclass
+    parser = argparse.ArgumentParser()
 
-Inform it of the first two commands::
+Add a couple of commands via :func:`~argh.assembling.add_commands`::
 
-    parser.add_commands([shell, load])
+    argh.add_commands(parser, [load, dump])
 
-These will be accessible under the related functions' names.
+The commands will be accessible under the related functions' names::
 
-Then add the web-related commands (note the difference)::
+    $ ./app.py {load,dump}
 
-    parser.add_commands([serve, serve_rest],
-                         namespace='www',
-                         title='Web-related commands')
+Subcommands
+...........
 
-We have just created a couple of *subcommands* under the namespace "www". The
-`title` keyword is for documentation purposes (see
-:func:`~argh.assembling.add_commands` documentation).
+If the application has too many commands, they can be grouped into namespaces::
+
+    argh.add_commands(parser, [serve, ping], namespace='www',
+                      title='Web-related commands')
+
+The resulting CLI is as follows::
+
+    $ ./app.py www {serve,ping}
+
+See :doc:`subparsers` for the gory details.
+
+Dispatching Commands
+....................
 
 The last thing is to actually parse the arguments and call the relevant command
 (function) when our module is called as a script::
 
-    if __name__=='__main__':
-        parser.dispatch()
+    if __name__ == '__main__':
+        argh.dispatch(parser)
 
-Great! We have created a fully working script with two simple commands
-(``shell`` and ``load``) and two subcommands (``www serve`` and ``www
-serve-rest``).
+The function :func:`~argh.dispatching.dispatch` uses the parser to obtain the
+relevant function and arguments; then it converts arguments to a form
+digestible by this particular function and calls it.  The errors are wrapped
+if required (see below); the output is processed and written to `stdout`
+or a given file object.  Special care is given to terminal encoding.  All this
+can be fine-tuned, see API docs.
 
-Note how they are assembled together by
-:meth:`~argh.helpers.ArghParser.add_commands`: two at root level and two within
-a namespace "www". This is the resulting command-line interface::
+A set of commands can be assembled and dispatched at once with a shortcut
+:func:`~argh.dispatching.dispatch_commands` which isn't as flexible as the
+full version described above but helps reduce the code in many cases.
+Please refer to the API documentation for details.
 
-    $ ./prog.py shell
-    $ ./prog.py load prancing_ponies.json
-    $ ./prog.py www serve-rest
-    $ ./prog.py www serve --port 6060 --noreload
+Modular Application
+...................
 
-There's also a shortcut :func:`~argh.dispatching.dispatch_commands` which
-isn't as flexible as the full version described above but helps reduce
-the code in many cases.  Please refer to the API documentation for details.
+As you see, with `argh` the CLI application consists of three parts:
+
+1. declarations (functions and their arguments);
+2. assembling (a parser is constructed with these functions);
+3. dispatching (input → parser → function → output).
+
+This clear separation makes a simple script just a bit more readable,
+but for a large application this is extremely important.
+
+Also note that the parser is standard.
+It's OK to call :func:`~argh.dispatching.dispatch` on a custom subclass of `argparse.ArgumentParser`.
+By the way, `argh` ships with :class:`~argh.helpers.ArghParser` which
+integrates the assembling and dispatching functions for DRYness.
 
 Single-command application
 --------------------------
@@ -183,80 +294,13 @@ command like ``check_mail.py check --now`` while ``check_mail.py --now`` would
 suffice. In such cases :func:`~argh.assembling.add_commands` should be replaced
 with :func:`~argh.assembling.set_default_command`::
 
-    def main(args):
+    def main():
         return 1
 
-    parser = ArghParser()
-    parser.set_default_command(main)
+    argh.set_default_command(parser, main)
 
 There's also a nice shortcut :func:`~argh.dispatching.dispatch_command`.
 Please refer to the API documentation for details.
-
-Subparsers
-----------
-
-The statement ``parser.add_commands([bar, quux])`` builds two subparsers named
-`bar` and `quux`. A "subparser" is an argument parser bound to a namespace. In
-other words, it works with everything after a certain positional argument.
-`Argh` implements commands by creating a subparser for every function.
-
-Again, here's how we create two subparsers for commands ``foo`` and ``bar``::
-
-    parser = ArghParser()
-    parser.add_commands([bar, quux])
-    parser.dispatch()
-
-The equivalent code without `Argh` would be::
-
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
-
-    foo_parser = subparsers.add_parser('foo')
-    foo_parser.set_defaults(function=foo)
-
-    bar_parser = subparsers.add_parser('bar')
-    bar_parser.set_defaults(function=bar)
-
-    args = parser.parse_args()
-    print args.function(args)
-
-Now consider this expression::
-
-    parser = ArghParser()
-    parser.add_commands([bar, quux], namespace='foo')
-    parser.dispatch()
-
-It produces a command hierarchy for the command-line expressions ``foo bar``
-and ``foo quux``. This involves "subsubparsers". Without `Argh` you would need
-to write something like this (generic argparse API)::
-
-    import sys
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
-
-    foo_parser = subparsers.add_parser('foo')
-    foo_subparsers = foo_parser.add_subparsers()
-
-    foo_bar_parser = foo_subparsers.add_parser('bar')
-    foo_bar_parser.set_defaults(function=bar)
-
-    foo_quux_parser = foo_subparsers.add_parser('quux')
-    foo_quux_parser.set_defaults(function=quux)
-
-    args = parser.parse_args()
-    print args.function(args)
-
-.. note::
-
-    You don't have to use :class:`~argh.helpers.ArghParser`; the standard
-    :class:`argparse.ArgumentParser` will do. You will just need to call
-    stand-alone functions :func:`~argh.helpers.add_commands` and
-    :func:`~argh.helpers.dispatch` instead of :class:`~argh.helpers.ArghParser`
-    methods.
 
 Generated help
 --------------
@@ -265,18 +309,19 @@ Generated help
 arguments. The usage information is displayed when user provides the switch
 ``--help``. However `argparse` does not provide a ``help`` *command*.
 
-`Argh` always adds the command ``help`` automatically. It displays the
-docstring:
+`Argh` always adds the command ``help`` automatically:
 
     * ``help shell`` → ``shell --help``
     * ``help web serve`` → ``web serve --help``
+
+See also `<#documenting-your-commands>`_.
 
 Returning results
 -----------------
 
 Most commands print something. The traditional straightforward way is this::
 
-    def foo(args):
+    def foo():
         print('hello')
         print('world')
 
@@ -288,24 +333,29 @@ However, this approach has a couple of flaws:
       so Unicode output may break the pipe (e.g. ``$ foo.py test | wc -l``). Of
       course you don't want to do the checks on every `print` statement.
 
-A good solution would be to collect the output in a list and bulk-process it at
-the end. Actually you can simply return a list and `Argh` will take care of the
-encoding::
+Good news: if you return a string, `Argh` will take care of the encoding::
 
-    def foo(args):
+    def foo():
+        return 'привет'
+
+But what about multiple print statements?  Collecting the output in a list
+and bulk-processing it at the end would suffice.  Actually you can simply
+return a list and `Argh` will take care of it::
+
+    def foo():
         return ['hello', 'world']
 
 .. note::
 
-    If you return a string, it is printed as is. A list or tuple is iterated
+    If you return a string, it is printed as is.  A list or tuple is iterated
     and printed line by line. This is how :func:`dispatcher
-    <argh.helpers.dispatch>` works.
+    <argh.dispatching.dispatch>` works.
 
 This is fine, but what about non-linear code with if/else, exceptions and
 interactive prompts? Well, you don't need to manage the stack of results within
 the function. Just convert it to a generator and `Argh` will do the rest::
 
-    def foo(args):
+    def foo():
         yield 'hello'
         yield 'world'
 
@@ -323,10 +373,9 @@ Exceptions
 Usually you only want to display the traceback on unexpected exceptions. If you
 know that something can be wrong, you'll probably handle it this way::
 
-    @arg('key')
-    def show_item(args):
+    def show_item(key):
         try:
-            item = items[args.key]
+            item = items[key]
         except KeyError as error:
             print(e)    # hide the traceback
             sys.exit()  # bail out (unsafe!)
@@ -334,14 +383,13 @@ know that something can be wrong, you'll probably handle it this way::
             ... do something ...
             print(item)
 
-This works but the print-and-exit tasks are repetitive; moreover, there are
-cases when you don't want to raise `SystemExit` and just want to collect the
+This works, but the print-and-exit tasks are repetitive; moreover, there are
+cases when you don't want to raise `SystemExit` and just need to collect the
 output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
 
-    @arg('key')
-    def show_item(args):
+    def show_item(key):
         try:
-            item = items[args.key]
+            item = items[key]
         except KeyError as error:
             raise CommandError(error)  # bail out, hide traceback
         else:
@@ -353,9 +401,8 @@ message (depending on how :func:`~argh.dispatching.dispatch` was called).
 
 The decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 
-    @arg('key')
     @wrap_errors(KeyError)        # catch KeyError, show the message, hide traceback
-    def show_item(args):
-        return items[args.key]    # raise KeyError
+    def show_item(key):
+        return items[key]    # raise KeyError
 
 Of course it should be used with care in more complex commands.
