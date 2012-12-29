@@ -31,32 +31,36 @@ that a custom dispatcher may not do.
 Installation
 ------------
 
+Using pip::
+
     $ pip install argh
 
-Example
--------
+Arch Linux (AUR)::
+
+    $ yaourt python-argh
+
+Examples
+--------
 
 A very simple application with one command::
 
     from argh import *
 
-    @dispatch_command
-    @arg('name')
-    def main(args):
-        return 'Hello ' + args.name
+    def main():
+        return 'Hello world'
 
-An application with multiple commands::
+    dispatch_command(main)
 
-    @command
-    def echo(text='hello'):
-        print text
+A flexible application with multiple commands::
 
-    @command
-    def another_echo(text='hi there'):
-        print text
+    def echo(text):
+        return text
+
+    def greeter(name, greeting='hello'):
+        return greeting + ', ' + name
 
     parser = ArghParser()
-    parser.add_commands([echo, another_echo])
+    parser.add_commands([echo, greeter])
 
     if __name__ == '__main__':
         parser.dispatch()
@@ -64,10 +68,23 @@ An application with multiple commands::
 The powerful API of `argparse` is also available::
 
     @arg('text', default='hello world', nargs='+', help='The message')
-    def echo(args):
+    def echo(text):
         print args.text
 
-The approaches can be safely combined.
+The approaches can be safely combined even up to this level::
+
+    # adding help to `foo` which is in the function signature:
+    @arg('foo', help='blah')
+    # these are not in the signature so they go to **kwargs:
+    @arg('baz')
+    @arg('-q', '--quux')
+    # the function itself:
+    def cmd(foo, bar=1, *args, **kwargs):
+        yield foo
+        yield bar
+        yield ', '.join(args)
+        yield kwargs['baz']
+        yield kwargs['quux']
 
 Links
 -----
@@ -80,12 +97,14 @@ Links
   * `Issue tracker`_
   * `Mailing list`_ (subscribe to get important announcements)
   * Direct e-mail (neithere at gmail com)
+  * Twitter_ (to get notified of commits; mostly for lulz)
 
 .. _project home page: http://bitbucket.org/neithere/argh/
 .. _documentation: http://argh.readthedocs.org
 .. _package distribution: http://pypi.python.org/pypi/argh
 .. _issue tracker: http://bitbucket.org/neithere/argh/issues/
 .. _mailing list: http://groups.google.com/group/argh-users
+.. _twitter: http://twitter.com/python-argh
 
 Author
 ------
