@@ -145,33 +145,35 @@ def _execute_command(args):
         if getattr(args.function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
             result = args.function(args)
         else:
+            # namespace -> dictionary
+            _flat_key = lambda key: key.replace('-', '_')
+            all_input = dict((_flat_key(k), v) for k,v in  vars(args).items())
+
             # filter the namespace variables so that only those expected by the
             # actual function will pass
+
             f = args.function
             if PY3:
                 spec = inspect.getfullargspec(f)
             else:
                 spec = inspect.getargspec(f)
 
-            def _normalize_keys(pairs):
-                return dict((k.replace('-','_'),v) for k,v in pairs)
-            normalized_kwargs = _normalize_keys(args._get_kwargs())
+            positional = [all_input[k] for k in spec.args]
+            keywords = {}
 
-            ok_args = [x for x in args._get_args() if x in spec.args]
-            ok_kwargs = dict((k,v) for k,v in normalized_kwargs.items()
-                             if k in spec.args)
-
+            # *args
             if spec.varargs:
-                ok_args += getattr(args, spec.varargs)
+                positional += getattr(args, spec.varargs)
 
+            # **kwargs
             varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
             if varkw:
-                banned = ['function'] + list(ok_args) + list(ok_kwargs)
-                extra = [k for k in vars(args) if k not in banned]
+                not_kwargs = ['function'] + spec.args + [spec.varargs]
+                extra = [k for k in vars(args) if k not in not_kwargs]
                 for k in extra:
-                    ok_kwargs[k] = getattr(args, k)
+                    keywords[k] = getattr(args, k)
 
-            result = args.function(*ok_args, **ok_kwargs)
+            result = args.function(*positional, **keywords)
 
         # Yield the results
         if isinstance(result, (GeneratorType, list, tuple)):

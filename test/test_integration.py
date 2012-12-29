@@ -137,6 +137,52 @@ def test_class_method_as_command():
     pass
 
 
+def test_all_specs_in_one():
+
+    @argh.arg('foo')
+    @argh.arg('--bar')
+    @argh.arg('fox')
+    @argh.arg('--baz')
+    def cmd(foo, bar=1, *args, **kwargs):
+        yield 'foo: {0}'.format(foo)
+        yield 'bar: {0}'.format(bar)
+        yield '*args: {0}'.format(args)
+        for k in sorted(kwargs):
+            yield '** {0}: {1}'.format(k, kwargs[k])
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    # 1) bar=1 is treated as --bar so positionals from @arg that go **kwargs
+    #    will still have higher priority than bar.
+    # 2) *args, a positional with nargs='*', sits between two required
+    #    positionals (foo and fox), so it gets nothing.
+    assert run(p, 'one two') == (
+        'foo: one\n'
+        'bar: 1\n'
+        '*args: ()\n'
+        '** baz: None\n'
+        '** fox: two\n')
+
+    # two required positionals (foo and fox) get an argument each and one extra
+    # is left; therefore the middle one is given to *args.
+    assert run(p, 'one two three') == (
+        'foo: one\n'
+        'bar: 1\n'
+        "*args: ('two',)\n"
+        '** baz: None\n'
+        '** fox: three\n')
+
+    # two required positionals (foo and fox) get an argument each and two extra
+    # are left; both are given to *args (it's greedy).
+    assert run(p, 'one two three four') == (
+        'foo: one\n'
+        'bar: 1\n'
+        "*args: ('two', 'three')\n"
+        '** baz: None\n'
+        '** fox: four\n')
+
+
 def test_arg_merged():
     """ @arg merges into function signature.
     """
