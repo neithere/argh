@@ -57,7 +57,7 @@ setup(
     version  = __version__,
     packages = ['argh'],
     provides = ['argh'],
-    requires = ['python(>=2.5)', 'argparse(>=1.1)'],
+    requires = ['python(>=2.6)', 'argparse(>=1.1)'],
     install_requires = ['argparse>=1.1'],    # for Python 2.6 (no bundled argparse; setuptools is likely to exist)
 
     # copyright
