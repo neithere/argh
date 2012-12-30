@@ -63,7 +63,7 @@ The examples above raise some questions, including:
 * how do I access the parser to fine-tune its behaviour?
 * how to keep the code as DRY as possible?
 * how do I expose the function under custom name and/or define aliases?
-* how do I get values of given type?
+* how do I have values converted to given type?
 * can I use a namespace object instead of the natural way?
 
 Just read on.
@@ -207,10 +207,9 @@ This way arguments cannot be defined in the Natural Way but the
 :class:`~argh.decorators.arg` decorator works as usual.
 
 .. note::
-
-   Both in ``**kwargs``-only and `@expects_obj` cases the arguments **must**
-   be declared via decorators or directly via `argparse` API.  Otherwise the
-   command is considered to have zero arguments (apart from ``--help``).
+   In both cases — ``**kwargs``-only and `@expects_obj` — the arguments
+   **must** be declared via decorators or directly via the `argparse` API.
+   Otherwise the command has zero arguments (apart from ``--help``).
 
 Assembling Commands
 -------------------
@@ -248,7 +247,7 @@ The resulting CLI is as follows::
 See :doc:`subparsers` for the gory details.
 
 Dispatching Commands
-....................
+--------------------
 
 The last thing is to actually parse the arguments and call the relevant command
 (function) when our module is called as a script::
@@ -271,7 +270,7 @@ Please refer to the API documentation for details.
 Modular Application
 ...................
 
-As you see, with `argh` the CLI application consists of three parts:
+As you can see, with `argh` the CLI application consists of three parts:
 
 1. declarations (functions and their arguments);
 2. assembling (a parser is constructed with these functions);
@@ -281,7 +280,9 @@ This clear separation makes a simple script just a bit more readable,
 but for a large application this is extremely important.
 
 Also note that the parser is standard.
-It's OK to call :func:`~argh.dispatching.dispatch` on a custom subclass of `argparse.ArgumentParser`.
+It's OK to call :func:`~argh.dispatching.dispatch` on a custom subclass
+of `argparse.ArgumentParser`.
+
 By the way, `argh` ships with :class:`~argh.helpers.ArghParser` which
 integrates the assembling and dispatching functions for DRYness.
 
