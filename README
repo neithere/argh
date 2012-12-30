@@ -77,7 +77,9 @@ Arch Linux (AUR)::
 Examples
 --------
 
-A very simple application with one command::
+A very simple application with one command:
+
+.. code-block:: python
 
     from argh import *
 
@@ -86,7 +88,9 @@ A very simple application with one command::
 
     dispatch_command(main)
 
-A potentially modular application with multiple commands::
+A potentially modular application with multiple commands:
+
+.. code-block:: python
 
     # declaring:
 
@@ -114,7 +118,9 @@ The powerful API of `argparse` is also available:
     def echo(text):
         print text
 
-The approaches can be safely combined even up to this level::
+The approaches can be safely combined even up to this level:
+
+.. code-block:: python
 
     # adding help to `foo` which is in the function signature:
     @arg('foo', help='blah')
