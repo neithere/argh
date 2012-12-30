@@ -50,7 +50,7 @@ In a nutshell
 
     * infer command name from function name;
     * infer arguments from function signature;
-    * infer agrument type from the default value;
+    * infer argument type from the default value;
     * infer argument action from the default value (for booleans);
     * add an alias root command ``help`` for the ``--help`` argument.
 
