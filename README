@@ -1,31 +1,66 @@
-Argh, argparse!
-===============
+Argh: The Natural CLI
+=====================
 
-Did you ever say "argh" trying to remember the details of `optparse` or
-`argparse` API?  If yes, this package may be useful for you.
+Building a command-line interface?  Found yourself uttering "argh!" while
+struggling with the API of `argparse`?  Don't want to lose its power but don't
+need the complexity?
+
+.. epigraph::
+
+    Everything should be made as simple as possible, but no simpler.
+
+    -- Albert Einstein (probably)
 
 `Argh` provides a wrapper for `argparse`.  `Argparse` is a very powerful tool;
-`argh` just makes it easy to use.
+`Argh` just makes it easy to use.
 
 In a nutshell
 -------------
 
-Here's a list of features that `argh` adds to `argparse`:
+`Argh`-powered applications are *simple* but *flexible*:
 
-* mark a function as a CLI command and specify its arguments before the parser
-  is instantiated;
-* nested commands made easy: no messing with subparsers (though they are of
-  course used under the hood);
-* infer command name from function name;
-* infer agrument type from the default value;
-* infer argument action from the default value (for booleans);
-* infer arguments from function signature;
-* add an alias root command ``help`` for the ``--help`` argument;
-* enable passing unwrapped arguments to certain functions instead of a
-  `argparse.Namespace` object.
+:Modular:
+    Declaration of commands can be decoupled from assembling and dispatching;
 
-`Argh` is fully compatible with `argparse`.  You can mix `argh`-agnostic and
-`argh`-aware code.  Just keep in mind that the dispatcher does some extra work
+:Pythonic:
+    Commands are declared naturally, no complex API calls in most cases;
+
+:Reusable:
+    Commands are plain functions, can be used directly outside of CLI context;
+
+:Layered:
+    The complexity of code raises with requirements;
+
+:Transparent:
+    The full power of argparse is available whenever needed;
+
+:Namespaced:
+    Nested commands are a piece of cake, no messing with subparsers (though
+    they are of course used under the hood);
+
+:Term-Friendly:
+    Command output is processed with respect to stream encoding;
+
+:Unobtrusive:
+    `Argh` can dispatch a subset of pure-`argparse` code, and pure-`argparse`
+    code can update and dispatch a parser assembled with `Argh`;
+
+:DRY:
+    The amount of boilerplate code is minimal; among other things, `Argh` will:
+
+    * infer command name from function name;
+    * infer arguments from function signature;
+    * infer agrument type from the default value;
+    * infer argument action from the default value (for booleans);
+    * add an alias root command ``help`` for the ``--help`` argument.
+
+Sounds good?  Check the tutorial!
+
+Relation to argparse
+--------------------
+
+`Argh` is fully compatible with `argparse`.  You can mix `Argh`-agnostic and
+`Argh`-aware code.  Just keep in mind that the dispatcher does some extra work
 that a custom dispatcher may not do.
 
 Installation
@@ -51,7 +86,9 @@ A very simple application with one command::
 
     dispatch_command(main)
 
-A flexible application with multiple commands::
+A potentially modular application with multiple commands::
+
+    # declaring:
 
     def echo(text):
         return text
@@ -59,17 +96,23 @@ A flexible application with multiple commands::
     def greeter(name, greeting='hello'):
         return greeting + ', ' + name
 
+    # assembling:
+
     parser = ArghParser()
     parser.add_commands([echo, greeter])
+
+    # dispatching:
 
     if __name__ == '__main__':
         parser.dispatch()
 
-The powerful API of `argparse` is also available::
+The powerful API of `argparse` is also available:
+
+.. code-block:: python
 
     @arg('text', default='hello world', nargs='+', help='The message')
     def echo(text):
-        print args.text
+        print text
 
 The approaches can be safely combined even up to this level::
 
