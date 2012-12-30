@@ -50,7 +50,7 @@ readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
 setup(
     # overview
     name             = 'argh',
-    description      = 'A simple argparse wrapper.',
+    description      = 'An unobtrusive argparse wrapper with natural syntax',
     long_description = readme,
 
     # technical info
