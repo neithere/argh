@@ -33,6 +33,7 @@ Details
    reference
    similar
    projects
+   subparsers
 
 Indices and tables
 ==================
