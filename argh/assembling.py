@@ -105,6 +105,9 @@ def _guess(kwargs):
     """
     guessed = {}
 
+    TYPE_AWARE_ACTIONS = 'store', 'append'
+    "Parser actions that accept argument 'type'."
+
     # guess type/action from default value
     value = kwargs.get('default')
     if value is not None:
@@ -114,7 +117,9 @@ def _guess(kwargs):
                 guessed['action'] = 'store_false' if value else 'store_true'
         elif kwargs.get('type') is None:
             # infer type from default value
-            guessed['type'] = type(value)
+            # (make sure that action handler supports this keyword)
+            if kwargs.get('action', 'store') in TYPE_AWARE_ACTIONS:
+                guessed['type'] = type(value)
 
     # guess type from choices (first item)
     if kwargs.get('choices') and 'type' not in list(guessed) + list(kwargs):

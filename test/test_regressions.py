@@ -5,6 +5,8 @@ Regression tests
 """
 from .base import DebugArghParser, run
 
+import argh
+
 
 def test_regression_issue12():
     """Issue #12: @command was broken if there were more than one argument
@@ -46,7 +48,7 @@ def test_regression_issue12_help_flag():
 def test_regression_issue27():
     """Issue #27: store_true is not set for inferred bool argument.
 
-    Reason: when @command was refactored, it stopped using @arg, but it is
+    :Reason: when @command was refactored, it stopped using @arg, but it is
     it was there that guesses (choices→type, default→type and
     default→action) were made.
     """
@@ -70,3 +72,24 @@ def test_regression_issue27():
     # default → action (store_true)
     assert run(p, 'parrot') == 'beautiful plumage\n'
     assert run(p, 'parrot --dead') == 'this parrot is no more\n'
+
+
+def test_regression_issue31():
+    """ Issue #31: Argh fails with parameter action type 'count' if a default
+    value is provided.
+
+    :Reason: assembling._guess() would infer type from default value without
+        regard to the action.  _CountAction does not accept argument "type".
+
+    :Solution: restricted type inferring to actions "store" and "append".
+    """
+
+    @argh.arg('-v', '--verbose', dest='verbose', action='count', default=0)
+    def cmd(**kwargs):
+        yield kwargs.get('verbose', -1)
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+    assert '0\n' == run(p, '')
+    assert '1\n' == run(p, '-v')
+    assert '2\n' == run(p, '-vv')
