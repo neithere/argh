@@ -14,14 +14,14 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
+import sys
 import argparse
-import inspect
 
-from argh.six import PY3, string_types
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
 from argh.utils import get_subparsers
+from argh import compat
 
 
 __all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
@@ -48,18 +48,15 @@ def _get_args_from_signature(function):
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
 
-    if PY3:
-        spec = inspect.getfullargspec(function)
-    else:
-        spec = inspect.getargspec(function)
+    spec = compat.getargspec(function)
 
     kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
 
-    if PY3:
+    if sys.version_info < (3,0):
+        annotations = {}
+    else:
         annotations = dict((k,v) for k,v in function.__annotations__.items()
                            if isinstance(v, str))
-    else:
-        annotations = {}
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
@@ -145,10 +142,8 @@ def _fix_compat_issue29(function):
     # It's very likely that in the latter case the function accepts one and
     # only argument named "args".  If so, we simply wrap this function in
     # @expects_obj and issue a warning.
-    if PY3:
-        spec = inspect.getfullargspec(function)
-    else:
-        spec = inspect.getargspec(function)
+    spec = compat.getargspec(function)
+
     if spec.args == ['args']:
         # this is it -- a classic old-style function, goddamnit.
         # no checking *args and **kwargs because they are unlikely to matter.
@@ -207,10 +202,7 @@ def set_default_command(parser, function):
 
     function = _fix_compat_issue29(function)
 
-    if PY3:
-        spec = inspect.getfullargspec(function)
-    else:
-        spec = inspect.getargspec(function)
+    spec = compat.getargspec(function)
 
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))
@@ -350,7 +342,6 @@ def add_commands(parser, functions, namespace=None, title=None,
 
     if namespace:
         # make a namespace placeholder and register the commands within it
-        assert isinstance(namespace, string_types)
         subsubparser = subparsers.add_parser(namespace, help=title)
         subparsers = subsubparser.add_subparsers(title=title,
                                                  description=description,

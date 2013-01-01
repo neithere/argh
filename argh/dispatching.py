@@ -17,14 +17,12 @@ import inspect
 import sys
 from types import GeneratorType
 
-from argh.six import text_type, BytesIO, StringIO, PY3
-
+from argh import compat, io
 from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
-from argh import io
 
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands']
@@ -106,7 +104,10 @@ def dispatch(parser, argv=None, add_help_command=True,
     if output_file is None:
         # user wants a string; we create an internal temporary file-like object
         # and will return its contents as a string
-        f = StringIO() if PY3 else BytesIO()
+        if sys.version_info < (3,0):
+            f = compat.BytesIO()
+        else:
+            f = compat.StringIO()
     else:
         # normally this is stdout; can be any file
         f = output_file
@@ -152,11 +153,7 @@ def _execute_command(args):
             # filter the namespace variables so that only those expected by the
             # actual function will pass
 
-            f = args.function
-            if PY3:
-                spec = inspect.getfullargspec(f)
-            else:
-                spec = inspect.getargspec(f)
+            spec = compat.getargspec(args.function)
 
             positional = [all_input[k] for k in spec.args]
             keywords = {}
@@ -193,7 +190,7 @@ def _execute_command(args):
         for line in result:
             yield line
     except tuple(wrappable_exceptions) as e:
-        yield text_type(e)
+        yield compat.text_type(e)
 
 
 def dispatch_command(function, *args, **kwargs):

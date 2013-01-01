@@ -13,8 +13,9 @@ Output Processing
 ~~~~~~~~~~~~~~~~~
 """
 import locale
+import sys
 
-from argh.six import binary_type, text_type, PY3
+from argh import compat
 
 
 __all__ = ['dump', 'encode_output', 'safe_input']
@@ -22,24 +23,24 @@ __all__ = ['dump', 'encode_output', 'safe_input']
 
 def _input(prompt):
     # this function can be mocked up in tests
-    if PY3:
-        return input(prompt)
-    else:
+    if sys.version_info < (3,0):
         return raw_input(prompt)
+    else:
+        return input(prompt)
 
 
 def safe_input(prompt):
     "Prompts user for input. Correctly handles prompt message encoding."
 
-    if PY3:
-        if not isinstance(prompt, text_type):
-            # Python 3.x: bytes →  unicode
-            prompt = prompt.decode()
-    else:
-        if isinstance(prompt, text_type):
+    if sys.version_info < (3,0):
+        if isinstance(prompt, compat.text_type):
             # Python 2.x: unicode →  bytes
             encoding = locale.getpreferredencoding() or 'utf-8'
             prompt = prompt.encode(encoding)
+    else:
+        if not isinstance(prompt, compat.text_type):
+            # Python 3.x: bytes →  unicode
+            prompt = prompt.decode()
 
     return _input(prompt)
 
@@ -72,24 +73,24 @@ def encode_output(value, output_file):
         The output is binary if the object is a TTY; otherwise it's Unicode.
 
     """
-    if not PY3:
+    if sys.version_info < (3,0):
         # handle special cases in Python 2.x
 
         if output_file.isatty():
             # TTY expects bytes
-            if isinstance(value, text_type):
+            if isinstance(value, compat.text_type):
                 encoding = getattr(output_file, 'encoding', None)
                 encoding = encoding or locale.getpreferredencoding() or 'utf-8'
                 # unicode →  binary
                 return value.encode(encoding)
-            return binary_type(value)
+            return compat.binary_type(value)
 
-        if isinstance(value, binary_type):
+        if isinstance(value, compat.binary_type):
             # binary →  unicode
             return value.decode('utf-8')
 
     # whatever → unicode
-    return text_type(value)
+    return compat.text_type(value)
 
 
 def dump(raw_data, output_file):

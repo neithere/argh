@@ -3,8 +3,10 @@
 Common stuff for tests
 ~~~~~~~~~~~~~~~~~~~~~~
 """
+import sys
+
 from argh import ArghParser
-from argh.six import  PY3, BytesIO, StringIO, string_types
+from argh.compat import BytesIO, StringIO
 
 
 class DebugArghParser(ArghParser):
@@ -19,14 +21,14 @@ class DebugArghParser(ArghParser):
 
 def make_IO():
     "Returns a file object of the same type as `sys.stdout`."
-    if PY3:
-        return StringIO()
-    else:
+    if sys.version_info < (3,0):
         return BytesIO()
+    else:
+        return StringIO()
 
 
 def call_cmd(parser, command_string, **kwargs):
-    if isinstance(command_string, string_types):
+    if hasattr(command_string, 'split'):
         args = command_string.split()
     else:
         args = command_string

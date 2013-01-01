@@ -3,6 +3,7 @@
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+import sys
 import mock
 import pytest
 
@@ -167,7 +168,7 @@ def test_set_default_command_kwargs():
 
 def test_annotation():
     "Extracting argument help from function annotations (Python 3 only)."
-    if not argh.six.PY3:
+    if sys.version_info < (3,0):
         pytest.skip('unsupported configuration')
 
     # Yes, this looks horrible, but otherwise Python 2 would die

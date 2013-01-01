@@ -9,7 +9,7 @@ from .base import make_IO
 
 
 def _dispatch_and_capture(func, command_string, **kwargs):
-    if isinstance(command_string, argh.six.string_types):
+    if hasattr(command_string, 'split'):
         args = command_string.split()
     else:
         args = command_string

@@ -3,6 +3,7 @@
 Interaction Tests
 ~~~~~~~~~~~~~~~~~
 """
+import sys
 import argh
 
 
@@ -54,7 +55,10 @@ def test_prompt():
 def test_encoding():
     "Unicode and bytes are accepted as prompt message"
     def raw_input_mock(prompt):
-        if not argh.six.PY3:
-            assert isinstance(prompt, argh.six.binary_type)
+        if sys.version_info <= (3,0):
+            assert isinstance(prompt, argh.compat.binary_type)
     argh.io._input = raw_input_mock
-    argh.confirm(argh.six.u('привет'))
+    msg = 'привет'
+    if sys.version_info <= (3,0):
+        msg = unicode(msg, 'unicode_escape')
+    argh.confirm(msg)
