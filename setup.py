@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #    Argh is a simple argparse wrapper.
-#    Copyright © 2010  Andrey Mikhaylenko
+#    Copyright © 2010—2013  Andrey Mikhaylenko
 #
 #    This file is part of Argh.
 #
