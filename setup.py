@@ -20,6 +20,7 @@
 #    along with Argh.  If not, see <http://gnu.org/licenses/>.
 
 
+import io
 import os
 
 # Why distutils?
@@ -36,7 +37,7 @@ except:
 # Importing `__version__` from `argh` would trigger a cascading import
 # of `argparse`. We need to avoid this as Python < 2.7 ships without argparse.
 __version__ = None
-with open('argh/__init__.py') as f:
+with io.open('argh/__init__.py', encoding='utf8') as f:
     for line in f:
         if line.startswith('__version__'):
             exec(line)
@@ -44,7 +45,8 @@ with open('argh/__init__.py') as f:
 assert __version__, 'argh.__version__ must be imported correctly'
 
 
-readme = open(os.path.join(os.path.dirname(__file__), 'README')).read()
+with io.open(os.path.join(os.path.dirname(__file__), 'README'), encoding='ascii') as f:
+	readme = f.read()
 
 
 setup(
