@@ -1,5 +1,5 @@
 Similar projects
-================
+~~~~~~~~~~~~~~~~
 
 Obviously, `Argh` is not the only CLI helper library in the Python world.
 It was created when some similar solutions already existed; more appeared

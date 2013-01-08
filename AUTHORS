@@ -1,20 +1,31 @@
-The "Argh" project was originally developed by:
+Contributors
+~~~~~~~~~~~~
 
-  * Andrey Mikhaylenko <neithere@gmail.com>
+Here is an inevitably incomplete list of contributors, i.e. people who have
+suggested features, reported bugs, submitted patches, wrote packaging scripts
+and generally made *Argh* better:
 
-...and here is an inevitably incomplete list of contributors, i.e.
-people who have submitted patches, reported bugs, added translations
-and generally made Models better:
+:Andrey Mikhaylenko:  Author, Maintainer
+:Gora Khargosh:       Bug reports
+:Mika Eloranta:       Patches
+:Fabien Devaux:       ArchLinux package
+:Hannu Valtonen:      Debian package
+:Georges Dubus:       Python3 support fixes
+:Roman Ovchinnikov:   Debian package
+:thethomasw:          Python2.6 bug reports
+:Tuk Bredsdorff:      List of similar projects
+:Mike Gilbert:        Gentoo package; patch
 
-  * Gora Khargosh (bug reports)
-  * Mika Eloranta (patches)
-  * Fabien Devaux (ArchLinux package)
-  * Hannu Valtonen (Debian package)
-  * Georges Dubus (Python3 support fixes)
-  * Roman Ovchinnikov (Debian package)
-  * thethomasw (Python2.6 bug reports)
-  * Tuk Bredsdorff (list of similar projects)
-  * Mike Gilbert (encoding patch; Gentoo package)
-  * you? :)
+...you? :-)
+    Patches, ideas and any feedback is highly appreciated.
 
-Patches, ideas and any feedback is highly appreciated.
+Acknowledgements
+----------------
+
+Early versions were somewhat inspired by Alexander Solovyov's opster_.
+
+.. _opster: http://pypi.python.org/pypi/opster
+
+Thanks to the authors of argparse_ for the excellent library.
+
+.. _argparse: http://docs.python.org/dev/library/argparse.html

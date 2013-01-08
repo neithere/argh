@@ -34,6 +34,7 @@ Details
    similar
    projects
    subparsers
+   contributors
 
 Indices and tables
 ==================
