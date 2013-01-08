@@ -181,3 +181,37 @@ def test_annotation():
     p.set_default_command(argh.command(cmd))
     prog_help = p.format_help()
     assert 'quux' in prog_help
+
+
+@mock.patch('argh.assembling.COMPLETION_ENABLED', True)
+def test_custom_argument_completer():
+    "Issue #33: Enable custom per-argument shell completion"
+
+    def func(foo):
+        pass
+
+    setattr(func, argh.constants.ATTR_ARGS, [
+        dict(option_strings=('foo',), completer='STUB')
+    ])
+
+    p = argh.ArghParser()
+    p.set_default_command(func)
+
+    assert p._actions[-1].completer == 'STUB'
+
+
+@mock.patch('argh.assembling.COMPLETION_ENABLED', False)
+def test_custom_argument_completer_no_backend():
+    "If completion backend is not available, nothing breaks"
+
+    def func(foo):
+        pass
+
+    setattr(func, argh.constants.ATTR_ARGS, [
+        dict(option_strings=('foo',), completer='STUB')
+    ])
+
+    p = argh.ArghParser()
+    p.set_default_command(func)
+
+    assert not hasattr(p._actions[-1], 'completer')

@@ -17,6 +17,7 @@ Functions and classes to properly assemble your commands in a parser.
 import sys
 import argparse
 
+from argh.completion import COMPLETION_ENABLED
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
@@ -256,8 +257,11 @@ def set_default_command(parser, function):
         dest_or_opt_strings = draft.pop('option_strings')
         if parser.add_help and '-h' in dest_or_opt_strings:
             dest_or_opt_strings = [x for x in dest_or_opt_strings if x != '-h']
+        completer = draft.pop('completer', None)
         try:
-            parser.add_argument(*dest_or_opt_strings, **draft)
+            action = parser.add_argument(*dest_or_opt_strings, **draft)
+            if COMPLETION_ENABLED and completer:
+                action.completer = completer
         except Exception as e:
             raise type(e)('{func}: cannot add arg {args}: {msg}'.format(
                 args='/'.join(dest_or_opt_strings), func=function.__name__, msg=e))

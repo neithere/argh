@@ -41,6 +41,22 @@ whether you let it do it for you or use the underlying API.
 
 .. _argcomplete: https://github.com/kislyuk/argcomplete
 .. _python-selfcompletion: https://github.com/dbarnett/python-selfcompletion
+
+Argument-level completion
+-------------------------
+
+Argcomplete_ supports custom "completers".  The documentation suggests adding
+the completer as an attribute of the argument parser action::
+
+    parser.add_argument("--env-var1").completer = EnvironCompleter
+
+However, this doesn't fit the normal `Argh`-assisted workflow.
+It is recommended to use the :func:`~argh.decorators.arg` decorator::
+
+    @arg('--env-var1', completer=EnvironCompleter)
+    def func(...):
+        ...
+
 """
 
 COMPLETION_ENABLED = False

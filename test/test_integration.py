@@ -7,6 +7,7 @@ import sys
 import re
 import argparse
 
+import mock
 import pytest
 
 import argh
@@ -590,3 +591,17 @@ def test_normalized_keys():
     p.set_default_command(cmd)
 
     assert run(p, 'hello') == 'hello\n'
+
+
+@mock.patch('argh.assembling.COMPLETION_ENABLED', True)
+def test_custom_argument_completer():
+    "Issue #33: Enable custom per-argument shell completion"
+
+    @argh.arg('foo', completer='STUB')
+    def func(foo):
+        pass
+
+    p = argh.ArghParser()
+    p.set_default_command(func)
+
+    assert p._actions[-1].completer == 'STUB'
