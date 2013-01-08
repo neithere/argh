@@ -77,23 +77,34 @@ The Natural Way
 You've already learned the natural way of declaring commands before even
 knowing about `argh`::
 
-    def foo(bar, baz=1, flag=False, *quux):
+    def my_command(alpha, beta=1, gamma=False, *delta):
         return
 
-This maps to the following CLI signature::
+When executed as ``app.py my-command --help``, such application prints::
 
-    foo [--baz BAZ] -f bar [quux [quux ...]]
+    usage: app.py my-command [-h] [-b BETA] [-g] alpha [delta [delta ...]]
 
-...and equals to this chunk of `argparse` code (with the exception that
-in `argh` you don't immediately modify a parser but rather declare what's
-to be added to it later)::
+    positional arguments:
+      alpha
+      delta
 
-    parser.add_argument('bar')
-    parser.add_argument('-b', '--baz', default=1, type=int)
-    parser.add_argument('-f', '--flag', default=False, action='store_true')
-    parser.add_argument('quux', nargs='*')
+    optional arguments:
+      -h, --help            show this help message and exit
+      -b BETA, --beta BETA
+      -g, --gamma
 
-As you see:
+The same result can be achieved with this chunk of `argparse` code (with the
+exception that in `argh` you don't immediately modify a parser but rather
+declare what's to be added to it later)::
+
+    parser.add_argument('alpha')
+    parser.add_argument('-b', '--beta', default=1, type=int)
+    parser.add_argument('-g', '--gamma', default=False, action='store_true')
+    parser.add_argument('delta', nargs='*')
+
+Verbose, hardly readable, requires learning another API.
+
+`Argh` allows for more expressive and pythonic code because:
 
 * everything is inferred from the function signature;
 * arguments without default values are interpreted as required positional
