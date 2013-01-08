@@ -81,16 +81,18 @@ A very simple application with one command:
 
 .. code-block:: python
 
-    from argh import *
+    import argh
 
     def main():
         return 'Hello world'
 
-    dispatch_command(main)
+    argh.dispatch_command(main)
 
 A potentially modular application with multiple commands:
 
 .. code-block:: python
+
+    import argh
 
     # declaring:
 
@@ -102,7 +104,7 @@ A potentially modular application with multiple commands:
 
     # assembling:
 
-    parser = ArghParser()
+    parser = argh.ArghParser()
     parser.add_commands([echo, greeter])
 
     # dispatching:
