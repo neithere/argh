@@ -14,10 +14,10 @@ Assume we need a CLI application which output is modulated by arguments:
 
 .. code-block:: bash
 
-    $ python greet.py
+    $ ./greet.py
     Hello unknown user!
 
-    $ python greet.py John
+    $ ./greet.py --name John
     Hello John!
 
 This is our business logic:
