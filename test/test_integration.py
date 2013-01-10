@@ -605,3 +605,40 @@ def test_custom_argument_completer():
     p.set_default_command(func)
 
     assert p._actions[-1].completer == 'STUB'
+
+
+def test_class_members():
+    "Issue #34: class members as commands"
+
+    class Controller:
+        var = 123
+
+        def instance_meth(self, value):
+            return value, self.var
+
+        @classmethod
+        def class_meth(cls, value):
+            return value, cls.var
+
+        @staticmethod
+        def static_meth(value):
+            return value, 'w00t?'
+
+        @staticmethod
+        def static_meth2(value):
+            return value, 'huh!'
+
+    controller = Controller()
+
+    p = DebugArghParser()
+    p.add_commands([
+        controller.instance_meth,
+        controller.class_meth,
+        controller.static_meth,
+        Controller.static_meth2,
+    ])
+
+    assert run(p, 'instance-meth foo') == 'foo\n123\n'
+    assert run(p, 'class-meth foo') == 'foo\n123\n'
+    assert run(p, 'static-meth foo') == 'foo\nw00t?\n'
+    assert run(p, 'static-meth2 foo') == 'foo\nhuh!\n'

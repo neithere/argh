@@ -14,14 +14,14 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
-import sys
 import argparse
+import sys
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
-from argh.utils import get_subparsers
+from argh.utils import get_subparsers, get_arg_names
 from argh import compat
 
 
@@ -50,8 +50,9 @@ def _get_args_from_signature(function):
         return
 
     spec = compat.getargspec(function)
+    names = get_arg_names(function)
 
-    kwargs = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+    kwargs = dict(zip(*[reversed(x) for x in (names, spec.defaults or [])]))
 
     if sys.version_info < (3,0):
         annotations = {}
@@ -61,12 +62,12 @@ def _get_args_from_signature(function):
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args]
+    chars = [a[0] for a in names]
     char_counts = dict((char, chars.count(char)) for char in set(chars))
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
 
-    for name in spec.args:
+    for name in names:
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
