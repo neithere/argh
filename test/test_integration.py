@@ -18,7 +18,7 @@ from .base import DebugArghParser, run
 @pytest.mark.xfail(reason='TODO')
 def test_guessing_integration():
     "guessing is used in dispatching"
-    pass
+    assert 0
 
 
 def test_set_default_command_integration():
