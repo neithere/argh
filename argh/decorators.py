@@ -188,11 +188,9 @@ def wrap_errors(errors=None, processor=None, *args):
     Decorator. Wraps given exceptions into
     :class:`~argh.exceptions.CommandError`. Usage::
 
-        @arg('-x')
-        @arg('-y')
         @wrap_errors([AssertionError])
-        def foo(args):
-            assert args.x or args.y, 'x or y must be specified'
+        def foo(x=None, y=None):
+            assert x or y, 'x or y must be specified'
 
     If the assertion fails, its message will be correctly printed and the
     stack hidden. This helps to avoid boilerplate code.
