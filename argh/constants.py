@@ -25,6 +25,9 @@ ATTR_ARGS = 'argh_args'
 # list of exception classes that should be wrapped and printed as results
 ATTR_WRAPPED_EXCEPTIONS = 'argh_wrap_errors'
 
+# a function to preprocess the exception object when it is wrapped
+ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = 'argh_wrap_errors_processor'
+
 # forcing argparse.Namespace object instead of signature introspection
 ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
 

@@ -47,12 +47,32 @@ def test_command():
 
 
 def test_wrap_errors():
-    @argh.wrap_errors(KeyError, ValueError)
+    @argh.wrap_errors([KeyError, ValueError])
     def func():
         pass
 
     attr = getattr(func, argh.constants.ATTR_WRAPPED_EXCEPTIONS)
-    assert attr == (KeyError, ValueError)
+    assert attr == [KeyError, ValueError]
+
+
+def test_wrap_errors_processor():
+    @argh.wrap_errors(processor='STUB')
+    def func():
+        pass
+
+    attr = getattr(func, argh.constants.ATTR_WRAPPED_EXCEPTIONS_PROCESSOR)
+    assert attr == 'STUB'
+
+
+def test_wrap_errors_compat():
+    "Legacy decorator signature. TODO: remove in 1.0"
+
+    @argh.wrap_errors(KeyError, ValueError, TypeError)
+    def func():
+        pass
+
+    attr = getattr(func, argh.constants.ATTR_WRAPPED_EXCEPTIONS)
+    assert attr == [KeyError, ValueError, TypeError]
 
 
 def test_expects_obj():

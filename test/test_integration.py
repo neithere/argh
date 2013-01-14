@@ -261,9 +261,8 @@ def test_backwards_compatibility_issue29():
 class TestErrorWrapping:
 
     def _get_parrot(self):
-        @argh.arg('--dead', default=False)
-        def parrot(args):
-            if args.dead:
+        def parrot(dead=False):
+            if dead:
                 raise ValueError('this parrot is no more')
             else:
                 return 'beautiful plumage'
@@ -290,6 +289,19 @@ class TestErrorWrapping:
 
         assert run(p, '') == 'beautiful plumage\n'
         assert run(p, '--dead') == 'this parrot is no more\n'
+
+    def test_processor(self):
+        parrot = self._get_parrot()
+        wrapped_parrot = argh.wrap_errors(ValueError)(parrot)
+
+        def failure(err):
+            return 'ERR: ' + str(err) + '!'
+        processed_parrot = argh.wrap_errors(processor=failure)(wrapped_parrot)
+
+        p = argh.ArghParser()
+        p.set_default_command(processed_parrot)
+
+        assert run(p, '--dead') == 'ERR: this parrot is no more!\n'
 
 
 def test_argv():

@@ -411,10 +411,19 @@ output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
 `Argh` will wrap this exception and choose the right way to display its
 message (depending on how :func:`~argh.dispatching.dispatch` was called).
 
-The decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
+Decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 
-    @wrap_errors(KeyError)        # catch KeyError, show the message, hide traceback
+    @wrap_errors([KeyError])  # catch KeyError, show the message, hide traceback
     def show_item(key):
-        return items[key]    # raise KeyError
+        return items[key]     # raise KeyError
 
 Of course it should be used with care in more complex commands.
+
+The decorator accepts a list as its first argument, so multiple commands can be
+specified.  It also allows plugging in a preprocessor for the catched errors::
+
+    @wrap_errors(processor=lambda excinfo: 'ERR: {0}'.format(excinfo))
+    def func():
+        raise CommandError('some error')
+
+The command above will print `ERR: some error`.

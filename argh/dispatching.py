@@ -18,6 +18,7 @@ from types import GeneratorType
 
 from argh import compat, io
 from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
+                            ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
@@ -191,7 +192,10 @@ def _execute_command(args):
         for line in result:
             yield line
     except tuple(wrappable_exceptions) as e:
-        yield compat.text_type(e)
+        processor = getattr(args.function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
+                            lambda x:x)
+
+        yield compat.text_type(processor(e))
 
 
 def dispatch_command(function, *args, **kwargs):

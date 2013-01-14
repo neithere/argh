@@ -14,6 +14,7 @@ Command decorators
 """
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_WRAPPED_EXCEPTIONS,
+                            ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
 
@@ -154,22 +155,86 @@ def command(func):
     return func
 
 
-def wrap_errors(*exceptions):
+def _fix_compat_issue36(func, errors, processor, args):
+    #
+    # TODO: remove before 1.0 release (will break backwards compatibility)
+    #
+
+    if errors and not hasattr(errors, '__iter__'):
+        # what was expected to be a list is actually its first item
+        errors = [errors]
+
+        # what was expected to be a function is actually the second item
+        if processor:
+            errors.append(processor)
+            processor = None
+
+        # *args, if any, are the remaining items
+        if args:
+            errors.extend(args)
+
+        import warnings
+        warnings.warn('{func.__name__}: wrappable exceptions must be declared '
+                      'as list, i.e. @wrap_errors([{errors}]) instead of '
+                      '@wrap_errors({errors})'.format(
+                        func=func, errors=', '.join(x.__name__ for x in errors)),
+                      DeprecationWarning)
+
+    return errors, processor
+
+
+def wrap_errors(errors=None, processor=None, *args):
     """
     Decorator. Wraps given exceptions into
     :class:`~argh.exceptions.CommandError`. Usage::
 
         @arg('-x')
         @arg('-y')
-        @wrap_errors(AssertionError)
+        @wrap_errors([AssertionError])
         def foo(args):
             assert args.x or args.y, 'x or y must be specified'
 
     If the assertion fails, its message will be correctly printed and the
     stack hidden. This helps to avoid boilerplate code.
+
+    :param errors:
+        A list of exception classes to catch.
+    :param processor:
+        A callable that expects the exception object and returns a string.
+        For example, this renders all wrapped errors in red colour::
+
+            from termcolor import colored
+
+            def failure(err):
+                return colored(str(err), 'red')
+
+            @wrap_errors(processor=failure)
+            def my_command(...):
+                ...
+
+    .. warning::
+
+       The `exceptions` argument **must** be a list.
+
+       For backward compatibility reasons the old way is still allowed::
+
+           @wrap_errors(KeyError, ValueError)
+
+       However, the hack that allows that will be **removed** in Argh 1.0.
+
+       Please make sure to update your code.
+
     """
+
     def wrapper(func):
-        setattr(func, ATTR_WRAPPED_EXCEPTIONS, exceptions)
+        errors_, processor_ = _fix_compat_issue36(func, errors, processor, args)
+
+        if errors_:
+            setattr(func, ATTR_WRAPPED_EXCEPTIONS, errors_)
+
+        if processor_:
+            setattr(func, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, processor_)
+
         return func
     return wrapper
 
