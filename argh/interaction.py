@@ -12,10 +12,11 @@
 Interaction
 ~~~~~~~~~~~
 """
-from argh import compat, io
+from argh.compat import text_type
+from argh.io import safe_input
 
 
-__all__ = ['confirm']
+__all__ = ['confirm', 'safe_input']
 
 
 def confirm(action, default=None, skip=False):
@@ -63,16 +64,16 @@ def confirm(action, default=None, skip=False):
             False: ('y','N'),
         }
         y, n = defaults[default]
-        prompt = compat.text_type('{action}? ({y}/{n})').format(**locals())
+        prompt = text_type('{action}? ({y}/{n})').format(**locals())
         choice = None
         try:
             if default is None:
                 cnt = 1
                 while not choice and cnt < MAX_ITERATIONS:
-                    choice = io.safe_input(prompt)
+                    choice = safe_input(prompt)
                     cnt += 1
             else:
-                choice = io.safe_input(prompt)
+                choice = safe_input(prompt)
         except KeyboardInterrupt:
             return None
     if choice in ('yes', 'y', 'Y'):
