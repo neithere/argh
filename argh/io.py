@@ -70,27 +70,27 @@ def encode_output(value, output_file):
         We can expect both Unicode and bytes. They need to be encoded so as
         to match the file object encoding.
 
-        The output is binary if the object is a TTY; otherwise it's Unicode.
+        The output is binary if the object doesn't explicitly require Unicode.
 
     """
-    if sys.version_info < (3,0):
-        # handle special cases in Python 2.x
-
-        if output_file.isatty():
-            # TTY expects bytes
+    if sys.version_info > (3,0):
+        # Python 3:  whatever → unicode
+        return compat.text_type(value)
+    else:
+        # Python 2:  handle special cases
+        stream_encoding = getattr(output_file, 'encoding', None)
+        if stream_encoding:
+            if stream_encoding.upper() == 'UTF-8':
+                return compat.text_type(value)
+            else:
+                return value.encode(stream_encoding, 'ignore')
+        else:
+            # no explicit encoding requirements; force binary
             if isinstance(value, compat.text_type):
-                encoding = getattr(output_file, 'encoding', None)
-                encoding = encoding or locale.getpreferredencoding() or 'utf-8'
-                # unicode →  binary
-                return value.encode(encoding)
-            return compat.binary_type(value)
-
-        if isinstance(value, compat.binary_type):
-            # binary →  unicode
-            return value.decode('utf-8')
-
-    # whatever → unicode
-    return compat.text_type(value)
+                # unicode → binary
+                return value.encode('utf-8')
+            else:
+                return value
 
 
 def dump(raw_data, output_file):
