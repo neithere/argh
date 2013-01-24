@@ -58,6 +58,8 @@ It is recommended to use the :func:`~argh.decorators.arg` decorator::
         ...
 
 """
+import os
+
 
 COMPLETION_ENABLED = False
 "Dynamically set to `True` on load if argcomplete_ was successfully imported."
@@ -79,6 +81,6 @@ def autocomplete(parser):
     """
     if COMPLETION_ENABLED:
         argcomplete.autocomplete(parser)
-    else:
+    elif 'bash' in os.getenv('SHELL', ''):
         import warnings
         warnings.warn('Bash completion not available. Install argcomplete.')
