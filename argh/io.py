@@ -90,7 +90,7 @@ def encode_output(value, output_file):
                 # unicode → binary
                 return value.encode('utf-8')
             else:
-                return value
+                return str(value)
 
 
 def dump(raw_data, output_file):
