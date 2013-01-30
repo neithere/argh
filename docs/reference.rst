@@ -13,6 +13,9 @@ API Reference
 .. automodule:: argh.dispatching
    :members:
 
+.. automodule:: argh.interaction
+   :members:
+
 .. automodule:: argh.completion
    :members:
 

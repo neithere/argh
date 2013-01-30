@@ -42,11 +42,9 @@ def confirm(action, default=None, skip=False):
 
     Usage::
 
-        @arg('key')
-        @arg('--silent', help='do not prompt, always give default answers')
-        def delete(args):
+        def delete(key, silent=False):
             item = db.get(Item, args.key)
-            if confirm('Delete '+item.title, default=True, skip=args.silent):
+            if confirm('Delete '+item.title, default=True, skip=silent):
                 item.delete()
                 print('Item deleted.')
             else:
