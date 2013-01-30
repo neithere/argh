@@ -3,7 +3,7 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
-from .base import DebugArghParser, run
+from .base import DebugArghParser, run, CmdResult as R
 
 import argh
 
@@ -20,9 +20,9 @@ def test_regression_issue12():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') ==  'foo 1, fox 2\n'
-    assert run(p, '--foo 3') == 'foo 3, fox 2\n'
-    assert run(p, '--fox 3') == 'foo 1, fox 3\n'
+    assert run(p, '').out ==  'foo 1, fox 2\n'
+    assert run(p, '--foo 3').out == 'foo 3, fox 2\n'
+    assert run(p, '--fox 3').out == 'foo 1, fox 3\n'
     assert 'unrecognized' in run(p, '-f 3', exit=True)
 
 
@@ -37,7 +37,7 @@ def test_regression_issue12_help_flag():
     # no help → no conflict
     p = DebugArghParser('PROG', add_help=False)
     p.set_default_command(ddos)
-    assert run(p, '-h 127.0.0.1') == 'so be it, 127.0.0.1!\n'
+    assert run(p, '-h 127.0.0.1').out == 'so be it, 127.0.0.1!\n'
 
     # help added → conflict → short name ignored
     p = DebugArghParser('PROG', add_help=True)
@@ -65,13 +65,13 @@ def test_regression_issue27():
     p.add_commands([parrot, grenade])
 
     # default → type (int)
-    assert run(p, 'grenade') == ('Three shall be the number '
-                                 'thou shalt count\n')
-    assert run(p, 'grenade --count 5') == '5 is right out\n'
+    assert run(p, 'grenade').out == ('Three shall be the number '
+                                     'thou shalt count\n')
+    assert run(p, 'grenade --count 5').out == '5 is right out\n'
 
     # default → action (store_true)
-    assert run(p, 'parrot') == 'beautiful plumage\n'
-    assert run(p, 'parrot --dead') == 'this parrot is no more\n'
+    assert run(p, 'parrot').out == 'beautiful plumage\n'
+    assert run(p, 'parrot --dead').out == 'this parrot is no more\n'
 
 
 def test_regression_issue31():
@@ -90,6 +90,6 @@ def test_regression_issue31():
 
     p = DebugArghParser()
     p.set_default_command(cmd)
-    assert '0\n' == run(p, '')
-    assert '1\n' == run(p, '-v')
-    assert '2\n' == run(p, '-vv')
+    assert '0\n' == run(p, '').out
+    assert '1\n' == run(p, '-v').out
+    assert '2\n' == run(p, '-vv').out

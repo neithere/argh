@@ -30,7 +30,8 @@ __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands']
 
 
 def dispatch(parser, argv=None, add_help_command=True,
-             completion=True, pre_call=None, output_file=sys.stdout,
+             completion=True, pre_call=None,
+             output_file=sys.stdout, errors_file=sys.stderr,
              raw_output=False, namespace=None):
     """Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
@@ -60,6 +61,10 @@ def dispatch(parser, argv=None, add_help_command=True,
 
         A file-like object for output. If `None`, the resulting lines are
         collected and returned as a string. Default is ``sys.stdout``.
+
+    :param errors_file:
+
+        Same as `output_file` but for ``sys.stderr``.
 
     :param raw_output:
 
@@ -97,7 +102,7 @@ def dispatch(parser, argv=None, add_help_command=True,
             # * https://google.com/search?q=argh+dispatch+pre_call
             # * https://github.com/madjar/aurifere/blob/master/aurifere/cli.py#L92
             pre_call(args)
-        lines = _execute_command(args)
+        lines = _execute_command(args, errors_file)
     else:
         # no commands declared, can't dispatch; display help message
         lines = [parser.format_usage()]
@@ -129,7 +134,7 @@ def dispatch(parser, argv=None, add_help_command=True,
         return f.read()
 
 
-def _execute_command(args):
+def _execute_command(args, errors_file):
     """Asserts that ``args.function`` is present and callable. Tries different
     approaches to calling the function (with an `argparse.Namespace` object or
     with ordinary signature). Yields the results line by line.
@@ -193,9 +198,10 @@ def _execute_command(args):
             yield line
     except tuple(wrappable_exceptions) as e:
         processor = getattr(args.function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            lambda x:x)
+                            lambda e: '{0.__class__.__name__}: {0}'.format(e))
 
-        yield compat.text_type(processor(e))
+        errors_file.write(compat.text_type(processor(e)))
+        errors_file.write('\n')
 
 
 def dispatch_command(function, *args, **kwargs):

@@ -4,9 +4,13 @@ Common stuff for tests
 ~~~~~~~~~~~~~~~~~~~~~~
 """
 import sys
+from collections import namedtuple
 
 from argh import ArghParser
 from argh.compat import BytesIO, StringIO
+
+
+CmdResult = namedtuple('CmdResult', ('out', 'err'))
 
 
 class DebugArghParser(ArghParser):
@@ -33,18 +37,21 @@ def call_cmd(parser, command_string, **kwargs):
     else:
         args = command_string
 
-    io = make_IO()
+    io_out = make_IO()
+    io_err = make_IO()
 
     if 'output_file' not in kwargs:
-        kwargs['output_file'] = io
+        kwargs['output_file'] = io_out
+    kwargs['errors_file'] = io_err
 
     result = parser.dispatch(args, **kwargs)
 
     if kwargs.get('output_file') is None:
-        return result
+        return CmdResult(out=result, err=io_err.read())
     else:
-        io.seek(0)
-        return io.read()
+        io_out.seek(0)
+        io_err.seek(0)
+        return CmdResult(out=io_out.read(), err=io_err.read())
 
 
 def run(parser, command_string, kwargs=None, exit=False):

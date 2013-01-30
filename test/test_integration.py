@@ -12,7 +12,7 @@ import pytest
 
 import argh
 
-from .base import DebugArghParser, run
+from .base import DebugArghParser, run, CmdResult as R
 
 
 @pytest.mark.xfail(reason='TODO')
@@ -29,9 +29,9 @@ def test_set_default_command_integration():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') == '1\n'
-    assert run(p, '--foo 2') == '2\n'
-    assert None == run(p, '--help', exit=True)
+    assert run(p, '') == R(out='1\n', err='')
+    assert run(p, '--foo 2') == R(out='2\n', err='')
+    assert run(p, '--help', exit=True) == None
 
 
 def test_set_default_command_integration_merging():
@@ -42,8 +42,8 @@ def test_set_default_command_integration_merging():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') == '1\n'
-    assert run(p, '--foo 2') == '2\n'
+    assert run(p, '') == R(out='1\n', err='')
+    assert run(p, '--foo 2') == R(out='2\n', err='')
     assert 'bar' in p.format_help()
 
 
@@ -59,7 +59,7 @@ def test_simple_function_no_args():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') == '1\n'
+    assert run(p, '') == R(out='1\n', err='')
 
 
 def test_simple_function_positional():
@@ -74,7 +74,7 @@ def test_simple_function_positional():
     else:
         msg = 'the following arguments are required: x'
     assert run(p, '', exit=True) == msg
-    assert run(p, 'foo') == 'foo\n'
+    assert run(p, 'foo') == R(out='foo\n', err='')
 
 
 def test_simple_function_defaults():
@@ -84,9 +84,9 @@ def test_simple_function_defaults():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') == 'foo\n'
+    assert run(p, '') == R(out='foo\n', err='')
     assert run(p, 'bar', exit=True) == 'unrecognized arguments: bar'
-    assert run(p, '--x bar') == 'bar\n'
+    assert run(p, '--x bar') == R(out='bar\n', err='')
 
 
 def test_simple_function_varargs():
@@ -98,9 +98,9 @@ def test_simple_function_varargs():
     p = DebugArghParser()
     p.set_default_command(func)
 
-    assert run(p, '') == '\n'
-    assert run(p, 'foo') == 'foo\n'
-    assert run(p, 'foo bar') == 'foo, bar\n'
+    assert run(p, '') == R(out='\n', err='')
+    assert run(p, 'foo') == R(out='foo\n', err='')
+    assert run(p, 'foo bar') == R(out='foo, bar\n', err='')
 
 
 def test_simple_function_kwargs():
@@ -121,9 +121,9 @@ def test_simple_function_kwargs():
     else:
         msg = 'the following arguments are required: foo'
     assert run(p, '', exit=True) == msg
-    assert run(p, 'hello') == 'bar: None\nfoo: hello\n'
+    assert run(p, 'hello') == R(out='bar: None\nfoo: hello\n', err='')
     assert run(p, '--bar 123', exit=True) == msg
-    assert run(p, 'hello --bar 123') == 'bar: 123\nfoo: hello\n'
+    assert run(p, 'hello --bar 123') == R(out='bar: 123\nfoo: hello\n', err='')
 
 
 def test_simple_function_multiple():
@@ -158,30 +158,30 @@ def test_all_specs_in_one():
     #    will still have higher priority than bar.
     # 2) *args, a positional with nargs='*', sits between two required
     #    positionals (foo and fox), so it gets nothing.
-    assert run(p, 'one two') == (
+    assert run(p, 'one two') == R(out=
         'foo: one\n'
         'bar: 1\n'
         '*args: ()\n'
         '** baz: None\n'
-        '** fox: two\n')
+        '** fox: two\n', err='')
 
     # two required positionals (foo and fox) get an argument each and one extra
     # is left; therefore the middle one is given to *args.
-    assert run(p, 'one two three') == (
+    assert run(p, 'one two three') == R(out=
         'foo: one\n'
         'bar: 1\n'
         "*args: ('two',)\n"
         '** baz: None\n'
-        '** fox: three\n')
+        '** fox: three\n', err='')
 
     # two required positionals (foo and fox) get an argument each and two extra
     # are left; both are given to *args (it's greedy).
-    assert run(p, 'one two three four') == (
+    assert run(p, 'one two three four') == R(out=
         'foo: one\n'
         'bar: 1\n'
         "*args: ('two', 'three')\n"
         '** baz: None\n'
-        '** fox: four\n')
+        '** fox: four\n', err='')
 
 
 def test_arg_merged():
@@ -248,14 +248,14 @@ def test_backwards_compatibility_issue29():
     p = DebugArghParser('PROG')
     p.add_commands([old, old_marked, new])
 
-    assert 'ok 1\n' == run(p, 'old ok')
-    assert 'ok 5\n' == run(p, 'old ok --bar 5')
+    assert R('ok 1\n', '') == run(p, 'old ok')
+    assert R('ok 5\n', '') == run(p, 'old ok --bar 5')
 
-    assert 'ok 1\n' == run(p, 'old-marked ok')
-    assert 'ok 5\n' == run(p, 'old-marked ok --bar 5')
+    assert R('ok 1\n', '') == run(p, 'old-marked ok')
+    assert R('ok 5\n', '') == run(p, 'old-marked ok --bar 5')
 
-    assert 'ok 1\n' == run(p, 'new ok')
-    assert 'ok 5\n' == run(p, 'new ok --bar 5')
+    assert R('ok 1\n', '') == run(p, 'new ok')
+    assert R('ok 5\n', '') == run(p, 'new ok --bar 5')
 
 
 class TestErrorWrapping:
@@ -275,7 +275,7 @@ class TestErrorWrapping:
         p = DebugArghParser()
         p.set_default_command(parrot)
 
-        assert run(p, '') == 'beautiful plumage\n'
+        assert run(p, '') == R('beautiful plumage\n', '')
         with pytest.raises(ValueError) as excinfo:
             run(p, '--dead')
         assert re.match('this parrot is no more', str(excinfo.value))
@@ -287,8 +287,8 @@ class TestErrorWrapping:
         p = DebugArghParser()
         p.set_default_command(wrapped_parrot)
 
-        assert run(p, '') == 'beautiful plumage\n'
-        assert run(p, '--dead') == 'this parrot is no more\n'
+        assert run(p, '') == R('beautiful plumage\n', '')
+        assert run(p, '--dead') == R('', 'ValueError: this parrot is no more\n')
 
     def test_processor(self):
         parrot = self._get_parrot()
@@ -301,7 +301,20 @@ class TestErrorWrapping:
         p = argh.ArghParser()
         p.set_default_command(processed_parrot)
 
-        assert run(p, '--dead') == 'ERR: this parrot is no more!\n'
+        assert run(p, '--dead') == R('', 'ERR: this parrot is no more!\n')
+
+    def test_stderr_vs_stdout(self):
+
+        @argh.wrap_errors([KeyError])
+        def func(key):
+            db = {'a': 1}
+            return db[key]
+
+        p = argh.ArghParser()
+        p.set_default_command(func)
+
+        assert run(p, 'a') == R(out='1\n', err='')
+        assert run(p, 'b') == R(out='', err="KeyError: 'b'\n")
 
 
 def test_argv():
@@ -316,7 +329,7 @@ def test_argv():
     _argv = sys.argv
 
     sys.argv = sys.argv[:1] + ['echo', 'hi there']
-    assert run(p, None) == 'you said hi there\n'
+    assert run(p, None) == R('you said hi there\n', '')
 
     sys.argv = _argv
 
@@ -324,8 +337,8 @@ def test_argv():
 def test_commands_not_defined():
     p = DebugArghParser()
 
-    assert run(p, '', {'raw_output': True}) == p.format_usage()
-    assert run(p, '') == p.format_usage() + '\n'
+    assert run(p, '', {'raw_output': True}).out == p.format_usage()
+    assert run(p, '').out == p.format_usage() + '\n'
 
     assert 'unrecognized arguments' in run(p, 'foo', exit=True)
     assert 'unrecognized arguments' in run(p, '--foo', exit=True)
@@ -343,7 +356,7 @@ def test_command_not_chosen():
         assert 'too few arguments' in run(p, '', exit=True)
     else:
         # Python since 3.3 returns a help message and doesn't exit
-        assert 'usage:' in run(p, '')
+        assert 'usage:' in run(p, '').out
 
 
 def test_invalid_choice():
@@ -410,7 +423,7 @@ def test_echo():
     p = DebugArghParser()
     p.add_commands([echo])
 
-    assert run(p, 'echo foo') == 'you said foo\n'
+    assert run(p, 'echo foo') == R(out='you said foo\n', err='')
 
 
 def test_bool_action():
@@ -423,8 +436,8 @@ def test_bool_action():
     p = DebugArghParser()
     p.add_commands([parrot])
 
-    assert run(p, 'parrot') == 'beautiful plumage\n'
-    assert run(p, 'parrot --dead') == 'this parrot is no more\n'
+    assert run(p, 'parrot').out == 'beautiful plumage\n'
+    assert run(p, 'parrot --dead').out == 'this parrot is no more\n'
 
 
 def test_bare_namespace():
@@ -443,7 +456,7 @@ def test_bare_namespace():
         assert run(p, 'greet', exit=True) == 'too few arguments'
     else:
         # Python since 3.3 returns a help message and doesn't exit
-        assert 'usage:' in run(p, 'greet', exit=True)
+        assert 'usage:' in run(p, 'greet', exit=True).out
 
     # with an argument
 
@@ -468,8 +481,8 @@ def test_namespaced_function():
     p = DebugArghParser()
     p.add_commands([hello, howdy], namespace='greet')
 
-    assert run(p, 'greet hello') == 'Hello world!\n'
-    assert run(p, 'greet hello --name=John') == 'Hello John!\n'
+    assert run(p, 'greet hello').out == 'Hello world!\n'
+    assert run(p, 'greet hello --name=John').out == 'Hello John!\n'
     assert run(p, 'greet hello John', exit=True) == 'unrecognized arguments: John'
 
     if sys.version_info < (3,3):
@@ -480,7 +493,7 @@ def test_namespaced_function():
         message = 'the following arguments are required: buddy'
 
     assert message in run(p, 'greet howdy --name=John', exit=True)
-    assert run(p, 'greet howdy John') == 'Howdy John?\n'
+    assert run(p, 'greet howdy John').out == 'Howdy John?\n'
 
 
 def test_explicit_cmd_name():
@@ -492,7 +505,7 @@ def test_explicit_cmd_name():
     p = DebugArghParser()
     p.add_commands([orig_name])
     assert run(p, 'orig-name', exit=True).startswith('invalid choice')
-    assert run(p, 'new-name') == 'ok\n'
+    assert run(p, 'new-name').out == 'ok\n'
 
 
 def test_aliases():
@@ -505,9 +518,9 @@ def test_aliases():
     p.add_commands([alias1])
 
     if argh.assembling.SUPPORTS_ALIASES:
-        assert run(p, 'alias1') == 'ok\n'
-        assert run(p, 'alias2') == 'ok\n'
-        assert run(p, 'alias3') == 'ok\n'
+        assert run(p, 'alias1').out == 'ok\n'
+        assert run(p, 'alias2').out == 'ok\n'
+        assert run(p, 'alias3').out == 'ok\n'
 
 
 def test_help_alias():
@@ -535,7 +548,7 @@ def test_arg_order():
 
     p = DebugArghParser()
     p.set_default_command(cmd)
-    assert run(p, 'foo bar') == 'foo\nbar\n'
+    assert run(p, 'foo bar').out == 'foo\nbar\n'
 
 
 def test_raw_output():
@@ -547,8 +560,8 @@ def test_raw_output():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, 'foo bar') == 'foo\nbar\n'
-    assert run(p, 'foo bar', {'raw_output': True}) == 'foobar'
+    assert run(p, 'foo bar').out == 'foo\nbar\n'
+    assert run(p, 'foo bar', {'raw_output': True}).out == 'foobar'
 
 
 def test_output_file():
@@ -559,8 +572,8 @@ def test_output_file():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, '') == 'Hello world!\n'
-    assert run(p, '', {'output_file': None}) == 'Hello world!\n'
+    assert run(p, '').out == 'Hello world!\n'
+    assert run(p, '', {'output_file': None}).out == 'Hello world!\n'
 
 
 def test_command_error():
@@ -575,8 +588,10 @@ def test_command_error():
     p = DebugArghParser()
     p.add_commands([whiner_plain, whiner_iterable])
 
-    assert run(p, 'whiner-plain') == 'I feel depressed.\n'
-    assert run(p, 'whiner-iterable') == 'Hello...\nI feel depressed.\n'
+    assert run(p, 'whiner-plain') == R(
+        out='', err='CommandError: I feel depressed.\n')
+    assert run(p, 'whiner-iterable') == R(
+        out='Hello...\n', err='CommandError: I feel depressed.\n')
 
 
 def test_custom_namespace():
@@ -590,7 +605,7 @@ def test_custom_namespace():
     namespace = argparse.Namespace()
     namespace.custom_value = 'foo'
 
-    assert run(p, '', {'namespace': namespace}) == 'foo\n'
+    assert run(p, '', {'namespace': namespace}).out == 'foo\n'
 
 
 def test_normalized_keys():
@@ -602,7 +617,7 @@ def test_normalized_keys():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    assert run(p, 'hello') == 'hello\n'
+    assert run(p, 'hello').out == 'hello\n'
 
 
 @mock.patch('argh.assembling.COMPLETION_ENABLED', True)
@@ -650,7 +665,7 @@ def test_class_members():
         Controller.static_meth2,
     ])
 
-    assert run(p, 'instance-meth foo') == 'foo\n123\n'
-    assert run(p, 'class-meth foo') == 'foo\n123\n'
-    assert run(p, 'static-meth foo') == 'foo\nw00t?\n'
-    assert run(p, 'static-meth2 foo') == 'foo\nhuh!\n'
+    assert run(p, 'instance-meth foo').out == 'foo\n123\n'
+    assert run(p, 'class-meth foo').out == 'foo\n123\n'
+    assert run(p, 'static-meth foo').out == 'foo\nw00t?\n'
+    assert run(p, 'static-meth2 foo').out == 'foo\nhuh!\n'
