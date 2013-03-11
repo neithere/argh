@@ -58,6 +58,12 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
+if sys.version_info < (2,7):
+    install_requires = ['argparse >= 1.1']
+else:
+    install_requires = []
+
+
 setup(
     # overview
     name             = 'argh',
@@ -68,8 +74,7 @@ setup(
     version  = __version__,
     packages = ['argh'],
     provides = ['argh'],
-    requires = ['python(>=2.6)', 'argparse(>=1.1)'],
-    install_requires = ['argparse>=1.1'],    # for Python 2.6 (no bundled argparse; setuptools is likely to exist)
+    install_requires = install_requires,
 
     # testing
     tests_require=['pytest'],
