@@ -20,7 +20,8 @@ import sys
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT)
+                            ATTR_EXPECTS_NAMESPACE_OBJECT,
+                            PARSER_FORMATTER)
 from argh.utils import get_subparsers, get_arg_names
 from argh import compat
 
@@ -360,10 +361,16 @@ def add_commands(parser, functions, namespace=None, title=None,
         # use explicitly defined name; if none, use function name (a_b → a-b)
         cmd_name = getattr(func, ATTR_NAME,
                            func.__name__.replace('_','-'))
-        parser_kwargs = {}
 
-        # add command help from function's docstring
-        parser_kwargs['help'] = func.__doc__
+        parser_kwargs = {
+
+            # add command help from function's docstring
+            'help': func.__doc__,
+
+            # set default formatter
+            'formatter_class': PARSER_FORMATTER,
+
+        }
 
         # try adding aliases for command name
         if SUPPORTS_ALIASES:

@@ -8,6 +8,14 @@
 #  General Public License version 3 (LGPLv3) as published by the Free
 #  Software Foundation. See the file README for copying conditions.
 #
+import argparse
+
+__all__ = (
+    'ATTR_NAME', 'ATTR_ALIASES', 'ATTR_ARGS', 'ATTR_WRAPPED_EXCEPTIONS',
+    'ATTR_WRAPPED_EXCEPTIONS_PROCESSOR', 'ATTR_EXPECTS_NAMESPACE_OBJECT',
+    'PARSER_FORMATTER'
+)
+
 
 #
 # Names of function attributes where Argh stores command behaviour
@@ -30,6 +38,14 @@ ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = 'argh_wrap_errors_processor'
 
 # forcing argparse.Namespace object instead of signature introspection
 ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
+
+#
+# Other library-wide stuff
+#
+
+PARSER_FORMATTER = argparse.ArgumentDefaultsHelpFormatter
+""" Default formatter to be used in implicitly instantiated ArgumentParser.
+"""
 
 #-----------------------------------------------------------------------------
 #

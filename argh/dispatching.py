@@ -19,14 +19,16 @@ from types import GeneratorType
 from argh import compat, io
 from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT)
+                            ATTR_EXPECTS_NAMESPACE_OBJECT,
+                            PARSER_FORMATTER)
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
 from argh.utils import get_arg_names
 
 
-__all__ = ['dispatch', 'dispatch_command', 'dispatch_commands']
+__all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
+           'PARSER_FORMATTER']
 
 
 def dispatch(parser, argv=None, add_help_command=True,
@@ -206,6 +208,7 @@ def _execute_command(args, errors_file):
 
 def dispatch_command(function, *args, **kwargs):
     """ A wrapper for :func:`dispatch` that creates a one-command parser.
+    Uses :attr:`PARSER_FORMATTER`.
 
     This::
 
@@ -219,7 +222,7 @@ def dispatch_command(function, *args, **kwargs):
 
     This function can be also used as a decorator.
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
     set_default_command(parser, function)
     dispatch(parser, *args, **kwargs)
 
@@ -227,6 +230,7 @@ def dispatch_command(function, *args, **kwargs):
 def dispatch_commands(functions, *args, **kwargs):
     """ A wrapper for :func:`dispatch` that creates a parser, adds commands to
     the parser and dispatches them.
+    Uses :attr:`PARSER_FORMATTER`.
 
     This::
 
@@ -239,6 +243,6 @@ def dispatch_commands(functions, *args, **kwargs):
         dispatch(parser)
 
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
     add_commands(parser, functions)
     dispatch(parser, *args, **kwargs)

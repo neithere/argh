@@ -16,7 +16,7 @@ import argparse
 
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
-from argh.dispatching import dispatch
+from argh.dispatching import PARSER_FORMATTER, dispatch
 
 
 __all__ = ['ArghParser']
@@ -30,7 +30,13 @@ class ArghParser(argparse.ArgumentParser):
     wrappers for stand-alone functions :func:`~argh.assembling.add_commands`,
     :func:`~argh.completion.autocomplete` and
     :func:`~argh.dispatching.dispatch`.
+
+    Uses :attr:`~argh.dispatching.PARSER_FORMATTER`.
     """
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('formatter_class', PARSER_FORMATTER)
+        super(ArghParser, self).__init__(*args, **kwargs)
+
     def set_default_command(self, *args, **kwargs):
         "Wrapper for :func:`set_default_command`."
         return set_default_command(self, *args, **kwargs)
