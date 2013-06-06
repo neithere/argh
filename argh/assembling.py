@@ -304,16 +304,16 @@ def add_commands(parser, functions, namespace=None, title=None,
 
     :param title:
 
-        passed to :meth:`argsparse.ArgumentParser.add_subparsers` as `title`.
+        passed to :meth:`argparse.ArgumentParser.add_subparsers` as `title`.
 
     :param description:
 
-        passed to :meth:`argsparse.ArgumentParser.add_subparsers` as
+        passed to :meth:`argparse.ArgumentParser.add_subparsers` as
         `description`.
 
     :param help:
 
-        passed to :meth:`argsparse.ArgumentParser.add_subparsers` as `help`.
+        passed to :meth:`argparse.ArgumentParser.add_subparsers` as `help`.
 
     .. note::
 
