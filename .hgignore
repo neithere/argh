@@ -4,6 +4,7 @@
 ~$
 \.py[co]$
 \.sw[op]$
+^\.ropeproject/
 
 # testing
 ^\.tox/
