@@ -1,0 +1,20 @@
+language: python
+python:
+  - '2.6'
+  - '2.7'
+  - '3.2'
+  - '3.3'
+  - 'pypy'
+install:
+<<<<<<< HEAD
+  - 'pip install -r reqs-dev.txt --use-mirrors --quiet'
+script: py.test --cov=argh
+=======
+  - 'pip install -r requirements/devel.txt --use-mirrors'
+services:
+  - mongodb
+script: py.test --cov=monk
+>>>>>>> fa2b0aefb0b91fd1445e4109e0b54d32b70909c4
+notifications:
+  email:
+    - neithere+travis@gmail.com
