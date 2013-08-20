@@ -86,8 +86,7 @@ setup(
     license  = 'GNU Lesser General Public License (LGPL), Version 3',
 
     # more info
-    url          = 'http://bitbucket.org/neithere/argh/',
-    download_url = 'http://bitbucket.org/neithere/argh/src/',
+    url          = 'http://github.com/neithere/argh/',
 
     # categorization
     keywords     = ('cli command line argparse optparse argument option'),
