@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## Ignored stuff
 
 # temp files
@@ -27,20 +26,3 @@ nbproject/
 # packaging: Debian
 debian/python-argh
 debian/python-module-stampdir
-=======
-build/
-dist/
-docs/_build
-*.egg-info/*
-*.pyc
-*.pyo
-*~
-*.swo
-*.swp
-.coverage
-cover/
-*,cover
-htmlcov/
-.tox/
-.ropeproject/
->>>>>>> fa2b0aefb0b91fd1445e4109e0b54d32b70909c4
