@@ -12,6 +12,7 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
+from argh.assembling import _fix_compat_issue29
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
@@ -54,7 +55,11 @@ def alias(new_name):  # pragma: nocover
     import warnings
     warnings.warn('Decorator @alias() is deprecated. '
                   'Use @aliases() or @named() instead.', DeprecationWarning)
-    return named(new_name)
+    def wrapper(func):
+        setattr(func, ATTR_NAME, new_name)
+        _fix_compat_issue29(func)
+        return func
+    return wrapper
 
 
 def aliases(*names):
@@ -136,6 +141,7 @@ def arg(*args, **kwargs):
         # the outermost decorator inserts its value before the innermost's:
         declared_args.insert(0, dict(option_strings=args, **kwargs))
         setattr(func, ATTR_ARGS, declared_args)
+        _fix_compat_issue29(func)
         return func
     return wrapper
 

@@ -147,7 +147,7 @@ def _fix_compat_issue29(function):
     # @expects_obj and issue a warning.
     spec = compat.getargspec(function)
 
-    if spec.args == ['args']:
+    if spec.args in [['arg'], ['args'], ['self', 'arg'], ['self', 'args']]:
         # this is it -- a classic old-style function, goddamnit.
         # no checking *args and **kwargs because they are unlikely to matter.
         import warnings
