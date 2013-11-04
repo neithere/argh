@@ -140,12 +140,12 @@ The approaches can be safely combined even up to this level:
 Links
 -----
 
-* `Project home page`_ (Bitbucket)
+* `Project home page`_ (GitHub)
 * `Documentation`_ (Read the Docs)
 * `Package distribution`_ (PyPI)
 * Questions, requests, bug reports, etc.:
 
-  * `Issue tracker`_
+  * `Issue tracker`_ (GitHub)
   * `Mailing list`_ (subscribe to get important announcements)
   * Direct e-mail (neithere at gmail com)
   * Twitter_ (to get notified of commits; mostly for lulz)
