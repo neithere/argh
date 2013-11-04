@@ -39,7 +39,7 @@ with io.open('argh/__init__.py', encoding='utf8') as f:
 assert __version__, 'argh.__version__ must be imported correctly'
 
 
-with io.open(os.path.join(os.path.dirname(__file__), 'README'), encoding='ascii') as f:
+with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding='ascii') as f:
 	readme = f.read()
 
 

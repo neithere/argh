@@ -6,7 +6,7 @@
 #
 #  Argh is free software under terms of the GNU Lesser
 #  General Public License version 3 (LGPLv3) as published by the Free
-#  Software Foundation. See the file README for copying conditions.
+#  Software Foundation. See the file README.rst for copying conditions.
 #
 """
 Dispatching
