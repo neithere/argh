@@ -24,7 +24,7 @@ from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
-from argh.utils import get_arg_names
+from argh.utils import get_arg_spec
 
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
@@ -161,10 +161,9 @@ def _execute_command(args, errors_file):
             # filter the namespace variables so that only those expected by the
             # actual function will pass
 
-            spec = compat.getargspec(args.function)
-            names = get_arg_names(args.function)
+            spec = get_arg_spec(args.function)
 
-            positional = [all_input[k] for k in names]
+            positional = [all_input[k] for k in spec.args]
             keywords = {}
 
             # *args

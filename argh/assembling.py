@@ -22,8 +22,7 @@ from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT,
                             PARSER_FORMATTER)
-from argh.utils import get_subparsers, get_arg_names
-from argh import compat
+from argh.utils import get_subparsers, get_arg_spec
 
 
 __all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
@@ -50,10 +49,10 @@ def _get_args_from_signature(function):
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
 
-    spec = compat.getargspec(function)
-    names = get_arg_names(function)
+    spec = get_arg_spec(function)
 
-    kwargs = dict(zip(*[reversed(x) for x in (names, spec.defaults or [])]))
+    kwargs = dict(zip(*[reversed(x) for x in (spec.args,
+                                              spec.defaults or [])]))
 
     if sys.version_info < (3,0):
         annotations = {}
@@ -63,12 +62,12 @@ def _get_args_from_signature(function):
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in names]
+    chars = [a[0] for a in spec.args]
     char_counts = dict((char, chars.count(char)) for char in set(chars))
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
 
-    for name in names:
+    for name in spec.args:
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
@@ -145,7 +144,7 @@ def _fix_compat_issue29(function):
     # It's very likely that in the latter case the function accepts one and
     # only argument named "args".  If so, we simply wrap this function in
     # @expects_obj and issue a warning.
-    spec = compat.getargspec(function)
+    spec = get_arg_spec(function)
 
     if spec.args in [['arg'], ['args'], ['self', 'arg'], ['self', 'args']]:
         # this is it -- a classic old-style function, goddamnit.
@@ -205,7 +204,7 @@ def set_default_command(parser, function):
 
     function = _fix_compat_issue29(function)
 
-    spec = compat.getargspec(function)
+    spec = get_arg_spec(function)
 
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))
