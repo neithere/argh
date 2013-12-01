@@ -51,8 +51,11 @@ def _get_args_from_signature(function):
 
     spec = get_arg_spec(function)
 
-    kwargs = dict(zip(*[reversed(x) for x in (spec.args,
-                                              spec.defaults or [])]))
+    defaults = dict(zip(*[reversed(x) for x in (spec.args,
+                                                spec.defaults or [])]))
+    defaults.update(getattr(spec, 'kwonlydefaults', None) or {})
+
+    kwonly = getattr(spec, 'kwonlyargs', [])
 
     if sys.version_info < (3,0):
         annotations = {}
@@ -67,7 +70,7 @@ def _get_args_from_signature(function):
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
 
-    for name in spec.args:
+    for name in spec.args + kwonly:
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
@@ -75,12 +78,16 @@ def _get_args_from_signature(function):
             # help message:  func(a : "b")  ->  add_argument("a", help="b")
             akwargs.update(help=annotations.get(name))
 
-        if name in kwargs:
-            akwargs.update(default=kwargs.get(name))
+        if name in defaults or name in kwonly:
+            if name in defaults:
+                akwargs.update(default=defaults.get(name))
+            else:
+                akwargs.update(required=True)
             flags = ('-{0}'.format(name[0]), '--{0}'.format(name))
             if name.startswith(conflicting_opts):
                 # remove short name
                 flags = flags[1:]
+
         else:
             # positional argument
             flags = (name,)

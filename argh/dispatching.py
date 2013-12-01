@@ -164,7 +164,8 @@ def _execute_command(args, errors_file):
             spec = get_arg_spec(args.function)
 
             positional = [all_input[k] for k in spec.args]
-            keywords = {}
+            kwonly = getattr(spec, 'kwonlyargs', [])
+            keywords = {k: all_input[k] for k in kwonly}
 
             # *args
             if spec.varargs:
@@ -173,7 +174,7 @@ def _execute_command(args, errors_file):
             # **kwargs
             varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
             if varkw:
-                not_kwargs = ['function'] + spec.args + [spec.varargs]
+                not_kwargs = ['function'] + spec.args + [spec.varargs] + kwonly
                 extra = [k for k in vars(args) if k not in not_kwargs]
                 for k in extra:
                     keywords[k] = getattr(args, k)
