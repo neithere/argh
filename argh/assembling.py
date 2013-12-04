@@ -65,7 +65,7 @@ def _get_args_from_signature(function):
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args]
+    chars = [a[0] for a in spec.args + kwonly]
     char_counts = dict((char, chars.count(char)) for char in set(chars))
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
