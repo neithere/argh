@@ -6,7 +6,7 @@ python:
   - '3.3'
   - 'pypy'
 install:
-  - 'pip install -r reqs-dev.txt --use-mirrors --quiet'
+  - 'pip install -r reqs-dev.txt'
 script: py.test --cov=argh
 notifications:
   email:
