@@ -24,6 +24,7 @@ from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             PARSER_FORMATTER)
 from argh.utils import get_subparsers, get_arg_names
 from argh import compat
+from argh.exceptions import AssemblingError
 
 
 __all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
@@ -191,7 +192,7 @@ def set_default_command(parser, function):
        :func:`~argh.decorators.arg`) and ones inferred from the function
        signature (e.g. via :func:`~argh.decorators.command`), declared ones
        will be merged into inferred ones. If an argument does not conform
-       function signature, `ValueError` is raised.
+       function signature, `AssemblingError` is raised.
 
     .. note::
 
@@ -240,11 +241,12 @@ def set_default_command(parser, function):
                     inferred_dict[dest] = kw
                 else:
                     xs = (inferred_dict[x]['option_strings'] for x in dests)
-                    raise ValueError('{func}: argument {flags} does not fit '
-                                     'function signature: {sig}'.format(
-                                        flags=', '.join(kw['option_strings']),
-                                        func=function.__name__,
-                                        sig=', '.join('/'.join(x) for x in xs)))
+                    raise AssemblingError(
+                        '{func}: argument {flags} does not fit '
+                        'function signature: {sig}'.format(
+                            flags=', '.join(kw['option_strings']),
+                            func=function.__name__,
+                            sig=', '.join('/'.join(x) for x in xs)))
 
         # pack the modified data back into a list
         inferred_args = [inferred_dict[x] for x in dests]

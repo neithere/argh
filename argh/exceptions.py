@@ -12,6 +12,12 @@
 Exceptions
 ~~~~~~~~~~
 """
+class AssemblingError(Exception):
+    """
+    Raised if the parser could not be configured due to malformed
+    or conflicting command declarations.
+    """
+
 
 class CommandError(Exception):
     """
