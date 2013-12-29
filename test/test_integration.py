@@ -233,6 +233,38 @@ def test_arg_mismatch_flag():
     assert msg in str(excinfo.value)
 
 
+def test_arg_mismatch_positional_vs_flag():
+    """ An `@arg('arg')` must match a positional arg in function signature.
+    """
+    @argh.arg('foo')
+    def func(foo=123):
+        return foo
+
+    p = DebugArghParser('PROG')
+    with pytest.raises(AssemblingError) as excinfo:
+        p.set_default_command(func)
+
+    msg = ('func: argument "foo" declared as optional (in function signature)'
+           ' and positional (via decorator)')
+    assert msg in str(excinfo.value)
+
+
+def test_arg_mismatch_flag_vs_positional():
+    """ An `@arg('--flag')` must match a keyword in function signature.
+    """
+    @argh.arg('--foo')
+    def func(foo):
+        return foo
+
+    p = DebugArghParser('PROG')
+    with pytest.raises(AssemblingError) as excinfo:
+        p.set_default_command(func)
+
+    msg = ('func: argument "foo" declared as positional (in function signature)'
+           ' and optional (via decorator)')
+    assert msg in str(excinfo.value)
+
+
 def test_backwards_compatibility_issue29():
     @argh.arg('foo')
     @argh.arg('--bar', default=1)
