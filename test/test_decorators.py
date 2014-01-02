@@ -37,6 +37,15 @@ def test_named():
     assert attr == 'new-name'
 
 
+def test_named_method():
+    class A:
+        @argh.named('new-name')
+        def meth(self):
+            pass
+    assert getattr(A.meth, argh.constants.ATTR_NAME) == 'new-name'
+    assert getattr(A().meth, argh.constants.ATTR_NAME) == 'new-name'
+
+
 def test_command():
     @argh.command
     def func():
