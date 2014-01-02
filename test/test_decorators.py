@@ -37,13 +37,37 @@ def test_named():
     assert attr == 'new-name'
 
 
+def test_named_proxy():
+    @argh.named('new-name')
+    def func(self):
+        pass
+
+    proxied_func = argh.named('another-name')(func)
+
+    assert getattr(func, argh.constants.ATTR_NAME) == 'new-name'
+    assert getattr(proxied_func, argh.constants.ATTR_NAME) == 'another-name'
+
+
 def test_named_method():
     class A:
         @argh.named('new-name')
         def meth(self):
             pass
+
     assert getattr(A.meth, argh.constants.ATTR_NAME) == 'new-name'
     assert getattr(A().meth, argh.constants.ATTR_NAME) == 'new-name'
+
+
+def test_named_method_proxy():
+    class A:
+        @argh.named('new-name')
+        def meth(self):
+            pass
+
+    a = A()
+    proxied_meth = argh.named('another-name')(a.meth)
+    assert getattr(a.meth, argh.constants.ATTR_NAME) == 'new-name'
+    assert getattr(proxied_meth, argh.constants.ATTR_NAME) == 'another-name'
 
 
 def test_command():
