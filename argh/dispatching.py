@@ -165,7 +165,7 @@ def _execute_command(args, errors_file):
 
             positional = [all_input[k] for k in spec.args]
             kwonly = getattr(spec, 'kwonlyargs', [])
-            keywords = {k: all_input[k] for k in kwonly}
+            keywords = dict((k, all_input[k]) for k in kwonly)
 
             # *args
             if spec.varargs:
