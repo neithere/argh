@@ -183,6 +183,27 @@ def test_annotation():
     assert 'quux' in prog_help
 
 
+def test_kwonlyargs():
+    "Correctly processing required and optional keyword-only arguments"
+    if sys.version_info < (3,0):
+        pytest.skip('unsupported configuration')
+
+    ns = {}
+    exec("def cmd(*args, foo='abcd', bar):\n"
+         "    return (args, foo, bar)",
+         None, ns)
+    cmd = ns['cmd']
+    p = argh.ArghParser()
+    p.add_argument = mock.MagicMock()
+    p.set_default_command(argh.command(cmd))
+    assert p.add_argument.mock_calls == [
+        mock.call('-f', '--foo', type=str, default='abcd'),
+        mock.call('-b', '--bar', required=True),
+        mock.call('args', nargs='*')
+    ]
+
+
+
 @mock.patch('argh.assembling.COMPLETION_ENABLED', True)
 def test_custom_argument_completer():
     "Issue #33: Enable custom per-argument shell completion"
