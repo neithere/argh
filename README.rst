@@ -1,6 +1,9 @@
 Argh: The Natural CLI
 =====================
 
+.. image:: https://travis-ci.org/neithere/argh.png?branch=master
+   :target: https://travis-ci.org/neithere/argh
+
 Building a command-line interface?  Found yourself uttering "argh!" while
 struggling with the API of `argparse`?  Don't want to lose its power but don't
 need the complexity?
