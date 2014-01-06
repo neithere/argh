@@ -3,9 +3,10 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
-from .base import DebugArghParser, run, CmdResult as R
-
+import pytest
 import argh
+
+from .base import DebugArghParser, run
 
 
 def test_regression_issue12():
@@ -109,3 +110,16 @@ def test_regression_issue31():
     assert '0\n' == run(p, '').out
     assert '1\n' == run(p, '-v').out
     assert '2\n' == run(p, '-vv').out
+
+
+def test_regression_issue47():
+    @argh.arg('--foo-bar', default="full")
+    def func(foo_bar):
+        return 'hello'
+
+    p = DebugArghParser()
+    with pytest.raises(argh.assembling.AssemblingError) as excinfo:
+        p.set_default_command(func)
+    msg = ('func: argument "foo_bar" declared as positional (in function '
+           'signature) and optional (via decorator)')
+    assert excinfo.exconly().endswith(msg)

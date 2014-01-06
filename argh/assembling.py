@@ -18,11 +18,13 @@ import argparse
 import sys
 
 from argh.completion import COMPLETION_ENABLED
+from argh.compat import OrderedDict
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT,
                             PARSER_FORMATTER)
 from argh.utils import get_subparsers, get_arg_spec
+from argh.exceptions import AssemblingError
 
 
 __all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
@@ -166,16 +168,30 @@ def _fix_compat_issue29(function):
     return function
 
 
-def _get_dest(parser, argspec):
+def _is_positional(args, prefix_chars='-'):
+    assert args
+    if 1 < len(args) or args[0][0].startswith(tuple(prefix_chars)):
+        return False
+    else:
+        return True
+
+
+def _get_parser_param_kwargs(parser, argspec):
     argspec = argspec.copy()    # parser methods modify source data
     args = argspec['option_strings']
-    assert args
 
-    if 1 < len(args) or args[0][0].startswith(tuple(parser.prefix_chars)):
-        kwargs = parser._get_optional_kwargs(*args, **argspec)
-    else:
+    if _is_positional(args, prefix_chars=parser.prefix_chars):
         kwargs = parser._get_positional_kwargs(*args, **argspec)
+    else:
+        kwargs = parser._get_optional_kwargs(*args, **argspec)
 
+    kwargs['dest'] = kwargs['dest'].replace('-', '_')
+
+    return kwargs
+
+
+def _get_dest(parser, argspec):
+    kwargs = _get_parser_param_kwargs(parser, argspec)
     return kwargs['dest']
 
 
@@ -197,7 +213,7 @@ def set_default_command(parser, function):
        :func:`~argh.decorators.arg`) and ones inferred from the function
        signature (e.g. via :func:`~argh.decorators.command`), declared ones
        will be merged into inferred ones. If an argument does not conform
-       function signature, `ValueError` is raised.
+       function signature, `AssemblingError` is raised.
 
     .. note::
 
@@ -215,45 +231,76 @@ def set_default_command(parser, function):
 
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))
+
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
 
-        # FIXME this is an ugly hack for preserving order
-        dests = []
-        inferred_dict = {}
-        for x in inferred_args:
-            dest = _get_dest(parser, x)
-            dests.append(dest)
-            inferred_dict[dest] = x
+        # a mapping of "dest" strings to argument declarations.
+        #
+        # * a "dest" string is a normalized form of argument name, i.e.:
+        #
+        #     '-f', '--foo' → 'foo'
+        #     'foo-bar'     → 'foo_bar'
+        #
+        # * argument declaration is a dictionary representing an argument;
+        #   it is obtained either from _get_args_from_signature() or from
+        #   an @arg decorator (as is).
+        #
+        dests = OrderedDict()
 
-        for kw in declared_args:
-            # 1) make sure that this declared arg conforms to the function
-            #    signature and therefore only refines an inferred arg:
-            #
-            #      @arg('foo')    maps to  func(foo)
-            #      @arg('--bar')  maps to  func(bar=...)
-            #
+        for argspec in inferred_args:
+            dest = _get_parser_param_kwargs(parser, argspec)['dest']
+            dests[dest] = argspec
 
-            dest = _get_dest(parser, kw)
-            if dest in inferred_dict:
-                # 2) merge declared args into inferred ones (e.g. help=...)
-                inferred_dict[dest].update(**kw)
+        for declared_kw in declared_args:
+            # an argument is declared via decorator
+            dest = _get_dest(parser, declared_kw)
+            if dest in dests:
+                # the argument is already known from function signature
+                #
+                # now make sure that this declared arg conforms to the function
+                # signature and therefore only refines an inferred arg:
+                #
+                #      @arg('my-foo')    maps to  func(my_foo)
+                #      @arg('--my-bar')  maps to  func(my_bar=...)
+
+                # either both arguments are positional or both are optional
+                decl_positional = _is_positional(declared_kw['option_strings'])
+                infr_positional = _is_positional(dests[dest]['option_strings'])
+                if decl_positional != infr_positional:
+                    kinds = {True: 'positional', False: 'optional'}
+                    raise AssemblingError(
+                        '{func}: argument "{dest}" declared as {kind_i} '
+                        '(in function signature) and {kind_d} (via decorator)'
+                        .format(
+                            func=function.__name__,
+                            dest=dest,
+                            kind_i=kinds[infr_positional],
+                            kind_d=kinds[decl_positional],
+                        ))
+
+                # merge explicit argument declaration into the inferred one
+                # (e.g. `help=...`)
+                dests[dest].update(**declared_kw)
             else:
+                # the argument is not in function signature
                 varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
                 if varkw:
-                    # function accepts **kwargs
-                    dests.append(dest)
-                    inferred_dict[dest] = kw
+                    # function accepts **kwargs; the argument goes into it
+                    dests[dest] = declared_kw
                 else:
-                    xs = (inferred_dict[x]['option_strings'] for x in dests)
-                    raise ValueError('{func}: argument {flags} does not fit '
-                                     'function signature: {sig}'.format(
-                                        flags=', '.join(kw['option_strings']),
-                                        func=function.__name__,
-                                        sig=', '.join('/'.join(x) for x in xs)))
+                    # there's no way we can map the argument declaration
+                    # to function signature
+                    xs = (dests[x]['option_strings'] for x in dests)
+                    raise AssemblingError(
+                        '{func}: argument {flags} does not fit '
+                        'function signature: {sig}'.format(
+                            flags=', '.join(declared_kw['option_strings']),
+                            func=function.__name__,
+                            sig=', '.join('/'.join(x) for x in xs)))
 
         # pack the modified data back into a list
-        inferred_args = [inferred_dict[x] for x in dests]
+        inferred_args = dests.values()
 
     command_args = inferred_args or declared_args
 

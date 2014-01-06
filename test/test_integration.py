@@ -11,6 +11,7 @@ import mock
 import pytest
 
 import argh
+from argh.exceptions import AssemblingError
 
 from .base import DebugArghParser, run, CmdResult as R
 
@@ -201,14 +202,14 @@ def test_arg_merged():
 
 
 def test_arg_mismatch_positional():
-    """ @arg must match function signature if @command is applied.
+    """ An `@arg('positional')` must match function signature.
     """
     @argh.arg('bogus-argument')
     def confuse_a_cat(vet, funny_things=123):
         return vet, funny_things
 
     p = DebugArghParser('PROG')
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(AssemblingError) as excinfo:
         p.set_default_command(confuse_a_cat)
 
     msg = ("confuse_a_cat: argument bogus-argument does not fit "
@@ -217,18 +218,50 @@ def test_arg_mismatch_positional():
 
 
 def test_arg_mismatch_flag():
-    """ @arg must match function signature if @command is applied.
+    """ An `@arg('--flag')` must match function signature.
     """
     @argh.arg('--bogus-argument')
     def confuse_a_cat(vet, funny_things=123):
         return vet, funny_things
 
     p = DebugArghParser('PROG')
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(AssemblingError) as excinfo:
         p.set_default_command(confuse_a_cat)
 
     msg = ("confuse_a_cat: argument --bogus-argument does not fit "
            "function signature: vet, -f/--funny-things")
+    assert msg in str(excinfo.value)
+
+
+def test_arg_mismatch_positional_vs_flag():
+    """ An `@arg('arg')` must match a positional arg in function signature.
+    """
+    @argh.arg('foo')
+    def func(foo=123):
+        return foo
+
+    p = DebugArghParser('PROG')
+    with pytest.raises(AssemblingError) as excinfo:
+        p.set_default_command(func)
+
+    msg = ('func: argument "foo" declared as optional (in function signature)'
+           ' and positional (via decorator)')
+    assert msg in str(excinfo.value)
+
+
+def test_arg_mismatch_flag_vs_positional():
+    """ An `@arg('--flag')` must match a keyword in function signature.
+    """
+    @argh.arg('--foo')
+    def func(foo):
+        return foo
+
+    p = DebugArghParser('PROG')
+    with pytest.raises(AssemblingError) as excinfo:
+        p.set_default_command(func)
+
+    msg = ('func: argument "foo" declared as positional (in function signature)'
+           ' and optional (via decorator)')
     assert msg in str(excinfo.value)
 
 

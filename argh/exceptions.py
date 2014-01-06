@@ -12,10 +12,20 @@
 Exceptions
 ~~~~~~~~~~
 """
+class AssemblingError(Exception):
+    """
+    Raised if the parser could not be configured due to malformed
+    or conflicting command declarations.
+    """
+
 
 class CommandError(Exception):
-    """The only exception that is wrapped by the dispatcher. Useful for
-    print-and-exit tasks.
+    """
+    Intended to be raised from within a command.  The dispatcher wraps this
+    exception by default and prints its message without traceback.
+
+    Useful for print-and-exit tasks when you expect a failure and don't want
+    to startle the ordinary user by the cryptic output.
 
     Consider the following example::
 
