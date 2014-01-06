@@ -120,6 +120,6 @@ def test_regression_issue47():
     p = DebugArghParser()
     with pytest.raises(argh.assembling.AssemblingError) as excinfo:
         p.set_default_command(func)
-    msg = ('func: argument "foo-bar" declared as positional (in function '
+    msg = ('func: argument "foo_bar" declared as positional (in function '
            'signature) and optional (via decorator)')
     assert excinfo.exconly().endswith(msg)
