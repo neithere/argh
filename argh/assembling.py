@@ -231,11 +231,11 @@ def set_default_command(parser, function):
             # 1) make sure that this declared arg conforms to the function
             #    signature and therefore only refines an inferred arg:
             #
-            #      @arg('foo')    maps to  func(foo)
-            #      @arg('--bar')  maps to  func(bar=...)
+            #      @arg('my-foo')    maps to  func(my_foo)
+            #      @arg('--my-bar')  maps to  func(my_bar=...)
             #
 
-            dest = _get_dest(parser, kw)
+            dest = _get_dest(parser, kw).replace('_', '-')
             if dest in inferred_dict:
                 # 2) merge declared args into inferred ones (e.g. help=...)
                 inferred_dict[dest].update(**kw)
