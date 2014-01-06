@@ -167,7 +167,7 @@ def _fix_compat_issue29(function):
     return function
 
 
-def _get_dest(parser, argspec):
+def _get_parser_param_kwargs(parser, argspec):
     argspec = argspec.copy()    # parser methods modify source data
     args = argspec['option_strings']
     assert args
@@ -177,7 +177,7 @@ def _get_dest(parser, argspec):
     else:
         kwargs = parser._get_positional_kwargs(*args, **argspec)
 
-    return kwargs['dest']
+    return kwargs
 
 
 def set_default_command(parser, function):
@@ -223,7 +223,7 @@ def set_default_command(parser, function):
         dests = []
         inferred_dict = {}
         for x in inferred_args:
-            dest = _get_dest(parser, x)
+            dest = _get_parser_param_kwargs(parser, x)['dest']
             dests.append(dest)
             inferred_dict[dest] = x
 
@@ -234,9 +234,28 @@ def set_default_command(parser, function):
             #      @arg('my-foo')    maps to  func(my_foo)
             #      @arg('--my-bar')  maps to  func(my_bar=...)
             #
+            declared_param_kwargs = _get_parser_param_kwargs(parser, kw)
 
-            dest = _get_dest(parser, kw).replace('_', '-')
+            # XXX this is unclean: dest = pythonized destination (with
+            # underscore); we change it back to hyphen.  should we do the
+            # contrary?
+            dest = declared_param_kwargs['dest'].replace('_', '-')
+
             if dest in inferred_dict:
+                # check if the both arguments are (not) required
+                inferred_kw = inferred_dict[dest]
+                inferred_param_kwargs = _get_parser_param_kwargs(parser, inferred_kw)
+                inferred_required = inferred_param_kwargs.get('required', False)
+                declared_required = declared_param_kwargs.get('required', False)
+                if not inferred_required == declared_required:
+                    kind_inferred = 'positional' if inferred_required else 'optional'
+                    kind_declared = 'positional' if declared_required else 'optional'
+                    raise AssemblingError(
+                        '{func}: argument "{dest}" declared as {kind_i} '
+                        '(in function signature) and {kind_d} (via decorator)'
+                        .format(func=function.__name__, dest=dest,
+                                kind_i=kind_inferred, kind_d=kind_declared))
+
                 # 2) merge declared args into inferred ones (e.g. help=...)
                 inferred_dict[dest].update(**kw)
             else:
