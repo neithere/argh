@@ -18,6 +18,8 @@ and generally made *Argh* better:
 :Marco Nenciarini:    Patch for shell completion
 :Matt Black:          Patch re TTY
 :Tony Narlock:        Adaptation of README to GitHub
+:Oskari Saarenmaa:    Compatibility improvements
+:Denis Lisov:         Support for keyword-only arguments (Python 3)
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.
