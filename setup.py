@@ -27,18 +27,30 @@ from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
 
-# Importing `__version__` from `argh` would trigger a cascading import
-# of `argparse`. We need to avoid this as Python < 2.7 ships without argparse.
-__version__ = None
-with io.open('argh/__init__.py', encoding='utf8') as f:
-    for line in f:
-        if line.startswith('__version__'):
-            exec(line)
-            break
-assert __version__, 'argh.__version__ must be imported correctly'
+if sys.version_info < (2,7):
+    #
+    # Python 2.6
+    #
+    install_requires = ['argparse >= 1.1']
+    # Importing `__version__` from `argh` would trigger a cascading import
+    # of `argparse`.  Avoiding this as Python < 2.7 ships without argparse.
+    __version__ = None
+    with io.open('argh/__init__.py', encoding='utf8') as f:
+        for line in f:
+            if line.startswith('__version__'):
+                exec(line)
+                break
+    assert __version__, 'argh.__version__ must be imported correctly'
+else:
+    #
+    # Python 2.7, 3.x
+    #
+    install_requires = []
+    from argh import __version__
 
 
-with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding='ascii') as f:
+with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
+             encoding='ascii') as f:
 	readme = f.read()
 
 
@@ -55,12 +67,6 @@ class PyTest(TestCommand):
         import pytest
         errno = pytest.main(self.test_args)
         sys.exit(errno)
-
-
-if sys.version_info < (2,7):
-    install_requires = ['argparse >= 1.1']
-else:
-    install_requires = []
 
 
 setup(
