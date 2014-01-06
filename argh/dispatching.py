@@ -84,8 +84,9 @@ def dispatch(parser, argv=None, add_help_command=True,
     You can also mark arbitrary exceptions as "wrappable" by using the
     :func:`~argh.decorators.wrap_errors` decorator.
     """
-    if completion and sys.stdout.isatty():
-        autocomplete(parser)
+    if completion:
+        isatty = hasattr(output_file, 'isatty') and output_file.isatty()
+        autocomplete(parser, allow_warnings=isatty)
 
     if argv is None:
         argv = sys.argv[1:]

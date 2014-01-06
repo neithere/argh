@@ -75,12 +75,16 @@ else:
 __all__ = ['autocomplete', 'COMPLETION_ENABLED']
 
 
-def autocomplete(parser):
-    """ Adds support for shell completion by patching given
+def autocomplete(parser, allow_warnings=True):
+    """ Adds support for shell completion via argcomplete_ by patching given
     `argparse.ArgumentParser` (sub)class.
+
+    If completion is not enabled, issues a warning.  The warning is suppressed
+    either if the shell is not `bash` or if `allow_warnings` is `False`.
+    The latter can be due to the output stream not being a TTY.
     """
     if COMPLETION_ENABLED:
         argcomplete.autocomplete(parser)
-    elif 'bash' in os.getenv('SHELL', ''):
+    elif allow_warnings and 'bash' in os.getenv('SHELL', ''):
         import warnings
         warnings.warn('Bash completion not available. Install argcomplete.')
