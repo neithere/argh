@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  Copyright (c) 2010—2013 Andrey Mikhaylenko and contributors
+#  Copyright © 2010—2014 Andrey Mikhaylenko and contributors
 #
 #  This file is part of Argh.
 #
@@ -24,7 +24,7 @@ from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import CommandError
-from argh.utils import get_arg_names
+from argh.utils import get_arg_spec
 
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
@@ -161,11 +161,11 @@ def _execute_command(args, errors_file):
             # filter the namespace variables so that only those expected by the
             # actual function will pass
 
-            spec = compat.getargspec(args.function)
-            names = get_arg_names(args.function)
+            spec = get_arg_spec(args.function)
 
-            positional = [all_input[k] for k in names]
-            keywords = {}
+            positional = [all_input[k] for k in spec.args]
+            kwonly = getattr(spec, 'kwonlyargs', [])
+            keywords = dict((k, all_input[k]) for k in kwonly)
 
             # *args
             if spec.varargs:
@@ -174,7 +174,7 @@ def _execute_command(args, errors_file):
             # **kwargs
             varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
             if varkw:
-                not_kwargs = ['function'] + spec.args + [spec.varargs]
+                not_kwargs = ['function'] + spec.args + [spec.varargs] + kwonly
                 extra = [k for k in vars(args) if k not in not_kwargs]
                 for k in extra:
                     keywords[k] = getattr(args, k)

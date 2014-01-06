@@ -702,3 +702,27 @@ def test_class_members():
     assert run(p, 'class-meth foo').out == 'foo\n123\n'
     assert run(p, 'static-meth foo').out == 'foo\nw00t?\n'
     assert run(p, 'static-meth2 foo').out == 'foo\nhuh!\n'
+
+
+def test_kwonlyargs():
+    "Correct dispatch in presence of keyword-only arguments"
+    if sys.version_info < (3,0):
+        pytest.skip('unsupported configuration')
+
+    ns = {}
+
+    exec("""def cmd(*args, foo='1', bar, baz='3', **kwargs):
+                return ' '.join(args), foo, bar, baz, len(kwargs)
+         """, None, ns)
+    cmd = ns['cmd']
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert (run(p, '--baz=done test  this --bar=do').out ==
+            'test this\n1\ndo\ndone\n0\n')
+    if sys.version_info < (3,3):
+        message = 'argument --bar is required'
+    else:
+        message = 'the following arguments are required: --bar'
+    assert run(p, 'test --foo=do', exit=True) == message

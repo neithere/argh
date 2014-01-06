@@ -1,9 +1,12 @@
 Argh: The Natural CLI
 =====================
 
+.. image:: https://travis-ci.org/neithere/argh.png?branch=master
+   :target: https://travis-ci.org/neithere/argh
+
 Building a command-line interface?  Found yourself uttering "argh!" while
-struggling with the API of `argparse`?  Don't want to lose its power but don't
-need the complexity?
+struggling with the API of `argparse`?  Don't like the complexity but need
+the power?
 
 .. epigraph::
 
@@ -11,7 +14,7 @@ need the complexity?
 
     -- Albert Einstein (probably)
 
-`Argh` provides a wrapper for `argparse`.  `Argparse` is a very powerful tool;
+`Argh` is a smart wrapper for `argparse`.  `Argparse` is a very powerful tool;
 `Argh` just makes it easy to use.
 
 In a nutshell

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#  Copyright (c) 2010—2013 Andrey Mikhaylenko and contributors
+#  Copyright © 2010—2014 Andrey Mikhaylenko and contributors
 #
 #  This file is part of Argh.
 #
@@ -42,18 +42,12 @@ def get_subparsers(parser, create=False):
             return parser.add_subparsers()
 
 
-def get_arg_names(function):
-    """Returns argument names for given function.  Omits special arguments
-    of instance methods (`self`) and static methods (usually `cls` or something
-    like this).
+def get_arg_spec(function):
+    """Returns argument specification for given function.  Omits special
+    arguments of instance methods (`self`) and static methods (usually `cls`
+    or something like this).
     """
     spec = compat.getargspec(function)
-    names = spec.args
-
-    if not names:
-        return []
-
     if inspect.ismethod(function):
-        return names[1:]
-    else:
-        return names
+        spec = spec._replace(args=spec.args[1:])
+    return spec

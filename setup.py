@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    Argh is a simple argparse wrapper.
-#    Copyright © 2010—2013  Andrey Mikhaylenko
+#    Copyright © 2010—2014  Andrey Mikhaylenko and contributors
 #
 #    This file is part of Argh.
 #
@@ -28,18 +27,30 @@ from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
 
-# Importing `__version__` from `argh` would trigger a cascading import
-# of `argparse`. We need to avoid this as Python < 2.7 ships without argparse.
-__version__ = None
-with io.open('argh/__init__.py', encoding='utf8') as f:
-    for line in f:
-        if line.startswith('__version__'):
-            exec(line)
-            break
-assert __version__, 'argh.__version__ must be imported correctly'
+if sys.version_info < (2,7):
+    #
+    # Python 2.6
+    #
+    install_requires = ['argparse >= 1.1']
+    # Importing `__version__` from `argh` would trigger a cascading import
+    # of `argparse`.  Avoiding this as Python < 2.7 ships without argparse.
+    __version__ = None
+    with io.open('argh/__init__.py', encoding='utf8') as f:
+        for line in f:
+            if line.startswith('__version__'):
+                exec(line)
+                break
+    assert __version__, 'argh.__version__ must be imported correctly'
+else:
+    #
+    # Python 2.7, 3.x
+    #
+    install_requires = []
+    from argh import __version__
 
 
-with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding='ascii') as f:
+with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
+             encoding='ascii') as f:
 	readme = f.read()
 
 
@@ -58,35 +69,29 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-if sys.version_info < (2,7):
-    install_requires = ['argparse >= 1.1']
-else:
-    install_requires = []
-
-
 setup(
     # overview
-    name             = 'argh',
-    description      = 'An unobtrusive argparse wrapper with natural syntax',
+    name = 'argh',
+    description = 'An unobtrusive argparse wrapper with natural syntax',
     long_description = readme,
 
     # technical info
-    version  = __version__,
+    version = __version__,
     packages = ['argh'],
     provides = ['argh'],
     install_requires = install_requires,
 
     # testing
-    tests_require=['pytest'],
+    tests_require = ['pytest'],
     cmdclass = {'test': PyTest},
 
     # copyright
-    author   = 'Andrey Mikhaylenko',
+    author = 'Andrey Mikhaylenko',
     author_email = 'neithere@gmail.com',
-    license  = 'GNU Lesser General Public License (LGPL), Version 3',
+    license = 'GNU Lesser General Public License (LGPL), Version 3',
 
     # more info
-    url          = 'http://github.com/neithere/argh/',
+    url = 'http://github.com/neithere/argh/',
 
     # categorization
     keywords     = ('cli command line argparse optparse argument option'),
