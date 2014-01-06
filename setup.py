@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#    Argh is a simple argparse wrapper.
-#    Copyright © 2010—2013  Andrey Mikhaylenko
+#    Copyright © 2010—2014  Andrey Mikhaylenko and contributors
 #
 #    This file is part of Argh.
 #
@@ -66,27 +65,27 @@ else:
 
 setup(
     # overview
-    name             = 'argh',
-    description      = 'An unobtrusive argparse wrapper with natural syntax',
+    name = 'argh',
+    description = 'An unobtrusive argparse wrapper with natural syntax',
     long_description = readme,
 
     # technical info
-    version  = __version__,
+    version = __version__,
     packages = ['argh'],
     provides = ['argh'],
     install_requires = install_requires,
 
     # testing
-    tests_require=['pytest'],
+    tests_require = ['pytest'],
     cmdclass = {'test': PyTest},
 
     # copyright
-    author   = 'Andrey Mikhaylenko',
+    author = 'Andrey Mikhaylenko',
     author_email = 'neithere@gmail.com',
-    license  = 'GNU Lesser General Public License (LGPL), Version 3',
+    license = 'GNU Lesser General Public License (LGPL), Version 3',
 
     # more info
-    url          = 'http://github.com/neithere/argh/',
+    url = 'http://github.com/neithere/argh/',
 
     # categorization
     keywords     = ('cli command line argparse optparse argument option'),
