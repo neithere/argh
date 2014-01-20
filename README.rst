@@ -1,6 +1,9 @@
 Argh: The Natural CLI
 =====================
 
+.. image:: https://badge.fury.io/py/argh.png
+   :target: http://badge.fury.io/py/argh
+
 .. image:: https://travis-ci.org/neithere/argh.png?branch=master
    :target: https://travis-ci.org/neithere/argh
 
