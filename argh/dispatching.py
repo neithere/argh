@@ -28,7 +28,7 @@ from argh.utils import get_arg_spec
 
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
-           'PARSER_FORMATTER']
+           'PARSER_FORMATTER', 'EntryPoint']
 
 
 def dispatch(parser, argv=None, add_help_command=True,
@@ -247,3 +247,18 @@ def dispatch_commands(functions, *args, **kwargs):
     parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
     add_commands(parser, functions)
     dispatch(parser, *args, **kwargs)
+
+
+class EntryPoint(object):
+
+    def __init__(self):
+        self.commands = []
+
+    def __call__(self, f=None):
+        if f:
+            self.commands.append(f)
+        else:
+            if len(self.commands) == 1:
+                dispatch_command(*self.commands)
+            else:
+                dispatch_commands(self.commands)
