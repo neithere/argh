@@ -58,6 +58,7 @@ It is recommended to use the :func:`~argh.decorators.arg` decorator::
         ...
 
 """
+import logging
 import os
 
 
@@ -75,7 +76,10 @@ else:
 __all__ = ['autocomplete', 'COMPLETION_ENABLED']
 
 
-def autocomplete(parser, allow_warnings=True):
+logger = logging.getLogger(__package__)
+
+
+def autocomplete(parser, allow_warnings=None):
     """ Adds support for shell completion via argcomplete_ by patching given
     `argparse.ArgumentParser` (sub)class.
 
@@ -83,8 +87,14 @@ def autocomplete(parser, allow_warnings=True):
     either if the shell is not `bash` or if `allow_warnings` is `False`.
     The latter can be due to the output stream not being a TTY.
     """
+    if allow_warnings is not None:
+        # XXX drop this in argh 1.0
+        # this is actually sane, contrary to what it looks like
+        import warnings
+        warnings.warn('allow_warnings is deprecated, logging is used instead',
+                      DeprecationWarning)
+
     if COMPLETION_ENABLED:
         argcomplete.autocomplete(parser)
-    elif allow_warnings and 'bash' in os.getenv('SHELL', ''):
-        import warnings
-        warnings.warn('Bash completion not available. Install argcomplete.')
+    elif 'bash' in os.getenv('SHELL', ''):
+        logger.debug('Bash completion not available. Install argcomplete.')
