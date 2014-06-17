@@ -170,6 +170,18 @@ Developed by Andrey Mikhaylenko since 2010.
 
 See file `AUTHORS` for a complete list of contributors to this library.
 
+Support
+-------
+
+The fastest way to improve this project is to submit tested and documented
+patches or detailed bug reports.
+
+Otherwise you can "flattr" me: |FlattrLink|_
+
+.. _FlattrLink: https://flattr.com/submit/auto?user_id=neithere&url=http%3A%2F%2Fpypi.python.org%2Fpypi%2Fargh
+.. |FlattrLink| image:: https://api.flattr.com/button/flattr-badge-large.png
+   :alt: Flattr the Argh project
+
 Licensing
 ---------
 
