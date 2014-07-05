@@ -23,6 +23,7 @@ and generally made *Argh* better:
 :Paul Jacobson:       Defaults in argument help message, raw docstrings
 :nilfisque:           Defaults in argument help message, raw docstrings
 :jdoppler:            Bug reports (based on StackOverflow)
+:Chuck Blake:         Support for Cython
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.
