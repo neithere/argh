@@ -297,6 +297,39 @@ of `argparse.ArgumentParser`.
 By the way, `argh` ships with :class:`~argh.helpers.ArghParser` which
 integrates the assembling and dispatching functions for DRYness.
 
+Entry Points
+............
+
+.. versionadded:: 0.25
+
+The normal way is to declare commands, then assemble them into an entry
+point and then dispatch.
+
+However, It is also possible to first declare an entry point and then
+register the commands with it right at command declaration stage.
+
+The commands are assembled together but the parser is not created until
+dispatching.
+
+To do so, use :class:`~argh.dispatching.EntryPoint`::
+
+   from argh import EntryPoint
+
+
+   app = EntryPoint('my cool app')
+
+   @app
+   def foo():
+       return 'hello'
+
+   @app
+   def bar():
+       return 'bye'
+
+
+   if __name__ == '__main__':
+       app()
+
 Single-command application
 --------------------------
 

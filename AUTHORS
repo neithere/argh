@@ -24,6 +24,7 @@ and generally made *Argh* better:
 :nilfisque:           Defaults in argument help message, raw docstrings
 :jdoppler:            Bug reports (based on StackOverflow)
 :Chuck Blake:         Support for Cython
+:invl:                Idea and basic implementation of EntryPoint
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.

@@ -23,7 +23,7 @@ from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
                             PARSER_FORMATTER)
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
-from argh.exceptions import CommandError
+from argh.exceptions import DispatchingError, CommandError
 from argh.utils import get_arg_spec
 
 
@@ -254,15 +254,54 @@ def dispatch_commands(functions, *args, **kwargs):
 
 
 class EntryPoint(object):
+    """
+    An object to which functions can be attached and then dispatched.
 
-    def __init__(self):
+    When called with an argument, the argument (a function) is registered
+    at this entry point as a command.
+
+    When called without an argument, dispatching is triggered with all
+    previously registered commands.
+
+    Usage::
+
+        from argh import EntryPoint
+
+        entrypoint = EntryPoint()
+
+        @entrypoint
+        def ls():
+            for i in range(10):
+                print i
+
+        @entrypoint
+        def greet():
+            print 'hello'
+
+        if __name__ == '__main__':
+            entrypoint()
+
+    """
+    def __init__(self, name=None):
+        self.name = name or 'unnamed'
         self.commands = []
 
     def __call__(self, f=None):
         if f:
-            self.commands.append(f)
+            self._register_command(f)
+            return f
+
+        return self._dispatch()
+
+    def _register_command(self, f):
+        self.commands.append(f)
+
+    def _dispatch(self):
+        if not self.commands:
+            raise DispatchingError('no commands for entry point "{}"'
+                                   .format(self.name))
+
+        if len(self.commands) == 1:
+            dispatch_command(*self.commands)
         else:
-            if len(self.commands) == 1:
-                dispatch_command(*self.commands)
-            else:
-                dispatch_commands(self.commands)
+            dispatch_commands(self.commands)

@@ -19,6 +19,13 @@ class AssemblingError(Exception):
     """
 
 
+class DispatchingError(Exception):
+    """
+    Raised if the dispatching could not be completed due to misconfiguration
+    which could not be determined on an earlier stage.
+    """
+
+
 class CommandError(Exception):
     """
     Intended to be raised from within a command.  The dispatcher wraps this

@@ -4,6 +4,8 @@ Dispatching tests
 ~~~~~~~~~~~~~~~~~
 """
 import argh
+from mock import patch
+import pytest
 
 from .base import make_IO
 
@@ -44,3 +46,37 @@ def test_dispatch_command_shortcut():
 
     assert run_func(cmd, '') == '1\n'
     assert run_func(cmd, '--foo 2') == '2\n'
+
+
+@patch('argh.dispatching.dispatch_command')
+@patch('argh.dispatching.dispatch_commands')
+def test_entrypoint(dcs_mock, dc_mock):
+
+    entrypoint = argh.EntryPoint('my cool app')
+
+    # no commands
+
+    with pytest.raises(argh.exceptions.DispatchingError) as excinfo:
+        entrypoint()
+    assert excinfo.exconly() == (
+        'DispatchingError: no commands for entry point "my cool app"')
+
+    # a single command
+
+    @entrypoint
+    def greet():
+        return 'hello'
+
+    entrypoint()
+    assert not dcs_mock.called
+    assert dc_mock.called
+    dc_mock.assert_called_with(greet)
+
+    # multiple commands
+
+    @entrypoint
+    def hit():
+        return 'knight with a chicken'
+
+    entrypoint()
+    dcs_mock.assert_called_with([greet, hit])
