@@ -752,3 +752,24 @@ def test_default_arg_values_in_help():
     assert 'remarkable animal' in p.format_help()
     # ...but is still present
     assert 'it can speak' in p.format_help()
+
+
+def test_help_formatting_is_preserved():
+    "Formatting of docstrings should not be messed up in help messages"
+
+    def func():
+        """
+        Sample function.
+
+        Parameters:
+            foo: float
+                An example argument.
+            bar: bool
+                Another argument.
+        """
+        return 'hello'
+
+    p = DebugArghParser()
+    p.set_default_command(func)
+
+    assert func.__doc__ in p.format_help()
