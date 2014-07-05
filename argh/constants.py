@@ -47,6 +47,12 @@ PARSER_FORMATTER = argparse.ArgumentDefaultsHelpFormatter
 """ Default formatter to be used in implicitly instantiated ArgumentParser.
 """
 
+DEFAULT_ARGUMENT_TEMPLATE = '%(default)s'
+""" Default template of argument help message (see issue #64).
+The template ``%(default)s`` is used by `argparse` to display the argument's
+default value.
+"""
+
 #-----------------------------------------------------------------------------
 #
 # deprecated

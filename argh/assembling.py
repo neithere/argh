@@ -22,7 +22,7 @@ from argh.compat import OrderedDict
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT,
-                            PARSER_FORMATTER)
+                            PARSER_FORMATTER, DEFAULT_ARGUMENT_TEMPLATE)
 from argh.utils import get_subparsers, get_arg_spec
 from argh.exceptions import AssemblingError
 
@@ -309,6 +309,8 @@ def set_default_command(parser, function):
 
     for draft in command_args:
         draft = draft.copy()
+        if 'help' not in draft:
+            draft.update(help=DEFAULT_ARGUMENT_TEMPLATE)
         dest_or_opt_strings = draft.pop('option_strings')
         if parser.add_help and '-h' in dest_or_opt_strings:
             dest_or_opt_strings = [x for x in dest_or_opt_strings if x != '-h']
