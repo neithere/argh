@@ -65,7 +65,8 @@ def test_set_default_command():
 
     assert parser.add_argument.mock_calls == [
         mock.call('foo', nargs='+', choices=[1,2], help='me', type=int),
-        mock.call('-b', '--bar', default=False, action='store_true')
+        mock.call('-b', '--bar', default=False, action='store_true',
+                  help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE)
     ]
     assert parser.set_defaults.mock_calls == [
         mock.call(function=func)
@@ -142,7 +143,8 @@ def test_set_default_command_varargs():
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call('file_paths', nargs='*'),
+        mock.call('file_paths', nargs='*', 
+                  help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
     ]
 
 
@@ -160,9 +162,9 @@ def test_set_default_command_kwargs():
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call('x'),
-        mock.call('foo'),
-        mock.call('--bar'),
+        mock.call('x', help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        mock.call('foo', help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        mock.call('--bar', help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
     ]
 
 
@@ -197,9 +199,12 @@ def test_kwonlyargs():
     p.add_argument = mock.MagicMock()
     p.set_default_command(argh.command(cmd))
     assert p.add_argument.mock_calls == [
-        mock.call('-f', '--foo', type=str, default='abcd'),
-        mock.call('-b', '--bar', required=True),
-        mock.call('args', nargs='*')
+        mock.call('-f', '--foo', type=str, default='abcd',
+                  help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        mock.call('-b', '--bar', required=True,
+                  help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        mock.call('args', nargs='*',
+                  help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE)
     ]
 
 

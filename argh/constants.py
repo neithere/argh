@@ -13,7 +13,7 @@ import argparse
 __all__ = (
     'ATTR_NAME', 'ATTR_ALIASES', 'ATTR_ARGS', 'ATTR_WRAPPED_EXCEPTIONS',
     'ATTR_WRAPPED_EXCEPTIONS_PROCESSOR', 'ATTR_EXPECTS_NAMESPACE_OBJECT',
-    'PARSER_FORMATTER'
+    'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE'
 )
 
 
@@ -43,8 +43,20 @@ ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
 # Other library-wide stuff
 #
 
-PARSER_FORMATTER = argparse.ArgumentDefaultsHelpFormatter
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                      argparse.RawDescriptionHelpFormatter):
+    pass
+
+
+PARSER_FORMATTER = CustomFormatter
 """ Default formatter to be used in implicitly instantiated ArgumentParser.
+"""
+
+
+DEFAULT_ARGUMENT_TEMPLATE = '%(default)s'
+""" Default template of argument help message (see issue #64).
+The template ``%(default)s`` is used by `argparse` to display the argument's
+default value.
 """
 
 #-----------------------------------------------------------------------------

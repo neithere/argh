@@ -20,6 +20,9 @@ and generally made *Argh* better:
 :Tony Narlock:        Adaptation of README to GitHub
 :Oskari Saarenmaa:    Compatibility improvements
 :Denis Lisov:         Support for keyword-only arguments (Python 3)
+:Paul Jacobson:       Defaults in argument help message, raw docstrings
+:nilfisque:           Defaults in argument help message, raw docstrings
+:jdoppler:            Bug reports (based on StackOverflow)
 :Chuck Blake:         Support for Cython
 
 ...you? :-)
