@@ -20,9 +20,8 @@ and generally made *Argh* better:
 :Tony Narlock:        Adaptation of README to GitHub
 :Oskari Saarenmaa:    Compatibility improvements
 :Denis Lisov:         Support for keyword-only arguments (Python 3)
+:Jörg Doppler:        Defaults in argument help message, raw docstrings
 :Paul Jacobson:       Defaults in argument help message, raw docstrings
-:nilfisque:           Defaults in argument help message, raw docstrings
-:Jörg Doppler:        Bug reports (based on StackOverflow)
 :Chuck Blake:         Support for Cython
 :invl:                Idea and basic implementation of EntryPoint
 
