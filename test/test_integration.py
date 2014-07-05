@@ -127,16 +127,19 @@ def test_simple_function_kwargs():
     assert run(p, 'hello --bar 123') == R(out='bar: 123\nfoo: hello\n', err='')
 
 
+@pytest.mark.xfail
 def test_simple_function_multiple():
-    pass
+    raise NotImplementedError
 
 
+@pytest.mark.xfail
 def test_simple_function_nested():
-    pass
+    raise NotImplementedError
 
 
+@pytest.mark.xfail
 def test_class_method_as_command():
-    pass
+    raise NotImplementedError
 
 
 def test_all_specs_in_one():
@@ -726,3 +729,26 @@ def test_kwonlyargs():
     else:
         message = 'the following arguments are required: --bar'
     assert run(p, 'test --foo=do', exit=True) == message
+
+
+def test_default_arg_values_in_help():
+    "Argument defaults should appear in the help message implicitly"
+
+    @argh.arg('name', default='Basil')
+    @argh.arg('--task', default='hang the Moose')
+    @argh.arg('--note', help='why is it a remarkable animal?')
+    def remind(name, task=None, reason='there are creatures living in it',
+               note='it can speak English'):
+        return "Oh what is it now, can't you leave me in peace..."
+
+    p = DebugArghParser()
+    p.set_default_command(remind)
+
+    assert 'Basil' in p.format_help()
+    assert 'Moose' in p.format_help()
+    assert 'creatures' in p.format_help()
+
+    # explicit help message is not obscured by the implicit one...
+    assert 'remarkable animal' in p.format_help()
+    # ...but is still present
+    assert 'it can speak' in p.format_help()
