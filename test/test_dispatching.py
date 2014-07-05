@@ -58,7 +58,7 @@ def test_entrypoint(dcs_mock, dc_mock):
 
     with pytest.raises(argh.exceptions.DispatchingError) as excinfo:
         entrypoint()
-    assert excinfo.exconly() == (
+    assert excinfo.exconly().endswith(
         'DispatchingError: no commands for entry point "my cool app"')
 
     # a single command

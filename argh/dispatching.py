@@ -298,7 +298,7 @@ class EntryPoint(object):
 
     def _dispatch(self):
         if not self.commands:
-            raise DispatchingError('no commands for entry point "{}"'
+            raise DispatchingError('no commands for entry point "{0}"'
                                    .format(self.name))
 
         if len(self.commands) == 1:
