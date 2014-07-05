@@ -39,6 +39,7 @@ Details
    projects
    subparsers
    contributors
+   changes
 
 Indices and tables
 ==================
