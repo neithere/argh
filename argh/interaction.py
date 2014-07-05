@@ -20,7 +20,8 @@ __all__ = ['confirm', 'safe_input']
 
 
 def confirm(action, default=None, skip=False):
-    """A shortcut for typical confirmation prompt.
+    """
+    A shortcut for typical confirmation prompt.
 
     :param action:
 

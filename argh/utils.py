@@ -19,7 +19,8 @@ from argh import compat
 
 
 def get_subparsers(parser, create=False):
-    """Returns the :class:`argparse._SubParsersAction` instance for given
+    """
+    Returns the :class:`argparse._SubParsersAction` instance for given
     :class:`ArgumentParser` instance as would have been returned by
     :meth:`ArgumentParser.add_subparsers`. The problem with the latter is that
     it only works once and raises an exception on the second attempt, and the
@@ -43,7 +44,8 @@ def get_subparsers(parser, create=False):
 
 
 def get_arg_spec(function):
-    """Returns argument specification for given function.  Omits special
+    """
+    Returns argument specification for given function.  Omits special
     arguments of instance methods (`self`) and static methods (usually `cls`
     or something like this).
     """

@@ -30,7 +30,9 @@ def _input(prompt):
 
 
 def safe_input(prompt):
-    "Prompts user for input. Correctly handles prompt message encoding."
+    """
+    Prompts user for input. Correctly handles prompt message encoding.
+    """
 
     if sys.version_info < (3,0):
         if isinstance(prompt, compat.text_type):
@@ -46,7 +48,8 @@ def safe_input(prompt):
 
 
 def encode_output(value, output_file):
-    """ Encodes given value so it can be written to given file object.
+    """
+    Encodes given value so it can be written to given file object.
 
     Value may be Unicode, binary string or any other data type.
 
@@ -94,7 +97,8 @@ def encode_output(value, output_file):
 
 
 def dump(raw_data, output_file):
-    """ Writes given line to given output file.
+    """
+    Writes given line to given output file.
     See :func:`encode_output` for details.
     """
     data = encode_output(raw_data, output_file)

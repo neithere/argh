@@ -42,7 +42,8 @@ def _check_support_aliases():
 
 
 SUPPORTS_ALIASES = _check_support_aliases()
-""" Calculated on load. If `True`, current version of argparse supports
+"""
+Calculated on load. If `True`, current version of argparse supports
 alternative command names (can be set via :func:`~argh.decorators.aliases`).
 """
 
@@ -196,7 +197,8 @@ def _get_dest(parser, argspec):
 
 
 def set_default_command(parser, function):
-    """ Sets default command (i.e. a function) for given parser.
+    """
+    Sets default command (i.e. a function) for given parser.
 
     If `parser.description` is empty and the function has a docstring,
     it is used as the description.
@@ -330,7 +332,8 @@ def set_default_command(parser, function):
 
 def add_commands(parser, functions, namespace=None, title=None,
                  description=None, help=None):
-    """Adds given functions as commands to given parser.
+    """
+    Adds given functions as commands to given parser.
 
     :param parser:
 

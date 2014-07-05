@@ -35,7 +35,8 @@ def dispatch(parser, argv=None, add_help_command=True,
              completion=True, pre_call=None,
              output_file=sys.stdout, errors_file=sys.stderr,
              raw_output=False, namespace=None):
-    """Parses given list of arguments using given parser, calls the relevant
+    """
+    Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
     The target function should expect one positional argument: the
@@ -138,7 +139,8 @@ def dispatch(parser, argv=None, add_help_command=True,
 
 
 def _execute_command(args, errors_file):
-    """Asserts that ``args.function`` is present and callable. Tries different
+    """
+    Asserts that ``args.function`` is present and callable. Tries different
     approaches to calling the function (with an `argparse.Namespace` object or
     with ordinary signature). Yields the results line by line.
 
@@ -208,7 +210,8 @@ def _execute_command(args, errors_file):
 
 
 def dispatch_command(function, *args, **kwargs):
-    """ A wrapper for :func:`dispatch` that creates a one-command parser.
+    """
+    A wrapper for :func:`dispatch` that creates a one-command parser.
     Uses :attr:`PARSER_FORMATTER`.
 
     This::
@@ -229,7 +232,8 @@ def dispatch_command(function, *args, **kwargs):
 
 
 def dispatch_commands(functions, *args, **kwargs):
-    """ A wrapper for :func:`dispatch` that creates a parser, adds commands to
+    """
+    A wrapper for :func:`dispatch` that creates a parser, adds commands to
     the parser and dispatches them.
     Uses :attr:`PARSER_FORMATTER`.
 

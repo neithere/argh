@@ -63,7 +63,9 @@ import os
 
 
 COMPLETION_ENABLED = False
-"Dynamically set to `True` on load if argcomplete_ was successfully imported."
+"""
+Dynamically set to `True` on load if argcomplete_ was successfully imported.
+"""
 
 try:
     import argcomplete
@@ -80,7 +82,8 @@ logger = logging.getLogger(__package__)
 
 
 def autocomplete(parser, allow_warnings=None):
-    """ Adds support for shell completion via argcomplete_ by patching given
+    """
+    Adds support for shell completion via argcomplete_ by patching given
     `argparse.ArgumentParser` (sub)class.
 
     If completion is not enabled, issues a warning.  The warning is suppressed
