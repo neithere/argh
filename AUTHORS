@@ -22,7 +22,7 @@ and generally made *Argh* better:
 :Denis Lisov:         Support for keyword-only arguments (Python 3)
 :Paul Jacobson:       Defaults in argument help message, raw docstrings
 :nilfisque:           Defaults in argument help message, raw docstrings
-:jdoppler:            Bug reports (based on StackOverflow)
+:Jörg Doppler:        Bug reports (based on StackOverflow)
 :Chuck Blake:         Support for Cython
 :invl:                Idea and basic implementation of EntryPoint
 

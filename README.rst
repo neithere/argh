@@ -60,6 +60,10 @@ In a nutshell
     * infer argument action from the default value (for booleans);
     * add an alias root command ``help`` for the ``--help`` argument.
 
+:No NIH Syndrome:
+    `Argh` supports *completion*, *progress bars* and everything else by being
+    friendly to excellent 3rd-party libraries.  No need to reinvent the wheel.
+
 Sounds good?  Check the tutorial!
 
 Relation to argparse
