@@ -143,7 +143,7 @@ def test_set_default_command_varargs():
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call('file_paths', nargs='*', 
+        mock.call('file_paths', nargs='*',
                   help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
     ]
 
@@ -180,7 +180,7 @@ def test_annotation():
     exec("def cmd(foo : 'quux' = 123):\n    'bar'\npass", None, ns)
     cmd = ns['cmd']
     p = argh.ArghParser()
-    p.set_default_command(argh.command(cmd))
+    p.set_default_command(cmd)
     prog_help = p.format_help()
     assert 'quux' in prog_help
 
@@ -197,7 +197,7 @@ def test_kwonlyargs():
     cmd = ns['cmd']
     p = argh.ArghParser()
     p.add_argument = mock.MagicMock()
-    p.set_default_command(argh.command(cmd))
+    p.set_default_command(cmd)
     assert p.add_argument.mock_calls == [
         mock.call('-f', '--foo', type=str, default='abcd',
                   help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
