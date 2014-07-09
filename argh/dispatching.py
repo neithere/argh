@@ -104,7 +104,7 @@ def dispatch(parser, argv=None, add_help_command=True,
         if pre_call:  # XXX undocumented because I'm unsure if it's OK
             # Actually used in real projects:
             # * https://google.com/search?q=argh+dispatch+pre_call
-            # * https://github.com/madjar/aurifere/blob/master/aurifere/cli.py#L92
+            # * https://github.com/neithere/argh/issues/63
             pre_call(args)
         lines = _execute_command(args, errors_file)
     else:
