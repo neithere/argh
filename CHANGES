@@ -2,6 +2,30 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.26
+------------
+
+This release is intended to be the last one before 1.0.  Therefore a major
+cleanup was done.  This **breaks backward compatibility**.  If your code is
+really outdated, please read this list carefully and grep your code.
+
+- Removed decorator `@alias` (deprecated since v.0.19).
+
+- Removed decorator `@plain_signature` (deprecated since v.0.20).
+
+- Dropped support for old-style functions that implicitly expected namespace
+  objects (deprecated since v.0.21).  The `@expects_obj` decorator is now
+  mandatory for such functions.
+
+- Removed decorator `@command` (deprecated since v.0.21).
+
+- The `@wrap_errors` decorator now strictly requires a list as its first
+  argument (old behaviour was deprecated since v.0.22).
+
+- The `allow_warnings` argument is removed from
+  `argh.completion.autocomplete()`.  Debug-level logging is used instead.
+  (The warnings were deprecated since v.0.25).
+
 Version 0.25
 ------------
 

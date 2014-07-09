@@ -81,22 +81,13 @@ __all__ = ['autocomplete', 'COMPLETION_ENABLED']
 logger = logging.getLogger(__package__)
 
 
-def autocomplete(parser, allow_warnings=None):
+def autocomplete(parser):
     """
     Adds support for shell completion via argcomplete_ by patching given
     `argparse.ArgumentParser` (sub)class.
 
-    If completion is not enabled, issues a warning.  The warning is suppressed
-    either if the shell is not `bash` or if `allow_warnings` is `False`.
-    The latter can be due to the output stream not being a TTY.
+    If completion is not enabled, logs a debug-level message.
     """
-    if allow_warnings is not None:
-        # XXX drop this in argh 1.0
-        # this is actually sane, contrary to what it looks like
-        import warnings
-        warnings.warn('allow_warnings is deprecated, logging is used instead',
-                      DeprecationWarning)
-
     if COMPLETION_ENABLED:
         argcomplete.autocomplete(parser)
     elif 'bash' in os.getenv('SHELL', ''):

@@ -75,22 +75,6 @@ def test_regression_issue27():
     assert run(p, 'parrot --dead').out == 'this parrot is no more\n'
 
 
-def test_regression_issue29():
-    class Tool(object):
-        def __init__(self):
-            self.p = DebugArghParser()
-            self.p.add_commands([self.test_command])
-
-        @argh.alias("test")
-        @argh.arg("a1")
-        @argh.arg("a2")
-        def test_command(self, args):
-            return "test"
-
-    tool = Tool()
-    assert run(tool.p, "test 123 456").out == "test\n"
-
-
 def test_regression_issue31():
     """ Issue #31: Argh fails with parameter action type 'count' if a default
     value is provided.

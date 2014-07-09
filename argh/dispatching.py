@@ -86,8 +86,7 @@ def dispatch(parser, argv=None, add_help_command=True,
     :func:`~argh.decorators.wrap_errors` decorator.
     """
     if completion:
-        isatty = hasattr(output_file, 'isatty') and output_file.isatty()
-        autocomplete(parser, allow_warnings=isatty)
+        autocomplete(parser)
 
     if argv is None:
         argv = sys.argv[1:]
@@ -129,7 +128,7 @@ def dispatch(parser, argv=None, add_help_command=True,
 
         io.dump(line, f)
         if not raw_output:
-            # in most cases user wants on message per line
+            # in most cases user wants one message per line
             io.dump('\n', f)
 
     if output_file is None:

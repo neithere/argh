@@ -40,9 +40,8 @@ def run_func(func, command_string, **kwargs):
 
 def test_dispatch_command_shortcut():
 
-    @argh.arg('--foo', default=1)
-    def cmd(args):
-        return args.foo
+    def cmd(foo=1):
+        return foo
 
     assert run_func(cmd, '') == '1\n'
     assert run_func(cmd, '--foo 2') == '2\n'

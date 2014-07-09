@@ -37,15 +37,6 @@ def test_named():
     assert attr == 'new-name'
 
 
-def test_command():
-    @argh.command
-    def func():
-        pass
-
-    attr = getattr(func, argh.constants.ATTR_INFER_ARGS_FROM_SIGNATURE)
-    assert attr == True
-
-
 def test_wrap_errors():
     @argh.wrap_errors([KeyError, ValueError])
     def func():
@@ -62,17 +53,6 @@ def test_wrap_errors_processor():
 
     attr = getattr(func, argh.constants.ATTR_WRAPPED_EXCEPTIONS_PROCESSOR)
     assert attr == 'STUB'
-
-
-def test_wrap_errors_compat():
-    "Legacy decorator signature. TODO: remove in 1.0"
-
-    @argh.wrap_errors(KeyError, ValueError, TypeError)
-    def func():
-        pass
-
-    attr = getattr(func, argh.constants.ATTR_WRAPPED_EXCEPTIONS)
-    assert attr == [KeyError, ValueError, TypeError]
 
 
 def test_expects_obj():

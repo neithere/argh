@@ -60,9 +60,3 @@ Default template of argument help message (see issue #64).
 The template ``%(default)s`` is used by `argparse` to display the argument's
 default value.
 """
-
-#-----------------------------------------------------------------------------
-#
-# deprecated
-#
-ATTR_INFER_ARGS_FROM_SIGNATURE = 'argh_infer_args_from_signature'

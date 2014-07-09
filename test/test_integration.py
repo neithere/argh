@@ -23,9 +23,8 @@ def test_guessing_integration():
 
 
 def test_set_default_command_integration():
-    @argh.arg('--foo', default=1)
-    def cmd(args):
-        return args.foo
+    def cmd(foo=1):
+        return foo
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -268,32 +267,6 @@ def test_arg_mismatch_flag_vs_positional():
     assert msg in str(excinfo.value)
 
 
-def test_backwards_compatibility_issue29():
-    @argh.arg('foo')
-    @argh.arg('--bar', default=1)
-    def old(args):
-        yield '{0} {1}'.format(args.foo, args.bar)
-
-    @argh.command
-    def old_marked(foo, bar=1):
-        yield '{0} {1}'.format(foo, bar)
-
-    def new(foo, bar=1):
-        yield '{0} {1}'.format(foo, bar)
-
-    p = DebugArghParser('PROG')
-    p.add_commands([old, old_marked, new])
-
-    assert R('ok 1\n', '') == run(p, 'old ok')
-    assert R('ok 5\n', '') == run(p, 'old ok --bar 5')
-
-    assert R('ok 1\n', '') == run(p, 'old-marked ok')
-    assert R('ok 5\n', '') == run(p, 'old-marked ok --bar 5')
-
-    assert R('ok 1\n', '') == run(p, 'new ok')
-    assert R('ok 5\n', '') == run(p, 'new ok --bar 5')
-
-
 class TestErrorWrapping:
 
     def _get_parrot(self):
@@ -318,7 +291,7 @@ class TestErrorWrapping:
 
     def test_error_wrapped(self):
         parrot = self._get_parrot()
-        wrapped_parrot = argh.wrap_errors(ValueError)(parrot)
+        wrapped_parrot = argh.wrap_errors([ValueError])(parrot)
 
         p = DebugArghParser()
         p.set_default_command(wrapped_parrot)
@@ -328,7 +301,7 @@ class TestErrorWrapping:
 
     def test_processor(self):
         parrot = self._get_parrot()
-        wrapped_parrot = argh.wrap_errors(ValueError)(parrot)
+        wrapped_parrot = argh.wrap_errors([ValueError])(parrot)
 
         def failure(err):
             return 'ERR: ' + str(err) + '!'
@@ -355,9 +328,8 @@ class TestErrorWrapping:
 
 def test_argv():
 
-    @argh.arg('text')
-    def echo(args):
-        return 'you said {0}'.format(args.text)
+    def echo(text):
+        return 'you said {0}'.format(text)
 
     p = DebugArghParser()
     p.add_commands([echo])
@@ -429,7 +401,7 @@ def test_invalid_choice():
 
 
 def test_unrecognized_arguments():
-    def cmd(args):
+    def cmd():
         return 1
 
     # single-command parser
@@ -452,9 +424,8 @@ def test_unrecognized_arguments():
 def test_echo():
     "A simple command is resolved to a function."
 
-    @argh.arg('text')
-    def echo(args):
-        return 'you said {0}'.format(args.text)
+    def echo(text):
+        return 'you said {0}'.format(text)
 
     p = DebugArghParser()
     p.add_commands([echo])
@@ -465,9 +436,8 @@ def test_echo():
 def test_bool_action():
     "Action `store_true`/`store_false` is inferred from default value."
 
-    @argh.arg('--dead', default=False)
-    def parrot(args):
-        return 'this parrot is no more' if args.dead else 'beautiful plumage'
+    def parrot(dead=False):
+        return 'this parrot is no more' if dead else 'beautiful plumage'
 
     p = DebugArghParser()
     p.add_commands([parrot])
@@ -577,10 +547,8 @@ def test_arg_order():
     """Positional arguments are resolved in the order in which the @arg
     decorators are defined.
     """
-    @argh.arg('foo')
-    @argh.arg('bar')
-    def cmd(args):
-        return args.foo, args.bar
+    def cmd(foo, bar):
+        return foo, bar
 
     p = DebugArghParser()
     p.set_default_command(cmd)

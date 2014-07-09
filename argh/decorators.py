@@ -12,16 +12,13 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
-from argh.assembling import _fix_compat_issue29
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            ATTR_INFER_ARGS_FROM_SIGNATURE,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
 
 
-__all__ = ['alias', 'aliases', 'named', 'arg', 'plain_signature', 'command',
-           'wrap_errors', 'expects_obj']
+__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj']
 
 
 def named(new_name):
@@ -42,22 +39,6 @@ def named(new_name):
     """
     def wrapper(func):
         setattr(func, ATTR_NAME, new_name)
-        return func
-    return wrapper
-
-
-def alias(new_name):  # pragma: nocover
-    """
-    .. deprecated:: 0.19
-
-       Use :func:`named` or :func:`aliases` instead.
-    """
-    import warnings
-    warnings.warn('Decorator @alias() is deprecated. '
-                  'Use @aliases() or @named() instead.', DeprecationWarning)
-    def wrapper(func):
-        setattr(func, ATTR_NAME, new_name)
-        _fix_compat_issue29(func)
         return func
     return wrapper
 
@@ -90,20 +71,6 @@ def aliases(*names):
         setattr(func, ATTR_ALIASES, names)
         return func
     return wrapper
-
-
-def plain_signature(func):  # pragma: nocover
-    """
-    .. deprecated:: 0.20
-
-       Function signature is now introspected by default.
-       Use :func:`expects_obj` for inverted behaviour.
-    """
-    import warnings
-    warnings.warn('Decorator @plain_signature is deprecated. '
-                  'Function signature is now introspected by default.',
-                  DeprecationWarning)
-    return func
 
 
 def arg(*args, **kwargs):
@@ -141,52 +108,8 @@ def arg(*args, **kwargs):
         # the outermost decorator inserts its value before the innermost's:
         declared_args.insert(0, dict(option_strings=args, **kwargs))
         setattr(func, ATTR_ARGS, declared_args)
-        _fix_compat_issue29(func)
         return func
     return wrapper
-
-
-def command(func):
-    """
-    .. deprecated:: 0.21
-
-       Function signature is now introspected by default.
-       Use :func:`expects_obj` for inverted behaviour.
-    """
-    import warnings
-    warnings.warn('Decorator @command is deprecated. '
-                  'Function signature is now introspected by default.',
-                  DeprecationWarning)
-    setattr(func, ATTR_INFER_ARGS_FROM_SIGNATURE, True)
-    return func
-
-
-def _fix_compat_issue36(func, errors, processor, args):
-    #
-    # TODO: remove before 1.0 release (will break backwards compatibility)
-    #
-
-    if errors and not hasattr(errors, '__iter__'):
-        # what was expected to be a list is actually its first item
-        errors = [errors]
-
-        # what was expected to be a function is actually the second item
-        if processor:
-            errors.append(processor)
-            processor = None
-
-        # *args, if any, are the remaining items
-        if args:
-            errors.extend(args)
-
-        import warnings
-        warnings.warn('{func.__name__}: wrappable exceptions must be declared '
-                      'as list, i.e. @wrap_errors([{errors}]) instead of '
-                      '@wrap_errors({errors})'.format(
-                        func=func, errors=', '.join(x.__name__ for x in errors)),
-                      DeprecationWarning)
-
-    return errors, processor
 
 
 def wrap_errors(errors=None, processor=None, *args):
@@ -216,28 +139,14 @@ def wrap_errors(errors=None, processor=None, *args):
             def my_command(...):
                 ...
 
-    .. warning::
-
-       The `exceptions` argument **must** be a list.
-
-       For backward compatibility reasons the old way is still allowed::
-
-           @wrap_errors(KeyError, ValueError)
-
-       However, the hack that allows that will be **removed** in Argh 1.0.
-
-       Please make sure to update your code.
-
     """
 
     def wrapper(func):
-        errors_, processor_ = _fix_compat_issue36(func, errors, processor, args)
+        if errors:
+            setattr(func, ATTR_WRAPPED_EXCEPTIONS, errors)
 
-        if errors_:
-            setattr(func, ATTR_WRAPPED_EXCEPTIONS, errors_)
-
-        if processor_:
-            setattr(func, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, processor_)
+        if processor:
+            setattr(func, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, processor)
 
         return func
     return wrapper
