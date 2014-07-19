@@ -86,8 +86,7 @@ def dispatch(parser, argv=None, add_help_command=True,
     :func:`~argh.decorators.wrap_errors` decorator.
     """
     if completion:
-        isatty = hasattr(output_file, 'isatty') and output_file.isatty()
-        autocomplete(parser, allow_warnings=isatty)
+        autocomplete(parser)
 
     if argv is None:
         argv = sys.argv[1:]
