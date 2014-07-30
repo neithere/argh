@@ -113,8 +113,8 @@ def _guess(kwargs):
     """
     guessed = {}
 
+    # Parser actions that accept argument 'type'
     TYPE_AWARE_ACTIONS = 'store', 'append'
-    "Parser actions that accept argument 'type'."
 
     # guess type/action from default value
     value = kwargs.get('default')
@@ -149,9 +149,11 @@ def _get_parser_param_kwargs(parser, argspec):
     args = argspec['option_strings']
 
     if _is_positional(args, prefix_chars=parser.prefix_chars):
-        kwargs = parser._get_positional_kwargs(*args, **argspec)
+        get_kwargs = parser._get_positional_kwargs
     else:
-        kwargs = parser._get_optional_kwargs(*args, **argspec)
+        get_kwargs = parser._get_optional_kwargs
+
+    kwargs = get_kwargs(*args, **argspec)
 
     kwargs['dest'] = kwargs['dest'].replace('-', '_')
 

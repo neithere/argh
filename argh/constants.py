@@ -45,7 +45,38 @@ ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
                       argparse.RawDescriptionHelpFormatter):
-    pass
+    def _expand_help(self, action):
+        """
+        This method is copied verbatim from ArgumentDefaultsHelpFormatter with
+        a couple of lines added just before the end.  Reason: we need to
+        `repr()` default values instead of simply inserting them as is.
+        This helps notice, for example, an empty string as the default value;
+        moreover, it prevents breaking argparse due to logical quirks inside
+        of its formatters.
+
+        Ideally this could be achieved by simply defining
+        :attr:`DEFAULT_ARGUMENT_TEMPLATE` as ``{default!r}`` but unfortunately
+        argparse only supports the old printf syntax.
+        """
+        params = dict(vars(action), prog=self._prog)
+        for name in list(params):
+            if params[name] is argparse.SUPPRESS:
+                del params[name]
+        for name in list(params):
+            if hasattr(params[name], '__name__'):
+                params[name] = params[name].__name__
+        if params.get('choices') is not None:
+            choices_str = ', '.join([str(c) for c in params['choices']])
+            params['choices'] = choices_str
+
+        # XXX this is added in Argh vs. argparse.ArgumentDefaultsHelpFormatter
+        #
+        if 'default' in params:
+            params['default'] = repr(params['default'])
+        #
+        # /
+
+        return self._get_help_string(action) % params
 
 
 PARSER_FORMATTER = CustomFormatter

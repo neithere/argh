@@ -722,6 +722,23 @@ def test_default_arg_values_in_help():
     assert 'it can speak' in p.format_help()
 
 
+def test_default_arg_values_in_help__regression():
+    "Empty string as default value → empty help string → broken argparse"
+
+    def foo(bar=''):
+        return bar
+
+    p = DebugArghParser()
+    p.set_default_command(foo)
+
+    # doesn't break
+    p.format_help()
+
+    # now check details
+    assert "-b BAR, --bar BAR  ''" in p.format_help()
+    # note the empty str repr ^^^
+
+
 def test_help_formatting_is_preserved():
     "Formatting of docstrings should not be messed up in help messages"
 
