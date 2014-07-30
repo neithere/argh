@@ -34,7 +34,8 @@ __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
 def dispatch(parser, argv=None, add_help_command=True,
              completion=True, pre_call=None,
              output_file=sys.stdout, errors_file=sys.stderr,
-             raw_output=False, namespace=None):
+             raw_output=False, namespace=None,
+             skip_unknown_args=False):
     """
     Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
@@ -79,6 +80,11 @@ def dispatch(parser, argv=None, add_help_command=True,
         If `True`, shell tab completion is enabled. Default is `True`. (You
         will also need to install it.)  See :mod:`argh.completion`.
 
+    :param skip_unknown_args:
+
+        If `True`, unknown arguments do not cause an error
+        (`ArgumentParser.parse_known_args` is used).
+
     By default the exceptions are not wrapped and will propagate. The only
     exception that is always wrapped is :class:`~argh.exceptions.CommandError`
     which is interpreted as an expected event so the traceback is hidden.
@@ -96,8 +102,13 @@ def dispatch(parser, argv=None, add_help_command=True,
             argv.pop(0)
             argv.append('--help')
 
+    if skip_unknown_args:
+        parse_args = parser.parse_known_args
+    else:
+        parse_args = parser.parse_args
+
     # this will raise SystemExit if parsing fails
-    args = parser.parse_args(argv, namespace=namespace)
+    args = parse_args(argv, namespace=namespace)
 
     if hasattr(args, 'function'):
         if pre_call:  # XXX undocumented because I'm unsure if it's OK
