@@ -311,7 +311,7 @@ def set_default_command(parser, function):
                 toggleable, inv_prefix = opt_string_togmap[dest_or_opt_strings[0]]
                 group = parser.add_mutually_exclusive_group()
 
-                draft['action'] = 'store_{}'.format(str(draft['default']).lower())
+                draft['action'] = 'store_true'
                 draft['dest'] = toggleable
 
                 # XXX unsure about desired behavior in autocompletion of toggleables case
@@ -320,7 +320,7 @@ def set_default_command(parser, function):
                 not_dest_or_opt_strings = tuple(map(lambda x : '--{}-{}'.format(inv_prefix, x.lstrip('-')), 
                                                     dest_or_opt_strings))
 
-                draft['action'] = 'store_{}'.format(str(not draft['default']).lower())
+                draft['action'] = 'store_false'
                 draft['default'] = not draft['default']
 
                 group.add_argument(*not_dest_or_opt_strings, **draft)
