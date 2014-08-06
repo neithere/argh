@@ -13,7 +13,7 @@ import argparse
 __all__ = (
     'ATTR_NAME', 'ATTR_ALIASES', 'ATTR_ARGS', 'ATTR_WRAPPED_EXCEPTIONS',
     'ATTR_WRAPPED_EXCEPTIONS_PROCESSOR', 'ATTR_EXPECTS_NAMESPACE_OBJECT',
-    'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE'
+    'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE', 'ATTR_TOGGLEABLES'
 )
 
 
@@ -38,6 +38,9 @@ ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = 'argh_wrap_errors_processor'
 
 # forcing argparse.Namespace object instead of signature introspection
 ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
+
+#toggleable
+ATTR_TOGGLEABLES = 'argh_toggleables'
 
 #
 # Other library-wide stuff

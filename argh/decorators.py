@@ -15,10 +15,11 @@ Command decorators
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT)
+                            ATTR_EXPECTS_NAMESPACE_OBJECT,
+                            ATTR_TOGGLEABLES)
 
 
-__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj']
+__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj', 'set_toggleable']
 
 
 def named(new_name):
@@ -173,3 +174,11 @@ def expects_obj(func):
     """
     setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
     return func
+
+def set_toggleable(name, inv_prefix = 'no'):
+    def wrapper(func):
+        toggleables = getattr(func, ATTR_TOGGLEABLES, [])
+        toggleables.append((name, inv_prefix))
+        setattr(func, ATTR_TOGGLEABLES, toggleables)
+        return func
+    return wrapper
