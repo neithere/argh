@@ -305,10 +305,10 @@ def set_default_command(parser, function):
             dest_or_opt_strings = [x for x in dest_or_opt_strings if x != '-h']
         completer = draft.pop('completer', None)
         try:
-            if dest_or_opt_strings[0] in opt_string_togmap:
+            if dest_or_opt_strings[-1] in opt_string_togmap:
                 # if we're working with a toggleable list of opt_strings, make mutually exclusive
                  # and set to opposite defaults & storing actions
-                toggleable, inv_prefix = opt_string_togmap[dest_or_opt_strings[0]]
+                toggleable, inv_prefix = opt_string_togmap[dest_or_opt_strings[-1]]
                 group = parser.add_mutually_exclusive_group()
 
 
