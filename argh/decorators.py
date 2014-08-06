@@ -176,6 +176,25 @@ def expects_obj(func):
     return func
 
 def set_toggleable(name, inv_prefix = 'no'):
+    """
+    Marks given name as toggleable, creating an additional, 
+    mutually exclusive parser argument to toggle a boolean,
+    which is, by default
+
+    :param name:
+        Name of boolean argument for which to create a toggleable argument
+    :param inv_prefix:
+        Prefix of inversion argument
+
+    Usage::
+
+        @arg('--do-foo', '--do-foo-alias')
+        @set_toggleable('--do-foo')
+        @set_toggleable('--do-foo-2', inv_prefix = 'invert')
+        def foo(x, do_foo = True, do_foo_2 = False):
+            print x, do_foo, do_foo_2
+    """
+
     def wrapper(func):
         toggleables = getattr(func, ATTR_TOGGLEABLES, [])
         toggleables.append((name, inv_prefix))
