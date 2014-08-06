@@ -178,8 +178,7 @@ def expects_obj(func):
 def set_toggleable(name, inv_prefix = 'no'):
     """
     Marks given name as toggleable, creating an additional, 
-    mutually exclusive parser argument to toggle a boolean,
-    which is, by default
+    mutually exclusive parser argument to toggle a boolean.
 
     :param name:
         Name of boolean argument for which to create a toggleable argument
