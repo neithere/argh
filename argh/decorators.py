@@ -19,8 +19,9 @@ from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_TOGGLEABLES)
 
 
-__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj', 'set_toggleable']
+__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj', 'set_toggleable', 'set_all_toggleable']
 
+from argh.utils import get_arg_spec
 
 def named(new_name):
     """
@@ -197,6 +198,20 @@ def set_toggleable(name, inv_prefix = 'no'):
     def wrapper(func):
         toggleables = getattr(func, ATTR_TOGGLEABLES, [])
         toggleables.append((name, inv_prefix))
+        setattr(func, ATTR_TOGGLEABLES, toggleables)
+        return func
+    return wrapper
+
+def set_all_toggleable(inv_prefix = 'no'):
+    def wrapper(func):
+        spec = get_arg_spec(func)
+
+        toggleables = getattr(func, ATTR_TOGGLEABLES, [])
+
+        for (dest, default) in zip(spec.args, spec.defaults):
+            if isinstance(default, bool):
+                cmd_dest = dest.replace('_', '-')
+                toggleables.append(('--' + cmd_dest, inv_prefix))
         setattr(func, ATTR_TOGGLEABLES, toggleables)
         return func
     return wrapper
