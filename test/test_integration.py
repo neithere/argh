@@ -797,7 +797,7 @@ def test_multiarg_toggle():
         R(out="toggle1: True, toggle2: False, toggle3: False, foo: 10\n",
                            err='')
 
-    assert p.format_usage() == """usage: -c [-h] [--toggle1 | --no-toggle1] [--toggle2 | --dont-toggle2]
+    assert p.format_usage() == """usage: py.test [-h] [--toggle1 | --no-toggle1] [--toggle2 | --dont-toggle2]
           [--toggle3] [-f FOO]\n"""
 
 
@@ -843,7 +843,7 @@ def test_multitoggle():
         R(out='M.A.D.\n', err='')
     assert run(p, '0 0 --temper-usa-aggression --temper-russia-aggression') == \
         R(out='peace\n', err='')
-    assert p.format_usage() == """usage: -c [-h] [-s SCENARIO] [--usa-aggression | --temper-usa-aggression]
+    assert p.format_usage() == """usage: py.test [-h] [-s SCENARIO] [--usa-aggression | --temper-usa-aggression]
           [--russia-aggression | --temper-russia-aggression]
           usa_nuke_count russia_nuke_count\n"""
     
@@ -859,4 +859,4 @@ def test_unknown_args():
 
     assert run(p, '--bar 1', exit=False,
                kwargs={'skip_unknown_args': True}) == \
-           R(out='usage: py.test [-h] [-f FOO]\n\n', err='')
+           R(out='usage: -c [-h] [-f FOO]\n\n', err='')
