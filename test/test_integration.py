@@ -15,7 +15,6 @@ from argh.exceptions import AssemblingError
 
 from .base import DebugArghParser, run, CmdResult as R
 
-
 @pytest.mark.xfail(reason='TODO')
 def test_guessing_integration():
     "guessing is used in dispatching"
@@ -760,8 +759,89 @@ def test_help_formatting_is_preserved():
     assert func.__doc__ in p.format_help()
 
 
-def test_unknown_args():
+def test_simple_toggle():
+    @argh.set_toggleable('--toggle')
+    def cmd(toggle = False):
+        return "Toggle is {}".format(toggle)
 
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == R(out='Toggle is False\n', err='')    
+    assert run(p, '--toggle') == R(out='Toggle is True\n', err='')
+    assert run(p, '--no-toggle') == R(out='Toggle is False\n', err='')
+    assert run(p, '--not-toggle', exit = True) == \
+        'unrecognized arguments: --not-toggle'
+    assert run(p, '--toggle --no-toggle', exit = True) == \
+        'argument --no-t/--no-toggle: not allowed with argument -t/--toggle'
+
+def test_multiarg_toggle():
+    @argh.set_toggleable('--toggle1')
+    @argh.set_toggleable('--toggle2', inv_prefix = 'dont')
+    def cmd(toggle1 = False,
+            toggle2 = True,
+            toggle3 = False,
+            foo = 3):
+        return "toggle1: {}, toggle2: {}, toggle3: {}, foo: {}".format(\
+            toggle1, toggle2, toggle3, foo)
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+
+    assert run(p, '') == R(out="toggle1: False, toggle2: True, toggle3: False, foo: 3\n",
+                           err='')
+    assert run(p, '--dont-toggle2') == \
+        R(out="toggle1: False, toggle2: False, toggle3: False, foo: 3\n",
+                           err='')
+    assert run(p, '--foo 10 --toggle1 --dont-toggle2') == \
+        R(out="toggle1: True, toggle2: False, toggle3: False, foo: 10\n",
+          err='')
+
+
+def test_multitoggle():
+
+    @argh.set_all_toggleable(inv_prefix = 'temper')
+    @argh.arg('usa_nuke_count', type = int)
+    @argh.arg('russia_nuke_count', type = int)
+    def faceoff(usa_nuke_count,
+                russia_nuke_count,
+                scenario = 'cold_war',
+                usa_aggression = True,
+                russia_aggression = False):
+
+        
+        if usa_aggression and russia_aggression and usa_nuke_count >= 1 and russia_nuke_count >= 1:
+            result = 'M.A.D.'
+        elif usa_aggression and usa_nuke_count >= 1:
+            result = 'Russia is destroyed :('
+        elif russia_aggression and russia_nuke_count >= 1:
+            result = 'USA is destroyed :('
+        elif usa_nuke_count + russia_nuke_count >= 1:
+            result = 'isolationism'
+        elif usa_aggression and russia_aggression:
+            result = 'impotence'
+        else:
+            result = 'peace'
+            
+        return result
+
+    p = DebugArghParser()
+    p.set_default_command(faceoff)
+
+    assert run(p, '1 1') == \
+        R(out='Russia is destroyed :(\n',
+          err='')
+    assert run(p, '0 0 --temper-usa-aggression') == R(out='peace\n', err='')
+    assert run(p, '0 1 --temper-usa-aggression --russia-aggression') == \
+        R(out='USA is destroyed :(\n', err='')
+    assert run(p, '0 0 --usa-aggression --russia-aggression') == \
+        R(out='impotence\n', err='')
+    assert run(p, '100 100 --usa-aggression --russia-aggression') == \
+        R(out='M.A.D.\n', err='')
+    assert run(p, '0 0 --temper-usa-aggression --temper-russia-aggression') == \
+        R(out='peace\n', err='')
+    
+def test_unknown_args():
     def cmd(foo=1):
         return foo
 
@@ -770,6 +850,7 @@ def test_unknown_args():
 
     assert run(p, '--foo 1') == R(out='1\n', err='')
     assert run(p, '--bar 1', exit=True) == 'unrecognized arguments: --bar 1'
+
     assert run(p, '--bar 1', exit=False,
                kwargs={'skip_unknown_args': True}) == \
            R(out='usage: py.test [-h] [-f FOO]\n\n', err='')

@@ -21,7 +21,8 @@ from argh.completion import COMPLETION_ENABLED
 from argh.compat import OrderedDict
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_EXPECTS_NAMESPACE_OBJECT,
-                            PARSER_FORMATTER, DEFAULT_ARGUMENT_TEMPLATE)
+                            PARSER_FORMATTER, DEFAULT_ARGUMENT_TEMPLATE,
+                            ATTR_TOGGLEABLES)
 from argh.utils import get_subparsers, get_arg_spec
 from argh.exceptions import AssemblingError
 
@@ -201,6 +202,8 @@ def set_default_command(parser, function):
     declared_args = getattr(function, ATTR_ARGS, [])
     inferred_args = list(_get_args_from_signature(function))
 
+    toggleables = getattr(function, ATTR_TOGGLEABLES, [])
+
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
 
@@ -271,6 +274,22 @@ def set_default_command(parser, function):
         # pack the modified data back into a list
         inferred_args = dests.values()
 
+    opt_string_togmap = {}
+
+    for toggleable, inv_prefix in [(t, i) for t,i in toggleables]:
+        if toggleable.find('_') >= 0:
+            raise AssemblingError("Toggleable destinations cannot contain underscores")
+
+        #for each toggleable, verify there exists a matching destination
+        matched_dest = False
+        for arg in inferred_args:
+            for opt_str in arg['option_strings']:
+                if opt_str == toggleable:
+                    matched_dest = True
+                    opt_string_togmap[opt_str] = (toggleable[2:], inv_prefix)
+        if not matched_dest:
+            raise AssemblingError("Unrecognized destination for toggleable: {}".format(toggleable))
+        
     command_args = inferred_args or declared_args
 
     # add types, actions, etc. (e.g. default=3 implies type=int)
@@ -280,12 +299,33 @@ def set_default_command(parser, function):
         draft = draft.copy()
         if 'help' not in draft:
             draft.update(help=DEFAULT_ARGUMENT_TEMPLATE)
+
         dest_or_opt_strings = draft.pop('option_strings')
         if parser.add_help and '-h' in dest_or_opt_strings:
             dest_or_opt_strings = [x for x in dest_or_opt_strings if x != '-h']
         completer = draft.pop('completer', None)
         try:
-            action = parser.add_argument(*dest_or_opt_strings, **draft)
+            if dest_or_opt_strings[-1] in opt_string_togmap:
+                # if we're working with a toggleable list of opt_strings, make mutually exclusive
+                 # and set to opposite defaults & storing actions
+                toggleable, inv_prefix = opt_string_togmap[dest_or_opt_strings[-1]]
+                group = parser.add_mutually_exclusive_group()
+
+                draft['action'] = 'store_true'
+                draft['dest'] = toggleable.replace('-', '_')
+
+                # XXX unsure about desired behavior in autocompletion of toggleables case
+                action = group.add_argument(*dest_or_opt_strings, **draft)
+
+                not_dest_or_opt_strings = tuple(map(lambda x : '--{}-{}'.format(inv_prefix, x.lstrip('-')), 
+                                                    dest_or_opt_strings))
+
+                draft['action'] = 'store_false'
+
+                group.add_argument(*not_dest_or_opt_strings, **draft)
+            else:
+                action = parser.add_argument(*dest_or_opt_strings, **draft)
+
             if COMPLETION_ENABLED and completer:
                 action.completer = completer
         except Exception as e:
