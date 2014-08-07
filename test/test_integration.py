@@ -795,11 +795,7 @@ def test_multiarg_toggle():
                            err='')
     assert run(p, '--foo 10 --toggle1 --dont-toggle2') == \
         R(out="toggle1: True, toggle2: False, toggle3: False, foo: 10\n",
-                           err='')
-
-    us = p.format_usage()
-    assert us[us.find('[-h]'):] == """[-h] [--toggle1 | --no-toggle1] [--toggle2 | --dont-toggle2]
-          [--toggle3] [-f FOO]\n"""
+          err='')
 
 
 def test_multitoggle():
@@ -844,10 +840,6 @@ def test_multitoggle():
         R(out='M.A.D.\n', err='')
     assert run(p, '0 0 --temper-usa-aggression --temper-russia-aggression') == \
         R(out='peace\n', err='')
-    us = p.format_usage()
-    assert us[us.find('[-h]'):] == """[-h] [-s SCENARIO] [--usa-aggression | --temper-usa-aggression]
-          [--russia-aggression | --temper-russia-aggression]
-          usa_nuke_count russia_nuke_count\n"""
     
 def test_unknown_args():
     def cmd(foo=1):
