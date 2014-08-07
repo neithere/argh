@@ -203,15 +203,17 @@ def set_toggleable(name, inv_prefix = 'no'):
     return wrapper
 
 def set_all_toggleable(inv_prefix = 'no'):
+
     def wrapper(func):
         spec = get_arg_spec(func)
 
         toggleables = getattr(func, ATTR_TOGGLEABLES, [])
-
-        for (dest, default) in zip(spec.args, spec.defaults):
+        
+        for (dest, default) in zip(spec.args[-len(spec.defaults):], spec.defaults):
             if isinstance(default, bool):
                 cmd_dest = dest.replace('_', '-')
                 toggleables.append(('--' + cmd_dest, inv_prefix))
+
         setattr(func, ATTR_TOGGLEABLES, toggleables)
         return func
     return wrapper

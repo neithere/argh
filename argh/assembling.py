@@ -311,7 +311,6 @@ def set_default_command(parser, function):
                 toggleable, inv_prefix = opt_string_togmap[dest_or_opt_strings[-1]]
                 group = parser.add_mutually_exclusive_group()
 
-
                 draft['action'] = 'store_true'
                 draft['dest'] = toggleable.replace('-', '_')
 
@@ -322,7 +321,6 @@ def set_default_command(parser, function):
                                                     dest_or_opt_strings))
 
                 draft['action'] = 'store_false'
-                draft['default'] = not draft['default']
 
                 group.add_argument(*not_dest_or_opt_strings, **draft)
             else:
