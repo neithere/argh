@@ -859,4 +859,4 @@ def test_unknown_args():
 
     assert run(p, '--bar 1', exit=False,
                kwargs={'skip_unknown_args': True}) == \
-           R(out='usage: -c [-h] [-f FOO]\n\n', err='')
+           R(out='usage: py.test [-h] [-f FOO]\n\n', err='')
