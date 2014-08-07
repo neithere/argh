@@ -15,7 +15,6 @@ from argh.exceptions import AssemblingError
 
 from .base import DebugArghParser, run, CmdResult as R
 
-import pdb
 @pytest.mark.xfail(reason='TODO')
 def test_guessing_integration():
     "guessing is used in dispatching"
@@ -858,9 +857,6 @@ def test_unknown_args():
     assert run(p, '--foo 1') == R(out='1\n', err='')
     assert run(p, '--bar 1', exit=True) == 'unrecognized arguments: --bar 1'
 
-    print run(p, '--bar 1', exit=False,
-              kwargs={'skip_unknown_args': True})
-               
     assert run(p, '--bar 1', exit=False,
                kwargs={'skip_unknown_args': True}) == \
            R(out='usage: py.test [-h] [-f FOO]\n\n', err='')
