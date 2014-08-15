@@ -75,10 +75,9 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
         #
         if 'default' in params:
             if params['default'] is None:
-                _repr = '-'
+                params['default'] = '-'
             else:
-                _repr = repr(params['default'])
-            params['default'] = _repr
+                params['default'] = repr(params['default'])
         #
         # /
 
