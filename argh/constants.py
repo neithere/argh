@@ -70,9 +70,15 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
             params['choices'] = choices_str
 
         # XXX this is added in Argh vs. argparse.ArgumentDefaultsHelpFormatter
+        #     (avoiding empty strings, otherwise Argparse would die with
+        #     an IndexError in _format_action)
         #
         if 'default' in params:
-            params['default'] = repr(params['default'])
+            if params['default'] is None:
+                _repr = '-'
+            else:
+                _repr = repr(params['default'])
+            params['default'] = _repr
         #
         # /
 
