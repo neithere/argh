@@ -176,7 +176,7 @@ def set_default_command(parser, function):
 
        An attempt to set default command to a parser which already has
        subparsers (e.g. added with :func:`~argh.assembling.add_commands`)
-       results in a `RuntimeError`.
+       results in a `AssemblingError`.
 
     .. note::
 
@@ -193,8 +193,8 @@ def set_default_command(parser, function):
 
     """
     if parser._subparsers:
-        raise RuntimeError('Cannot set default command to a parser with '
-                           'existing subparsers')
+        raise AssemblingError('Cannot set default command to a parser with '
+                              'existing subparsers')
 
     spec = get_arg_spec(function)
 
@@ -363,11 +363,11 @@ def add_commands(parser, functions, namespace=None, title=None,
 
        An attempt to add commands to a parser which already has a default
        function (e.g. added with :func:`~argh.assembling.set_default_command`)
-       results in a `RuntimeError`.
+       results in `AssemblingError`.
 
     """
     if 'function' in parser._defaults:
-        raise RuntimeError('Cannot add commands to a single-command parser')
+        raise AssemblingError('Cannot add commands to a single-command parser')
 
     subparsers = get_subparsers(parser, create=True)
 

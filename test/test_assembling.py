@@ -94,7 +94,7 @@ def test_set_default_command_vs_multiple():
     p = argh.ArghParser()
     p.set_default_command(one)
 
-    with pytest.raises(RuntimeError) as excinfo:
+    with pytest.raises(argh.exceptions.AssemblingError) as excinfo:
         p.add_commands([two])
     msg = 'Cannot add commands to a single-command parser'
     assert msg == str(excinfo.value)
@@ -108,7 +108,7 @@ def test_set_default_command_vs_subparsers():
     p = argh.ArghParser()
     p.add_commands([one])
 
-    with pytest.raises(RuntimeError) as excinfo:
+    with pytest.raises(argh.exceptions.AssemblingError) as excinfo:
         p.set_default_command(two)
     msg = 'Cannot set default command to a parser with existing subparsers'
     assert msg == str(excinfo.value)
