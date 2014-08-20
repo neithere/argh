@@ -16,6 +16,7 @@ Functions and classes to properly assemble your commands in a parser.
 """
 import argparse
 import sys
+import warnings
 
 from argh.completion import COMPLETION_ENABLED
 from argh.compat import OrderedDict
@@ -26,7 +27,12 @@ from argh.utils import get_subparsers, get_arg_spec
 from argh.exceptions import AssemblingError
 
 
-__all__ = ['SUPPORTS_ALIASES', 'set_default_command', 'add_commands']
+__all__ = [
+    'SUPPORTS_ALIASES',
+    'set_default_command',
+    'add_commands',
+    'add_subcommands',
+]
 
 
 def _check_support_aliases():
@@ -297,8 +303,10 @@ def set_default_command(parser, function):
     parser.set_defaults(function=function)
 
 
-def add_commands(parser, functions, namespace=None, title=None,
-                 description=None, help=None):
+def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
+                 func_kwargs=None,
+                 # deprecated args:
+                 title=None, description=None, help=None):
     """
     Adds given functions as commands to given parser.
 
@@ -325,21 +333,44 @@ def add_commands(parser, functions, namespace=None, title=None,
         namespace itself is not callable, so "prog.py greet" will fail and only
         display a help message.
 
-    Help message for a namespace can be also tuned with these params (provided
-    that you specify the `namespace`):
+    :param func_kwargs:
+
+        a `dict` of keyword arguments to be passed to each nested ArgumentParser
+        instance created per command (i.e. per function).  Members of this
+        dictionary have the highest priority, so a function's docstring is
+        overridden by a `help` in `func_kwargs` (if present).
+
+    :param namespace_kwargs:
+
+        a `dict` of keyword arguments to be passed to the nested ArgumentParser
+        instance under given `namespace`.
+
+    Deprecated params that should be moved into `namespace_kwargs`:
 
     :param title:
 
         passed to :meth:`argparse.ArgumentParser.add_subparsers` as `title`.
+
+        .. deprecated:: 0.26.0
+
+           Please use `namespace_kwargs` instead.
 
     :param description:
 
         passed to :meth:`argparse.ArgumentParser.add_subparsers` as
         `description`.
 
+        .. deprecated:: 0.26.0
+
+           Please use `namespace_kwargs` instead.
+
     :param help:
 
         passed to :meth:`argparse.ArgumentParser.add_subparsers` as `help`.
+
+        .. deprecated:: 0.26.0
+
+           Please use `namespace_kwargs` instead.
 
     .. note::
 
@@ -348,16 +379,6 @@ def add_commands(parser, functions, namespace=None, title=None,
         pretty opaque.
         You may prefer :class:`~argh.helpers.ArghParser.add_commands` for a bit
         more predictable API.
-
-    .. admonition:: Design flaw
-
-        This function peeks into the parser object using its internal API.
-        Unfortunately the public API does not allow to *get* the subparsers, it
-        only lets you *add* them, and do that *once*. So you would have to toss
-        the subparsers object around to add something later. That said, I doubt
-        that argparse will change a lot in the future as it's already pretty
-        stable. If some implementation details would change and break `argh`,
-        we'll simply add a workaround a keep it compatibile.
 
     .. note::
 
@@ -369,38 +390,92 @@ def add_commands(parser, functions, namespace=None, title=None,
     if 'function' in parser._defaults:
         raise AssemblingError('Cannot add commands to a single-command parser')
 
-    subparsers = get_subparsers(parser, create=True)
+    namespace_kwargs = namespace_kwargs or {}
+
+    # FIXME remove this by 1.0
+    #
+    if title:
+        warnings.warn('argument `title` is deprecated in add_commands(),'
+                      ' use `parser_kwargs` instead', DeprecationWarning)
+        namespace_kwargs['description'] = title
+    if help:
+        warnings.warn('argument `help` is deprecated in add_commands(),'
+                      ' use `parser_kwargs` instead', DeprecationWarning)
+        namespace_kwargs['help'] = help
+    if description:
+        warnings.warn('argument `description` is deprecated in add_commands(),'
+                      ' use `parser_kwargs` instead', DeprecationWarning)
+        namespace_kwargs['description'] = description
+    #
+    # /
+
+    subparsers_action = get_subparsers(parser, create=True)
 
     if namespace:
-        # make a namespace placeholder and register the commands within it
-        subsubparser = subparsers.add_parser(namespace, help=title)
-        subparsers = subsubparser.add_subparsers(title=title,
-                                                 description=description,
-                                                 help=help)
+        # Make a nested parser and init a deeper _SubParsersAction under it.
+
+        # Create a named group of commands.  It will be listed along with
+        # root-level commands in ``app.py --help``; in that context its `title`
+        # can be used as a short description on the right side of its name.
+        # Normally `title` is shown above the list of commands
+        # in ``app.py my-namespace --help``.
+        subsubparser_kw = {'help': namespace_kwargs.get('title')}
+        subsubparser = subparsers_action.add_parser(namespace, **subsubparser_kw)
+        subparsers_action = subsubparser.add_subparsers(**namespace_kwargs)
     else:
-        assert not any([title, description, help]), (
-            'Arguments "title", "description" or "extra_help" only make sense '
-            'if provided along with a namespace.')
+        assert not namespace_kwargs, ('`parser_kwargs` only makes sense '
+                                      'with `namespace`.')
 
     for func in functions:
-        # use explicitly defined name; if none, use function name (a_b → a-b)
-        cmd_name = getattr(func, ATTR_NAME,
-                           func.__name__.replace('_','-'))
+        cmd_name, func_parser_kwargs = _extract_command_meta_from_func(func)
 
-        parser_kwargs = {
-
-            # add command help from function's docstring
-            'help': func.__doc__,
-
-            # set default formatter
-            'formatter_class': PARSER_FORMATTER,
-
-        }
-
-        # try adding aliases for command name
-        if SUPPORTS_ALIASES:
-            parser_kwargs['aliases'] = getattr(func, ATTR_ALIASES, [])
+        # override any computed kwargs by manually supplied ones
+        if func_kwargs:
+            func_parser_kwargs.update(func_kwargs)
 
         # create and set up the parser for this command
-        command_parser = subparsers.add_parser(cmd_name, **parser_kwargs)
+        command_parser = subparsers_action.add_parser(cmd_name, **func_parser_kwargs)
         set_default_command(command_parser, func)
+
+
+def _extract_command_meta_from_func(func):
+    # use explicitly defined name; if none, use function name (a_b → a-b)
+    cmd_name = getattr(func, ATTR_NAME,
+                       func.__name__.replace('_','-'))
+
+    func_parser_kwargs = {
+
+        # add command help from function's docstring
+        'help': func.__doc__,
+
+        # set default formatter
+        'formatter_class': PARSER_FORMATTER,
+
+    }
+
+    # try adding aliases for command name
+    if SUPPORTS_ALIASES:
+        func_parser_kwargs['aliases'] = getattr(func, ATTR_ALIASES, [])
+
+    return cmd_name, func_parser_kwargs
+
+
+def add_subcommands(parser, namespace, functions, **namespace_kwargs):
+    """
+    A wrapper for :func:`add_commands`.
+
+    These examples are equivalent::
+
+        add_commands(parser, [get, put], namespace='db',
+                     namespace_kwargs={
+                         'title': 'database commands',
+                         'help': 'CRUD for our silly database'
+                     })
+
+        add_subcommands(parser, 'db', [get, put],
+                        title='database commands',
+                        help='CRUD for our silly database')
+
+    """
+    add_commands(parser, functions, namespace=namespace,
+                 namespace_kwargs=namespace_kwargs)

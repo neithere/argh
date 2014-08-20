@@ -26,12 +26,21 @@ really outdated, please read this list carefully and grep your code.
   `argh.completion.autocomplete()`.  Debug-level logging is used instead.
   (The warnings were deprecated since v.0.25).
 
+Some more stuff has been scheduled **to be purged before 1.0**:
+
+- Deprecated arguments `title`, `help` and `description` in `add_commands()`
+  helper function.  See documentation.
 
 Other changes:
 
 - Improved representation of default values in the help.
 
 - Dispatcher can be configured to skip unknown arguments (see #57).
+
+- Added `add_subcommands()` helper function (a convenience wrapper
+  for `add_commands()`).
+
+- `EntryPoint` now stores kwargs for the parser.
 
 Version 0.25
 ------------

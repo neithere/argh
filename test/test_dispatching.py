@@ -4,7 +4,7 @@ Dispatching tests
 ~~~~~~~~~~~~~~~~~
 """
 import argh
-from mock import patch
+from mock import Mock, patch
 import pytest
 
 from .base import make_IO
@@ -47,9 +47,10 @@ def test_dispatch_command_shortcut():
     assert run_func(cmd, '--foo 2') == '2\n'
 
 
-@patch('argh.dispatching.dispatch_command')
-@patch('argh.dispatching.dispatch_commands')
-def test_entrypoint(dcs_mock, dc_mock):
+@patch('argh.dispatching.dispatch')
+@patch('argh.dispatching.add_commands')
+@patch('argparse.ArgumentParser')
+def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
 
     entrypoint = argh.EntryPoint('my cool app')
 
@@ -60,6 +61,9 @@ def test_entrypoint(dcs_mock, dc_mock):
     assert excinfo.exconly().endswith(
         'DispatchingError: no commands for entry point "my cool app"')
 
+    mocked_parser = Mock()
+    ap_cls_mock.return_value = mocked_parser
+
     # a single command
 
     @entrypoint
@@ -67,15 +71,24 @@ def test_entrypoint(dcs_mock, dc_mock):
         return 'hello'
 
     entrypoint()
-    assert not dcs_mock.called
-    assert dc_mock.called
-    dc_mock.assert_called_with(greet)
+
+    assert add_commands_mock.called
+    add_commands_mock.assert_called_with(mocked_parser, [greet])
+    assert dispatch_mock.called
+    dispatch_mock.assert_called_with(mocked_parser)
 
     # multiple commands
+
+    add_commands_mock.reset_mock()
+    dispatch_mock.reset_mock()
 
     @entrypoint
     def hit():
         return 'knight with a chicken'
 
     entrypoint()
-    dcs_mock.assert_called_with([greet, hit])
+
+    assert add_commands_mock.called
+    add_commands_mock.assert_called_with(mocked_parser, [greet, hit])
+    assert dispatch_mock.called
+    dispatch_mock.assert_called_with(mocked_parser)

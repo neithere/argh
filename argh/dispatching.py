@@ -277,24 +277,25 @@ class EntryPoint(object):
 
         from argh import EntryPoint
 
-        entrypoint = EntryPoint()
+        app = EntryPoint('main', dict(description='This is a cool app'))
 
-        @entrypoint
+        @app
         def ls():
             for i in range(10):
                 print i
 
-        @entrypoint
+        @app
         def greet():
             print 'hello'
 
         if __name__ == '__main__':
-            entrypoint()
+            app()
 
     """
-    def __init__(self, name=None):
+    def __init__(self, name=None, parser_kwargs=None):
         self.name = name or 'unnamed'
         self.commands = []
+        self.parser_kwargs = parser_kwargs or {}
 
     def __call__(self, f=None):
         if f:
@@ -311,7 +312,6 @@ class EntryPoint(object):
             raise DispatchingError('no commands for entry point "{0}"'
                                    .format(self.name))
 
-        if len(self.commands) == 1:
-            dispatch_command(*self.commands)
-        else:
-            dispatch_commands(self.commands)
+        parser = argparse.ArgumentParser(**self.parser_kwargs)
+        add_commands(parser, self.commands)
+        dispatch(parser)
