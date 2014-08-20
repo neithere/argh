@@ -26,6 +26,13 @@ really outdated, please read this list carefully and grep your code.
   `argh.completion.autocomplete()`.  Debug-level logging is used instead.
   (The warnings were deprecated since v.0.25).
 
+
+Other changes:
+
+- Improved representation of default values in the help.
+
+- Dispatcher can be configured to skip unknown arguments (see #57).
+
 Version 0.25
 ------------
 
