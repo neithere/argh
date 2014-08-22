@@ -29,7 +29,7 @@ really outdated, please read this list carefully and grep your code.
 Some more stuff has been scheduled **to be purged before 1.0**:
 
 - Deprecated arguments `title`, `help` and `description` in `add_commands()`
-  helper function.  See documentation.
+  helper function.  See documentation and #60.
 
 Other changes:
 
