@@ -15,11 +15,13 @@ Command decorators
 from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT)
+                            ATTR_EXPECTS_NAMESPACE_OBJECT,
+                            ATTR_TOGGLEABLES)
 
 
-__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj']
+__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj', 'set_toggleable', 'set_all_toggleable']
 
+from argh.utils import get_arg_spec
 
 def named(new_name):
     """
@@ -173,3 +175,45 @@ def expects_obj(func):
     """
     setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
     return func
+
+def set_toggleable(name, inv_prefix = 'no'):
+    """
+    Marks given name as toggleable, creating an additional, 
+    mutually exclusive parser argument to toggle a boolean.
+
+    :param name:
+        Name of boolean argument for which to create a toggleable argument
+    :param inv_prefix:
+        Prefix of inversion argument
+
+    Usage::
+
+        @arg('--do-foo', '--do-foo-alias')
+        @set_toggleable('--do-foo')
+        @set_toggleable('--do-foo-2', inv_prefix = 'invert')
+        def foo(x, do_foo = True, do_foo_2 = False):
+            print x, do_foo, do_foo_2
+    """
+
+    def wrapper(func):
+        toggleables = getattr(func, ATTR_TOGGLEABLES, [])
+        toggleables.append((name, inv_prefix))
+        setattr(func, ATTR_TOGGLEABLES, toggleables)
+        return func
+    return wrapper
+
+def set_all_toggleable(inv_prefix = 'no'):
+
+    def wrapper(func):
+        spec = get_arg_spec(func)
+
+        toggleables = getattr(func, ATTR_TOGGLEABLES, [])
+        
+        for (dest, default) in zip(spec.args[-len(spec.defaults):], spec.defaults):
+            if isinstance(default, bool):
+                cmd_dest = dest.replace('_', '-')
+                toggleables.append(('--' + cmd_dest, inv_prefix))
+
+        setattr(func, ATTR_TOGGLEABLES, toggleables)
+        return func
+    return wrapper

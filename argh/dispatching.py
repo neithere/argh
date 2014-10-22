@@ -109,7 +109,7 @@ def dispatch(parser, argv=None, add_help_command=True,
 
     # this will raise SystemExit if parsing fails
     args = parse_args(argv, namespace=namespace)
-
+   
     if hasattr(args, 'function'):
         if pre_call:  # XXX undocumented because I'm unsure if it's OK
             # Actually used in real projects:
