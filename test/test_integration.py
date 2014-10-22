@@ -762,7 +762,7 @@ def test_help_formatting_is_preserved():
 def test_simple_toggle():
     @argh.set_toggleable('--toggle')
     def cmd(toggle = False):
-        return "Toggle is {}".format(toggle)
+        return "Toggle is {0}".format(toggle)
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -782,7 +782,7 @@ def test_multiarg_toggle():
             toggle2 = True,
             toggle3 = False,
             foo = 3):
-        return "toggle1: {}, toggle2: {}, toggle3: {}, foo: {}".format(\
+        return "toggle1: {0}, toggle2: {1}, toggle3: {2}, foo: {3}".format(\
             toggle1, toggle2, toggle3, foo)
 
     p = DebugArghParser()
