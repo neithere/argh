@@ -42,6 +42,10 @@ Other changes:
 
 - `EntryPoint` now stores kwargs for the parser.
 
+Fixed bugs:
+
+- Help formatter was broken for arguments with empty strings as default values.
+
 Version 0.25
 ------------
 

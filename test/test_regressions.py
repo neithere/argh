@@ -10,7 +10,8 @@ from .base import DebugArghParser, run
 
 
 def test_regression_issue12():
-    """Issue #12: @command was broken if there were more than one argument
+    """
+    Issue #12: @command was broken if there were more than one argument
     to begin with same character (i.e. short option names were inferred
     incorrectly).
     """
@@ -28,7 +29,8 @@ def test_regression_issue12():
 
 
 def test_regression_issue12_help_flag():
-    """Issue #12: if an argument starts with "h", e.g. "--host",
+    """
+    Issue #12: if an argument starts with "h", e.g. "--host",
     ArgumentError is raised because "--help" is always added by argh
     without decorators.
     """
@@ -47,7 +49,8 @@ def test_regression_issue12_help_flag():
 
 
 def test_regression_issue27():
-    """Issue #27: store_true is not set for inferred bool argument.
+    """
+    Issue #27: store_true is not set for inferred bool argument.
 
     :Reason: when @command was refactored, it stopped using @arg, but it is
     it was there that guesses (choices→type, default→type and
@@ -76,7 +79,8 @@ def test_regression_issue27():
 
 
 def test_regression_issue31():
-    """ Issue #31: Argh fails with parameter action type 'count' if a default
+    """
+    Issue #31: Argh fails with parameter action type 'count' if a default
     value is provided.
 
     :Reason: assembling._guess() would infer type from default value without
@@ -107,3 +111,17 @@ def test_regression_issue47():
     msg = ('func: argument "foo_bar" declared as positional (in function '
            'signature) and optional (via decorator)')
     assert excinfo.exconly().endswith(msg)
+
+
+def test_regression_issue76():
+    """
+    Issue #76: optional arguments defaulting to the empty string break --help.
+
+    This is also tested in integration tests but in a different way.
+    """
+    def cmd(foo=''):
+        pass
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+    run(p, '--help', exit=True)
