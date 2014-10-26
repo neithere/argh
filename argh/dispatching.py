@@ -209,11 +209,9 @@ def _get_function_from_namespace_obj(namespace_obj):
 
 def _execute_command(function, namespace_obj, errors_file, pre_call=None):
     """
-    XXX UPDATE THE DOCSTRING XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-    Asserts that ``args.function`` is present and callable. Tries different
-    approaches to calling the function (with an `argparse.Namespace` object or
-    with ordinary signature). Yields the results line by line.
+    Assumes that `function` is a callable.  Tries different approaches
+    to call it (with `namespace_obj` or with ordinary signature).
+    Yields the results line by line.
 
     If :class:`~argh.exceptions.CommandError` is raised, its message is
     appended to the results (i.e. yielded by the generator as a string).
