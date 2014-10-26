@@ -29,20 +29,20 @@ really outdated, please read this list carefully and grep your code.
 Some more stuff has been scheduled **to be purged before 1.0**:
 
 - Deprecated arguments `title`, `help` and `description` in `add_commands()`
-  helper function.  See documentation and #60.
+  helper function.  See documentation and issue #60.
 
 Other changes:
 
 - Improved representation of default values in the help.
 
-- Dispatcher can be configured to skip unknown arguments (see #57).
+- Dispatcher can be configured to skip unknown arguments (issue #57).
 
 - Added `add_subcommands()` helper function (a convenience wrapper
   for `add_commands()`).
 
 - `EntryPoint` now stores kwargs for the parser.
 
-- Added support for default command *with* nested commands (see #78).
+- Added support for default command *with* nested commands (issue #78).
 
   This only works with Python 3.4+ due to incorrect behaviour or earlier
   versions of Argparse (including the stand-alone one as of 1.2.1).
@@ -54,12 +54,13 @@ Other changes:
 
 Fixed bugs:
 
-- Help formatter was broken for arguments with empty strings as default values.
+- Help formatter was broken for arguments with empty strings as default values
+  (issue #76).
 
 Version 0.25
 ------------
 
-- Added EntryPoint class as another way to assemble functions (see #59).
+- Added EntryPoint class as another way to assemble functions (issue #59).
 
 - Added support for Python 3.4; dropped support for Python 3.3
   (this doesn't mean that Argh is necessarily broken under 3.3, 
@@ -67,8 +68,8 @@ Version 0.25
 
 - Shell completion warnings are now deprecated in favour of `logging`.
 
-- The command help now displays default values of all arguments (see #64).
+- The command help now displays default values of all arguments (issue #64).
 
-- Function docstrings are now displayed verbatim in the help (see #64).
+- Function docstrings are now displayed verbatim in the help (issue #64).
 
 - Argh's dispatching now should work properly in Cython.

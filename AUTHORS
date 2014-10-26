@@ -24,6 +24,7 @@ and generally made *Argh* better:
 :Paul Jacobson:       Defaults in argument help message, raw docstrings
 :Chuck Blake:         Support for Cython
 :invl:                Idea and basic implementation of EntryPoint
+:illumin-us-r3v0lution: Questions and examples of setuptools integration
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.

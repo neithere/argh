@@ -497,3 +497,28 @@ specified.  It also allows plugging in a preprocessor for the catched errors::
         raise CommandError('some error')
 
 The command above will print `ERR: some error`.
+
+Packaging
+---------
+
+So, you've done with the first version of your `Argh`-powered app.  The next
+step is to package it for distribution.  How to tell `setuptools` to create
+a system-wide script?  A simple example sums it up:
+
+.. code-block:: python
+
+    from setuptools import setup, find_packages
+
+    setup(
+        name = 'myapp',
+        version = '0.1',
+        entry_points = {'console_scripts': ['myapp = myapp:main']},
+        packages = find_packages(),
+        install_requires = ['argh'],
+    )
+
+This creates a system-wide `myapp` script that imports the `myapp` module and
+calls a `myapp.main` function.
+
+More complex examples can be found in this contributed repository:
+https://github.com/illumin-us-r3v0lution/argh-examples
