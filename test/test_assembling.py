@@ -86,7 +86,8 @@ def test_set_default_command_docstring():
     assert parser.description == 'docstring'
 
 
-def test_set_default_command_vs_multiple():
+@pytest.mark.skipif(sys.version_info >= (3,4), reason='supported since Python 3.4')
+def test_add_subparsers_when_default_command_exists__unsupported():
 
     def one(): return 1
     def two(): return 2
@@ -94,24 +95,61 @@ def test_set_default_command_vs_multiple():
     p = argh.ArghParser()
     p.set_default_command(one)
 
-    with pytest.raises(argh.exceptions.AssemblingError) as excinfo:
+    with pytest.raises(argh.AssemblingError) as excinfo:
         p.add_commands([two])
-    msg = 'Cannot add commands to a single-command parser'
-    assert msg == str(excinfo.value)
+
+    assert excinfo.exconly().endswith(
+        'Argparse library bundled with this version of Python '
+        'does not support combining a default command with nested ones.')
 
 
-def test_set_default_command_vs_subparsers():
-
+@pytest.mark.skipif(sys.version_info >= (3,4), reason='supported since Python 3.4')
+def test_set_default_command_when_subparsers_exist__unsupported():
     def one(): return 1
     def two(): return 2
 
     p = argh.ArghParser()
     p.add_commands([one])
 
-    with pytest.raises(argh.exceptions.AssemblingError) as excinfo:
+    with pytest.raises(argh.AssemblingError) as excinfo:
         p.set_default_command(two)
-    msg = 'Cannot set default command to a parser with existing subparsers'
-    assert msg == str(excinfo.value)
+
+    assert excinfo.exconly().endswith(
+        'Argparse library bundled with this version of Python '
+        'does not support combining a default command with nested ones.')
+
+
+@pytest.mark.skipif(sys.version_info < (3,4), reason='supported since Python 3.4')
+def test_add_subparsers_when_default_command_exists__supported():
+
+    def one(): return 1
+    def two(): return 2
+
+    p = argh.ArghParser()
+    p.set_default_command(one)
+    p.add_commands([two])
+
+    ns_one = p.parse_args([])
+    ns_two = p.parse_args(['two'])
+
+    assert ns_one.get_function() == one
+    assert ns_two.get_function() == two
+
+
+@pytest.mark.skipif(sys.version_info < (3,4), reason='supported since Python 3.4')
+def test_set_default_command_when_subparsers_exist__supported():
+    def one(): return 1
+    def two(): return 2
+
+    p = argh.ArghParser()
+    p.add_commands([one])
+    p.set_default_command(two)
+
+    ns_two = p.parse_args([])
+    ns_one = p.parse_args(['one'])
+
+    assert ns_one.get_function() == one
+    assert ns_two.get_function() == two
 
 
 def test_set_default_command_mixed_arg_types():

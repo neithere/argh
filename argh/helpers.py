@@ -16,18 +16,19 @@ import argparse
 
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
-from argh.dispatching import PARSER_FORMATTER, dispatch
+from argh.dispatching import PARSER_FORMATTER, ArghNamespace, dispatch
 
 
 __all__ = ['ArghParser']
 
 
 class ArghParser(argparse.ArgumentParser):
-    """ A subclass of :class:`ArgumentParser` with a couple of convenience
-    methods.
+    """
+    A subclass of :class:`ArgumentParser` with support for and a couple 
+    of convenience methods.
 
-    There is actually no need to subclass the parser. The methods are but
-    wrappers for stand-alone functions :func:`~argh.assembling.add_commands`,
+    All methods are but wrappers for stand-alone functions
+    :func:`~argh.assembling.add_commands`,
     :func:`~argh.completion.autocomplete` and
     :func:`~argh.dispatching.dispatch`.
 
@@ -38,16 +39,26 @@ class ArghParser(argparse.ArgumentParser):
         super(ArghParser, self).__init__(*args, **kwargs)
 
     def set_default_command(self, *args, **kwargs):
-        "Wrapper for :func:`set_default_command`."
+        "Wrapper for :func:`~argh.assembling.set_default_command`."
         return set_default_command(self, *args, **kwargs)
 
     def add_commands(self, *args, **kwargs):
-        "Wrapper for :func:`add_commands`."
+        "Wrapper for :func:`~argh.assembling.add_commands`."
         return add_commands(self, *args, **kwargs)
 
     def autocomplete(self):
+        "Wrapper for :func:`~argh.completion.autocomplete`."
         return autocomplete(self)
 
     def dispatch(self, *args, **kwargs):
-        "Wrapper for :func:`dispatch`."
+        "Wrapper for :func:`~argh.dispatching.dispatch`."
         return dispatch(self, *args, **kwargs)
+
+    def parse_args(self, args=None, namespace=None):
+        """
+        Wrapper for :meth:`argparse.ArgumentParser.parse_args`.  If `namespace`
+        is not defined, :class:`argh.dispatching.ArghNamespace` is used.
+        This is required for functions to be properly used as commands.
+        """
+        namespace = namespace or ArghNamespace()
+        return super(ArghParser, self).parse_args(args, namespace)

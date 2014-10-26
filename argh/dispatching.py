@@ -17,10 +17,13 @@ import sys
 from types import GeneratorType
 
 from argh import compat, io
-from argh.constants import (ATTR_WRAPPED_EXCEPTIONS,
-                            ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT,
-                            PARSER_FORMATTER)
+from argh.constants import (
+    ATTR_WRAPPED_EXCEPTIONS,
+    ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
+    ATTR_EXPECTS_NAMESPACE_OBJECT,
+    PARSER_FORMATTER,
+    DEST_FUNCTION,
+)
 from argh.completion import autocomplete
 from argh.assembling import add_commands, set_default_command
 from argh.exceptions import DispatchingError, CommandError
@@ -29,6 +32,35 @@ from argh.utils import get_arg_spec
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
            'PARSER_FORMATTER', 'EntryPoint']
+
+
+class ArghNamespace(argparse.Namespace):
+    """
+    A namespace object which collects the stack of functions (the
+    :attr:`~argh.constants.DEST_FUNCTION` arguments passed to it via
+    parser's defaults).
+    """
+    def __init__(self, *args, **kw):
+        super(ArghNamespace, self).__init__(*args, **kw)
+        self._functions_stack = []
+
+    def __setattr__(self, k, v):
+        print('setattr', k, v)
+        if k == DEST_FUNCTION:
+            # don't register the function under DEST_FUNCTION name.
+            # If `ArgumentParser.parse_known_args()` sees that we already have
+            # such attribute, it skips it.  However, it goes from the topmost
+            # parser to subparsers.  We need the function mapped to the
+            # subparser.  So we fool the `ArgumentParser` and pretend that we
+            # didn't get a DEST_FUNCTION attribute; however, in fact we collect
+            # all its values in a stack.  The last item in the stack would be
+            # the function mapped to the innermost parser — the one we need.
+            self._functions_stack.append(v)
+        else:
+            super(ArghNamespace, self).__setattr__(k, v)
+
+    def get_function(self):
+        return self._functions_stack[-1]
 
 
 def dispatch(parser, argv=None, add_help_command=True,
@@ -85,6 +117,13 @@ def dispatch(parser, argv=None, add_help_command=True,
         If `True`, unknown arguments do not cause an error
         (`ArgumentParser.parse_known_args` is used).
 
+    :param namespace:
+
+        An `argparse.Namespace`-like object.  By default an
+        :class:`ArghNamespace` object is used.  Please note that support for
+        combined default and nested functions may be broken if a different
+        type of object is forced.
+
     By default the exceptions are not wrapped and will propagate. The only
     exception that is always wrapped is :class:`~argh.exceptions.CommandError`
     which is interpreted as an expected event so the traceback is hidden.
@@ -107,16 +146,16 @@ def dispatch(parser, argv=None, add_help_command=True,
     else:
         parse_args = parser.parse_args
 
-    # this will raise SystemExit if parsing fails
-    args = parse_args(argv, namespace=namespace)
+    if not namespace:
+        namespace = ArghNamespace()
 
-    if hasattr(args, 'function'):
-        if pre_call:  # XXX undocumented because I'm unsure if it's OK
-            # Actually used in real projects:
-            # * https://google.com/search?q=argh+dispatch+pre_call
-            # * https://github.com/neithere/argh/issues/63
-            pre_call(args)
-        lines = _execute_command(args, errors_file)
+    # this will raise SystemExit if parsing fails
+    namespace_obj = parse_args(argv, namespace=namespace)
+
+    function = _get_function_from_namespace_obj(namespace_obj)
+
+    if function:
+        lines = _execute_command(function, namespace_obj, errors_file)
     else:
         # no commands declared, can't dispatch; display help message
         lines = [parser.format_usage()]
@@ -148,8 +187,30 @@ def dispatch(parser, argv=None, add_help_command=True,
         return f.read()
 
 
-def _execute_command(args, errors_file):
+def _get_function_from_namespace_obj(namespace_obj):
+    if isinstance(namespace_obj, ArghNamespace):
+        # our special namespace object keeps the stack of assigned functions
+        try:
+            function = namespace_obj.get_function()
+        except (AttributeError, IndexError):
+            return None
+    else:
+        # a custom (probably vanilla) namespace object keeps the last assigned
+        # function; this may be wrong but at least something may work
+        if not hasattr(namespace_obj, DEST_FUNCTION):
+            return None
+        function = getattr(namespace_obj, DEST_FUNCTION)
+
+    if not function or not hasattr(function, '__call__'):
+        return None
+
+    return function
+
+
+def _execute_command(function, namespace_obj, errors_file, pre_call=None):
     """
+    XXX UPDATE THE DOCSTRING XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
     Asserts that ``args.function`` is present and callable. Tries different
     approaches to calling the function (with an `argparse.Namespace` object or
     with ordinary signature). Yields the results line by line.
@@ -159,22 +220,27 @@ def _execute_command(args, errors_file):
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
-    assert hasattr(args, 'function') and hasattr(args.function, '__call__')
+    if pre_call:  # XXX undocumented because I'm unsure if it's OK
+        # Actually used in real projects:
+        # * https://google.com/search?q=argh+dispatch+pre_call
+        # * https://github.com/neithere/argh/issues/63
+        pre_call(namespace_obj)
 
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
-        if getattr(args.function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
-            result = args.function(args)
+        if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
+            result = function(namespace_obj)
         else:
             # namespace -> dictionary
             _flat_key = lambda key: key.replace('-', '_')
-            all_input = dict((_flat_key(k), v) for k,v in  vars(args).items())
+            all_input = dict((_flat_key(k), v)
+                             for k,v in vars(namespace_obj).items())
 
-            # filter the namespace variables so that only those expected by the
-            # actual function will pass
+            # filter the namespace variables so that only those expected
+            # by the actual function will pass
 
-            spec = get_arg_spec(args.function)
+            spec = get_arg_spec(function)
 
             positional = [all_input[k] for k in spec.args]
             kwonly = getattr(spec, 'kwonlyargs', [])
@@ -182,17 +248,18 @@ def _execute_command(args, errors_file):
 
             # *args
             if spec.varargs:
-                positional += getattr(args, spec.varargs)
+                positional += getattr(namespace_obj, spec.varargs)
 
             # **kwargs
             varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
             if varkw:
-                not_kwargs = ['function'] + spec.args + [spec.varargs] + kwonly
-                extra = [k for k in vars(args) if k not in not_kwargs]
-                for k in extra:
-                    keywords[k] = getattr(args, k)
+                not_kwargs = [DEST_FUNCTION] + spec.args + [spec.varargs] + kwonly
+                for k in vars(namespace_obj):
+                    if k.startswith('_') or k in not_kwargs:
+                        continue
+                    keywords[k] = getattr(namespace_obj, k)
 
-            result = args.function(*positional, **keywords)
+            result = function(*positional, **keywords)
 
         # Yield the results
         if isinstance(result, (GeneratorType, list, tuple)):
@@ -205,14 +272,14 @@ def _execute_command(args, errors_file):
                 yield result
 
     wrappable_exceptions = [CommandError]
-    wrappable_exceptions += getattr(args.function, ATTR_WRAPPED_EXCEPTIONS, [])
+    wrappable_exceptions += getattr(function, ATTR_WRAPPED_EXCEPTIONS, [])
 
     try:
         result = _call()
         for line in result:
             yield line
     except tuple(wrappable_exceptions) as e:
-        processor = getattr(args.function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
+        processor = getattr(function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
                             lambda e: '{0.__class__.__name__}: {0}'.format(e))
 
         errors_file.write(compat.text_type(processor(e)))

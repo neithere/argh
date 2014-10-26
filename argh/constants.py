@@ -13,7 +13,7 @@ import argparse
 __all__ = (
     'ATTR_NAME', 'ATTR_ALIASES', 'ATTR_ARGS', 'ATTR_WRAPPED_EXCEPTIONS',
     'ATTR_WRAPPED_EXCEPTIONS_PROCESSOR', 'ATTR_EXPECTS_NAMESPACE_OBJECT',
-    'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE'
+    'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE', 'DEST_FUNCTION',
 )
 
 
@@ -21,23 +21,30 @@ __all__ = (
 # Names of function attributes where Argh stores command behaviour
 #
 
-# explicit command name (differing from function name)
+#: explicit command name (differing from function name)
 ATTR_NAME = 'argh_name'
 
-# alternative command names
+#: alternative command names
 ATTR_ALIASES = 'argh_aliases'
 
-# declared arguments
+#: declared arguments
 ATTR_ARGS = 'argh_args'
 
-# list of exception classes that should be wrapped and printed as results
+#: list of exception classes that should be wrapped and printed as results
 ATTR_WRAPPED_EXCEPTIONS = 'argh_wrap_errors'
 
-# a function to preprocess the exception object when it is wrapped
+#: a function to preprocess the exception object when it is wrapped
 ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = 'argh_wrap_errors_processor'
 
-# forcing argparse.Namespace object instead of signature introspection
+#: forcing argparse.Namespace object instead of signature introspection
 ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
+
+#
+# Dest names in parser defaults
+#
+
+#: dest name for a function mapped to given endpoint (goes to Namespace obj)
+DEST_FUNCTION = 'function'
 
 #
 # Other library-wide stuff
@@ -84,10 +91,8 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
         return self._get_help_string(action) % params
 
 
+#: Default formatter to be used in implicitly instantiated ArgumentParser.
 PARSER_FORMATTER = CustomFormatter
-"""
-Default formatter to be used in implicitly instantiated ArgumentParser.
-"""
 
 
 DEFAULT_ARGUMENT_TEMPLATE = '%(default)s'

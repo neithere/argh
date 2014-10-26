@@ -20,9 +20,15 @@ import warnings
 
 from argh.completion import COMPLETION_ENABLED
 from argh.compat import OrderedDict
-from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT,
-                            PARSER_FORMATTER, DEFAULT_ARGUMENT_TEMPLATE)
+from argh.constants import (
+    ATTR_ALIASES,
+    ATTR_ARGS,
+    ATTR_NAME,
+    ATTR_EXPECTS_NAMESPACE_OBJECT,
+    PARSER_FORMATTER,
+    DEFAULT_ARGUMENT_TEMPLATE,
+    DEST_FUNCTION,
+)
 from argh.utils import get_subparsers, get_arg_spec
 from argh.exceptions import AssemblingError
 
@@ -171,6 +177,13 @@ def _get_dest(parser, argspec):
     return kwargs['dest']
 
 
+def _require_support_for_default_command_with_subparsers():
+    if sys.version_info < (3,4):
+        raise AssemblingError(
+            'Argparse library bundled with this version of Python '
+            'does not support combining a default command with nested ones.')
+
+
 def set_default_command(parser, function):
     """
     Sets default command (i.e. a function) for given parser.
@@ -199,8 +212,7 @@ def set_default_command(parser, function):
 
     """
     if parser._subparsers:
-        raise AssemblingError('Cannot set default command to a parser with '
-                              'existing subparsers')
+        _require_support_for_default_command_with_subparsers()
 
     spec = get_arg_spec(function)
 
@@ -300,7 +312,9 @@ def set_default_command(parser, function):
 
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__
-    parser.set_defaults(function=function)
+    parser.set_defaults(**{
+        DEST_FUNCTION: function,
+    })
 
 
 def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
@@ -387,8 +401,12 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
        results in `AssemblingError`.
 
     """
-    if 'function' in parser._defaults:
-        raise AssemblingError('Cannot add commands to a single-command parser')
+    # FIXME "namespace" is a correct name but it clashes with the "namespace"
+    # that represents arguments (argparse.Namespace and our ArghNamespace).
+    # We should rename the argument here.
+
+    if DEST_FUNCTION in parser._defaults:
+        _require_support_for_default_command_with_subparsers()
 
     namespace_kwargs = namespace_kwargs or {}
 
@@ -419,7 +437,9 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
         # can be used as a short description on the right side of its name.
         # Normally `title` is shown above the list of commands
         # in ``app.py my-namespace --help``.
-        subsubparser_kw = {'help': namespace_kwargs.get('title')}
+        subsubparser_kw = {
+            'help': namespace_kwargs.get('title'),
+        }
         subsubparser = subparsers_action.add_parser(namespace, **subsubparser_kw)
         subparsers_action = subsubparser.add_subparsers(**namespace_kwargs)
     else:

@@ -42,6 +42,16 @@ Other changes:
 
 - `EntryPoint` now stores kwargs for the parser.
 
+- Added support for default command *with* nested commands (see #78).
+
+  This only works with Python 3.4+ due to incorrect behaviour or earlier
+  versions of Argparse (including the stand-alone one as of 1.2.1).
+
+  Due to argparse peculiarities the function assignment technique relies
+  on a special `ArghNamespace` object.  It is used by default in `ArghParser`
+  and the shortcuts, but if you call the vanilla `ArgumentParser.parse_args()`
+  method, you now *have* to supply the proper namespace object.
+
 Fixed bugs:
 
 - Help formatter was broken for arguments with empty strings as default values.

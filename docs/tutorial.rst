@@ -218,6 +218,7 @@ This way arguments cannot be defined in the Natural Way but the
 :class:`~argh.decorators.arg` decorator works as usual.
 
 .. note::
+
    In both cases — ``**kwargs``-only and `@expects_obj` — the arguments
    **must** be declared via decorators or directly via the `argparse` API.
    Otherwise the command has zero arguments (apart from ``--help``).
@@ -346,6 +347,42 @@ with :func:`~argh.assembling.set_default_command`::
 
 There's also a nice shortcut :func:`~argh.dispatching.dispatch_command`.
 Please refer to the API documentation for details.
+
+Subcommands + Default Command
+-----------------------------
+
+.. versionadded:: 0.26
+
+It's possible to augment a single-command application with nested commands:
+
+.. code-block:: python
+
+    p = ArghParser()
+    p.add_commands([foo, bar])
+    p.set_default_command(foo)    # could be a `quux`
+
+However, this will raise an exception on assembling stage unless you have
+at least Python ≥ 3.4.  The reason is a bug in `argparse`.  Alright, what
+should you do then?  This is a simple workaround:
+
+.. code-block:: python
+
+    p = argh.ArghParser()
+    p.add_commands([foo, bar])
+    try:
+        p.set_default_command(quux)
+    except argh.AssemblingError:
+        print('Please upgrade to Python 3.4 or higher')
+        p.add_commands([quux])
+
+.. note::
+
+   If you are using `argh` with barebones `ArgumentParser`, make sure that
+   the `parse_args()` method gets :class:`~argh.dispatching.ArghNamespace`
+   as the namespace object, otherwise the correct choice of function cannot
+   be guaranteed.  The reason is that a higher-level parser has higher
+   priority than its nested ones when `argparse` picks a default dest from
+   defaults, which includes the function mapped to a certain endpoint.
 
 Generated help
 --------------
