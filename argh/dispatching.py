@@ -45,7 +45,6 @@ class ArghNamespace(argparse.Namespace):
         self._functions_stack = []
 
     def __setattr__(self, k, v):
-        print('setattr', k, v)
         if k == DEST_FUNCTION:
             # don't register the function under DEST_FUNCTION name.
             # If `ArgumentParser.parse_known_args()` sees that we already have
