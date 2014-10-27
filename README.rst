@@ -98,6 +98,13 @@ A very simple application with one command:
 
     argh.dispatch_command(main)
 
+Run it:
+
+.. code-block:: bash
+
+    $ ./app.py
+    Hello world
+
 A potentially modular application with multiple commands:
 
 .. code-block:: python
@@ -107,22 +114,63 @@ A potentially modular application with multiple commands:
     # declaring:
 
     def echo(text):
+        "Returns given word as is."
         return text
 
-    def greeter(name, greeting='hello'):
+    def greet(name, greeting='Hello'):
+        "Greets the user with given name. The greeting is customizable."
         return greeting + ', ' + name
 
     # assembling:
 
     parser = argh.ArghParser()
-    parser.add_commands([echo, greeter])
+    parser.add_commands([echo, greet])
 
     # dispatching:
 
     if __name__ == '__main__':
         parser.dispatch()
 
-The powerful API of `argparse` is also available:
+Of course it works:
+
+.. code-block:: bash
+
+    $ ./app.py greet Andy
+    Hello, Andy
+
+    $ ./app.py greet Andy -g Arrrgh
+    Arrrgh, Andy
+
+Here's the auto-generated help for this application (note how the docstrings
+are reused)::
+
+    $ ./app.py help
+
+    usage: app.py {echo,greet} ...
+
+    positional arguments:
+        echo        Returns given word as is.
+        greet       Greets the user with given name. The greeting is customizable.
+
+...and for a specific command (an ordinary function signature is converted
+to CLI arguments)::
+
+    $ ./app.py help greet
+
+    usage: app.py greet [-g GREETING] name
+
+    Greets the user with given name. The greeting is customizable.
+
+    positional arguments:
+      name
+
+    optional arguments:
+      -g GREETING, --greeting GREETING   'Hello'
+
+(The help messages have been simplified a bit for brevity.)
+
+`Argh` easily maps plain Python functions to CLI.  Sometimes this is not
+enough; in these cases the powerful API of `argparse` is also available:
 
 .. code-block:: python
 
@@ -158,14 +206,12 @@ Links
   * `Issue tracker`_ (GitHub)
   * `Mailing list`_ (subscribe to get important announcements)
   * Direct e-mail (neithere at gmail com)
-  * Twitter_ (to get notified of commits; mostly for lulz)
 
 .. _project home page: http://github.com/neithere/argh/
 .. _documentation: http://argh.readthedocs.org
 .. _package distribution: http://pypi.python.org/pypi/argh
 .. _issue tracker: http://github.com/neithere/argh/issues/
 .. _mailing list: http://groups.google.com/group/argh-users
-.. _twitter: http://twitter.com/python_argh
 
 Author
 ------
