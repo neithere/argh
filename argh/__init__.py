@@ -16,4 +16,4 @@ from .interaction import *
 from .helpers import *
 
 
-__version__ = '0.26.0'
+__version__ = '0.26.1'

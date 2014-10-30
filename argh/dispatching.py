@@ -154,7 +154,8 @@ def dispatch(parser, argv=None, add_help_command=True,
     function = _get_function_from_namespace_obj(namespace_obj)
 
     if function:
-        lines = _execute_command(function, namespace_obj, errors_file)
+        lines = _execute_command(function, namespace_obj, errors_file,
+                                 pre_call=pre_call)
     else:
         # no commands declared, can't dispatch; display help message
         lines = [parser.format_usage()]

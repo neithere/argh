@@ -2,6 +2,15 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.26.1
+--------------
+
+Fixed bugs:
+
+- The undocumented (and untested) argument `dispatch(..., pre_call=x)`
+  was broken; fixing because at least one important app depends on it
+  (issue #63).
+
 Version 0.26
 ------------
 
