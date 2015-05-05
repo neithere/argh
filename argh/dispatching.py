@@ -149,7 +149,7 @@ def dispatch(parser, argv=None, add_help_command=True,
             argv, namespace=namespace
         )
         # store unknown args on the namespace
-        namespace_obj.remainder = remainder
+        namespace_obj._remainder = remainder
     else:
         namespace_obj = parser.parse_args(argv, namespace=namespace)
 
