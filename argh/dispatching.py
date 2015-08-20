@@ -377,6 +377,8 @@ class EntryPoint(object):
             raise DispatchingError('no commands for entry point "{0}"'
                                    .format(self.name))
 
+        if 'prog' not in self.parser_kwargs:
+            self.parser_kwargs['prog'] = self.name
         parser = argparse.ArgumentParser(**self.parser_kwargs)
         add_commands(parser, self.commands)
         dispatch(parser)
