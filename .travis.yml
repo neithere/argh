@@ -5,6 +5,7 @@ python:
   - 3.2
   - 3.5
   #- 'pypy'    # omitting due to obscure early segfault on PyPy 2.2.0
+sudo: false
 install:
   - pip install -r reqs-dev.txt
   - pip install coveralls
