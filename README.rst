@@ -1,11 +1,26 @@
 Argh: The Natural CLI
 =====================
 
-.. image:: https://badge.fury.io/py/argh.png
-   :target: http://badge.fury.io/py/argh
+.. image:: https://img.shields.io/coveralls/neithere/argh.svg
+    :target: https://coveralls.io/r/neithere/argh
 
-.. image:: https://travis-ci.org/neithere/argh.png?branch=master
-   :target: https://travis-ci.org/neithere/argh
+.. image:: https://img.shields.io/travis/neithere/argh.svg
+    :target: https://travis-ci.org/neithere/argh
+
+.. image:: https://img.shields.io/pypi/format/argh.svg
+    :target: https://pypi.python.org/pypi/argh
+
+.. image:: https://img.shields.io/pypi/status/argh.svg
+    :target: https://pypi.python.org/pypi/argh
+
+.. image:: https://img.shields.io/pypi/v/argh.svg
+    :target: https://pypi.python.org/pypi/argh
+
+.. image:: https://img.shields.io/pypi/pyversions/argh.svg
+    :target: https://pypi.python.org/pypi/argh
+
+.. image:: https://img.shields.io/pypi/dd/argh.svg
+    :target: https://pypi.python.org/pypi/argh
 
 Building a command-line interface?  Found yourself uttering "argh!" while
 struggling with the API of `argparse`?  Don't like the complexity but need
