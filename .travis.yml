@@ -9,6 +9,7 @@ sudo: false
 install:
   - pip install -r reqs-dev.txt
   - pip install coveralls
+  - pip install pytest>=2.7.3 --upgrade
 script:
   py.test --cov=argh
 after_success:
