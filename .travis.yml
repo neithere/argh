@@ -1,13 +1,17 @@
 language: python
 python:
-  - '2.6'
-  - '2.7'
-  - '3.2'
-  - '3.3'
+  - 2.6
+  - 2.7
+  - 3.2
+  - 3.5
   #- 'pypy'    # omitting due to obscure early segfault on PyPy 2.2.0
 install:
-  - 'pip install -r reqs-dev.txt'
-script: py.test --cov=argh
+  - pip install -r reqs-dev.txt
+  - pip install coveralls
+script:
+  py.test --cov=argh
+after_success:
+  coveralls
 notifications:
   email:
     - neithere+travis@gmail.com
