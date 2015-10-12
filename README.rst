@@ -22,6 +22,12 @@ Argh: The Natural CLI
 .. image:: https://img.shields.io/pypi/dd/argh.svg
     :target: https://pypi.python.org/pypi/argh
 
+.. image:: https://readthedocs.org/projects/argh/badge/?version=stable
+    :target: http://argh.readthedocs.org/en/stable/
+
+.. image:: https://readthedocs.org/projects/argh/badge/?version=latest
+    :target: http://argh.readthedocs.org/en/latest/
+
 Building a command-line interface?  Found yourself uttering "argh!" while
 struggling with the API of `argparse`?  Don't like the complexity but need
 the power?
