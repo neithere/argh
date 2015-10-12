@@ -771,7 +771,9 @@ def test_prog():
 
     usage = get_usage_string()
 
-    assert run(p, '') == R(out=usage, err='')
+    with iocapture.capture() as captured:
+        assert run(p, '-h', exit=True) == None
+        assert captured.stdout.startswith(usage)
 
 
 def test_unknown_args():
