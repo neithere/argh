@@ -13,7 +13,7 @@ import pytest
 import argh
 from argh.exceptions import AssemblingError
 
-from .base import DebugArghParser, run, CmdResult as R
+from .base import DebugArghParser, get_usage_string, run, CmdResult as R
 
 
 @pytest.mark.xfail(reason='TODO')
@@ -760,6 +760,20 @@ def test_help_formatting_is_preserved():
     assert func.__doc__ in p.format_help()
 
 
+def test_prog():
+    "Program name propagates from sys.argv[0]"
+
+    def cmd(foo=1):
+        return foo
+
+    p = DebugArghParser()
+    p.add_commands([cmd])
+
+    usage = get_usage_string()
+
+    assert run(p, '') == R(out=usage, err='')
+
+
 def test_unknown_args():
 
     def cmd(foo=1):
@@ -768,8 +782,9 @@ def test_unknown_args():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
+    usage = get_usage_string('[-f FOO]')
+
     assert run(p, '--foo 1') == R(out='1\n', err='')
     assert run(p, '--bar 1', exit=True) == 'unrecognized arguments: --bar 1'
     assert run(p, '--bar 1', exit=False,
-               kwargs={'skip_unknown_args': True}) == \
-           R(out='usage: py.test [-h] [-f FOO]\n\n', err='')
+               kwargs={'skip_unknown_args': True}) == R(out=usage, err='')

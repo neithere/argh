@@ -3,6 +3,7 @@
 Common stuff for tests
 ~~~~~~~~~~~~~~~~~~~~~~
 """
+import os
 import sys
 from collections import namedtuple
 
@@ -80,3 +81,8 @@ def run(parser, command_string, kwargs=None, exit=False):
     else:
         if exit:
             raise AssertionError('Did not exit')
+
+
+def get_usage_string(definitions='{cmd} ...'):
+    prog = os.path.basename(sys.argv[0])
+    return 'usage: ' + prog + ' [-h] ' + definitions + '\n\n'
