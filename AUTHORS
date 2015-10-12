@@ -15,7 +15,7 @@ and generally made *Argh* better:
 :thethomasw:          Python2.6 bug reports
 :Tuk Bredsdorff:      List of similar projects
 :Mike Gilbert:        Gentoo package; patch
-:Marco Nenciarini:    Patch for shell completion
+:Marco Nenciarini:    Patch for shell completion and more
 :Matt Black:          Patch re TTY
 :Tony Narlock:        Adaptation of README to GitHub
 :Oskari Saarenmaa:    Compatibility improvements
@@ -25,6 +25,7 @@ and generally made *Argh* better:
 :Chuck Blake:         Support for Cython
 :invl:                Idea and basic implementation of EntryPoint
 :illumin-us-r3v0lution: Questions and examples of setuptools integration
+:Joseph McCullough:   Patch for dev environ
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.
