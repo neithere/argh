@@ -3,6 +3,7 @@
 Integration Tests
 ~~~~~~~~~~~~~~~~~
 """
+import os
 import sys
 import re
 import argparse
@@ -772,4 +773,4 @@ def test_unknown_args():
     assert run(p, '--bar 1', exit=True) == 'unrecognized arguments: --bar 1'
     assert run(p, '--bar 1', exit=False,
                kwargs={'skip_unknown_args': True}) == \
-           R(out='usage: py.test [-h] [-f FOO]\n\n', err='')
+           R(out='usage: %s [-h] [-f FOO]\n\n' % os.path.basename(sys.argv[0]), err='')
