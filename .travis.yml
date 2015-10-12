@@ -10,6 +10,7 @@ install:
   - pip install -r reqs-dev.txt
   - pip install coveralls
   - pip install pytest>=2.7.3 --upgrade
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.2 ]]; then pip install coverage==3.7.1; fi
 script:
   py.test --cov=argh
 after_success:
