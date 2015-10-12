@@ -7,6 +7,7 @@ import sys
 import re
 import argparse
 
+import iocapture
 import mock
 import pytest
 
