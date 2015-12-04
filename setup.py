@@ -82,7 +82,7 @@ setup(
     install_requires = install_requires,
 
     # testing
-    tests_require = ['pytest', 'mock'],
+    tests_require = ['pytest', 'mock', 'iocapture'],
     cmdclass = {'test': PyTest},
 
     # copyright
