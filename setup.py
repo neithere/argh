@@ -82,7 +82,7 @@ setup(
     install_requires = install_requires,
 
     # testing
-    tests_require = ['pytest'],
+    tests_require = ['pytest', 'mock'],
     cmdclass = {'test': PyTest},
 
     # copyright
