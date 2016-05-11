@@ -2,10 +2,8 @@
 Changelog
 ~~~~~~~~~
 
-Version 0.26.2-dev
-------------------
-
-Other changes:
+Version 0.26.2
+--------------
 
 - Removed official support for Python 3.4, added for 3.5.
 - Various tox-related improvements for development.
