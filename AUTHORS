@@ -27,6 +27,7 @@ and generally made *Argh* better:
 :illumin-us-r3v0lution: Questions and examples of setuptools integration
 :Joseph McCullough:   Patch for dev environ
 :Jason Dusek:         Patch for EntryPoint
+:Felix Yan:           Fix missing test dependencies
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.
