@@ -35,6 +35,7 @@ Details
 
    tutorial
    reference
+   cookbook
    similar
    projects
    subparsers
