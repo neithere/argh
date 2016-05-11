@@ -76,29 +76,49 @@ def aliases(*names):
 def arg(*args, **kwargs):
     """
     Declares an argument for given function. Does not register the function
-    anywhere, nor does it modify the function in any way. The signature is
-    exactly the same as that of :meth:`argparse.ArgumentParser.add_argument`,
-    only some keywords are not required if they can be easily guessed.
+    anywhere, nor does it modify the function in any way.
+
+    The signature of the decorator matches that of
+    :meth:`argparse.ArgumentParser.add_argument`, only some keywords are not
+    required if they can be easily guessed (e.g. you don't have to specify type
+    or action when an `int` or `bool` default value is supplied).
+
+    Typical use cases:
+
+    - In combination with :func:`expects_obj` (which is not recommended);
+    - in combination with ordinary function signatures to add details that
+      cannot be expressed with that syntax (e.g. help message).
 
     Usage::
 
-        @arg('path')
-        @arg('--format', choices=['yaml','json'], default='json')
-        @arg('--dry-run', default=False)
-        @arg('-v', '--verbosity', choices=range(0,3), default=1)
-        def load(args):
+        from argh import arg
+
+        @arg('path', help='path to the file to load')
+        @arg('--format', choices=['yaml','json'])
+        @arg('-v', '--verbosity', choices=range(0,3), default=2)
+        def load(path, something=None, format='json', dry_run=False, verbosity=1):
             loaders = {'json': json.load, 'yaml': yaml.load}
             loader = loaders[args.format]
             data = loader(args.path)
             if not args.dry_run:
-                if 1 < verbosity:
+                if verbosity < 1:
                     print('saving to the database')
                 put_to_database(data)
 
-    Note that:
+    In this example:
 
-    * you didn't have to specify ``action="store_true"`` for ``--dry-run``;
-    * you didn't have to specify ``type=int`` for ``--verbosity``.
+    - `path` declaration is extended with `help`;
+    - `format` declaration is extended with `choices`;
+    - `dry_run` declaration is not duplicated;
+    - `verbosity` is extended with `choices` and the default value is
+      overridden.  (If both function signature and `@arg` define a default
+      value for an argument, `@arg` wins.)
+
+    .. note::
+
+        It is recommended to avoid using this decorator unless there's no way
+        to tune the argument's behaviour or presentation using ordinary
+        function signatures.  Readability counts, don't repeat yourself.
 
     """
     def wrapper(func):

@@ -9,6 +9,7 @@ Other changes:
 
 - Removed official support for Python 3.4, added for 3.5.
 - Various tox-related improvements for development.
+- Improved documentation.
 
 Version 0.26.1
 --------------
