@@ -13,7 +13,7 @@ Use `nargs` from argparse by amending the function signature with the
     def cmd(patterns=None):
         distros = ('abc', 'xyz')
         return [d for d in distros if not patterns
-                                          or any(p in d for p in patterns)]
+                                      or any(p in d for p in patterns)]
 
 Resulting CLI::
 
