@@ -181,7 +181,7 @@ def test_set_default_command_varargs():
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call('file_paths', nargs='*',
+        mock.call('file_paths', nargs='*', metavar='file-paths',
                   help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
     ]
 

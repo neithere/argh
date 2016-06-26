@@ -77,14 +77,16 @@ def _get_args_from_signature(function):
         annotations = dict((k,v) for k,v in function.__annotations__.items()
                            if isinstance(v, str))
 
+    cmdline_args = [a for a in spec.args + kwonly if not a.startswith("_")]
+
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args + kwonly]
+    chars = [a[0] for a in cmdline_args if a in list(defaults) + kwonly]
     char_counts = dict((char, chars.count(char)) for char in set(chars))
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
 
-    for name in spec.args + kwonly:
+    for name in cmdline_args:
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
@@ -113,7 +115,10 @@ def _get_args_from_signature(function):
 
     if spec.varargs:
         # *args
-        yield dict(option_strings=[spec.varargs], nargs='*')
+        to_yield = dict(option_strings=[spec.varargs], nargs='*')
+        if '_' in spec.varargs:
+            to_yield["metavar"] = spec.varargs.replace('_', '-')
+        yield to_yield
 
 
 def _guess(kwargs):
