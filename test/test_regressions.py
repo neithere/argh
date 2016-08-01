@@ -125,3 +125,20 @@ def test_regression_issue76():
     p = DebugArghParser()
     p.set_default_command(cmd)
     run(p, '--help', exit=True)
+
+
+def test_regression_issue104():
+    """
+    Issue #76: Bug in the way **kwargs is handled
+
+    **kwargs handling was broken in the case that required (no default
+    value) positional argument names contained underscores.
+    """
+    def cmd(foo_foo, bar_bar, baz_baz=5, bip_bip=9, **kwargs):
+        return '\n'.join([str(foo_foo), str(bar_bar), str(baz_baz),
+                          str(bip_bip), str(kwargs)])
+
+    p = DebugArghParser()
+    p.set_default_command(cmd)
+    expected = "abc\ndef\n8\n9\n{}\n"
+    assert run(p, 'abc def --baz-baz 8').out == expected

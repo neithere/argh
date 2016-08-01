@@ -107,7 +107,8 @@ def _get_args_from_signature(function):
             flags = (name,)
 
         # cmd(foo_bar)  ->  add_argument('foo-bar')
-        flags = tuple(x.replace('_', '-') for x in flags)
+        flags = tuple(x.replace('_', '-') if x.startswith('-') else x
+                      for x in flags)
 
         yield dict(option_strings=flags, **akwargs)
 
