@@ -28,6 +28,7 @@ and generally made *Argh* better:
 :Joseph McCullough:   Patch for dev environ
 :Jason Dusek:         Patch for EntryPoint
 :Felix Yan:           Fix missing test dependencies
+:David Warde-Farley:  Bugfix
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.

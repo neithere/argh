@@ -2,6 +2,15 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.26.3-dev
+------------------
+
+Fixed bugs:
+
+- When command function signature contained ``**kwargs`` *and* positionals
+  without defaults and with underscores in their names, a weird behaviour could
+  be observed (issue #104).
+
 Version 0.26.2
 --------------
 
