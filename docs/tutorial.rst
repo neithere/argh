@@ -490,7 +490,7 @@ Decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 Of course it should be used with care in more complex commands.
 
 The decorator accepts a list as its first argument, so multiple commands can be
-specified.  It also allows plugging in a preprocessor for the catched errors::
+specified.  It also allows plugging in a preprocessor for the caught errors::
 
     @wrap_errors(processor=lambda excinfo: 'ERR: {0}'.format(excinfo))
     def func():
