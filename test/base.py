@@ -61,7 +61,7 @@ def run(parser, command_string, kwargs=None, exit=False):
     If SystemExit is raised, it propagates.
 
     :exit:
-        if set to `True`, then any SystemExit exception is catched and its
+        if set to `True`, then any SystemExit exception is caught and its
         string representation is returned; if the exception is not raised,
         an AssertionError is raised.  In other words, this parameter inverts
         the function's behaviour and expects SystemExit as the correct event.
