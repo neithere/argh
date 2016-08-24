@@ -4,8 +4,10 @@ Unit Tests For Utility Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import functools
+import sys
 
 import pytest
+
 
 from argh.utils import get_arg_spec
 
@@ -32,10 +34,16 @@ def _assert_spec(f, **overrides):
         assert actual == expected
 
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
 def test_get_arg_spec__plain_func():
     _assert_spec(function)
 
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
 def test_get_arg_spec__decorated_func():
     def d(_f):
         return _f
@@ -44,6 +52,9 @@ def test_get_arg_spec__decorated_func():
     _assert_spec(decorated)
 
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
 def test_get_arg_spec__wrapped():
     def wrapper_deco(f):
         @functools.wraps(f)
@@ -56,6 +67,9 @@ def test_get_arg_spec__wrapped():
     _assert_spec(wrapped)
 
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
 def test_get_arg_spec__wrapped_complex():
     def wrapper_deco(outer_arg):
         def _outer(f):
@@ -70,6 +84,9 @@ def test_get_arg_spec__wrapped_complex():
     _assert_spec(wrapped)
 
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
 def test_get_arg_spec__static_method():
     class C:
         @staticmethod
@@ -79,6 +96,9 @@ def test_get_arg_spec__static_method():
     _assert_spec(C.f)
 
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
 def test_get_arg_spec__method():
     class C:
         def f(self, x, y=0):
