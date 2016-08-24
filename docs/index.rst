@@ -6,7 +6,6 @@ Dependencies
 The `argh` library is supported (and tested unless otherwise specified) on
 the following versions of Python:
 
-* 2.6 (`argparse` library is required)
 * 2.7 (including PyPy 1.8)
 * 3.1 (`argparse` library is required; **not** tested)
 * 3.2
@@ -21,6 +20,9 @@ the following versions of Python:
 .. versionchanged:: 0.25
    Added support for Python 3.4, dropped support for Python 3.3.
    Argh may perfectly work under 3.3, I'm just not testing it.
+
+.. versionchanged:: 0.27
+   Dropped support for Python 2.6.
 
 Why this one?
 -------------

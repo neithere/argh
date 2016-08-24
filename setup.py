@@ -28,19 +28,7 @@ from setuptools.command.test import test as TestCommand
 
 
 if sys.version_info < (2,7):
-    #
-    # Python 2.6
-    #
-    install_requires = ['argparse >= 1.1']
-    # Importing `__version__` from `argh` would trigger a cascading import
-    # of `argparse`.  Avoiding this as Python < 2.7 ships without argparse.
-    __version__ = None
-    with io.open('argh/__init__.py', encoding='utf8') as f:
-        for line in f:
-            if line.startswith('__version__'):
-                exec(line)
-                break
-    assert __version__, 'argh.__version__ must be imported correctly'
+    raise Exception('Python <= 2.6 is not supported any more.')
 else:
     #
     # Python 2.7, 3.x
@@ -103,7 +91,6 @@ setup(
         'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
