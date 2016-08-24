@@ -49,6 +49,8 @@ def get_arg_spec(function):
     arguments of instance methods (`self`) and static methods (usually `cls`
     or something like this).
     """
+    if hasattr(function, '__wrapped__'):
+        function = function.__wrapped__
     spec = compat.getargspec(function)
     if inspect.ismethod(function):
         spec = spec._replace(args=spec.args[1:])
