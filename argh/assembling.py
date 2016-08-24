@@ -15,11 +15,11 @@ Assembling
 Functions and classes to properly assemble your commands in a parser.
 """
 import argparse
+from collections import OrderedDict
 import sys
 import warnings
 
 from argh.completion import COMPLETION_ENABLED
-from argh.compat import OrderedDict
 from argh.constants import (
     ATTR_ALIASES,
     ATTR_ARGS,

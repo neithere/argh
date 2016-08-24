@@ -5,6 +5,12 @@ Changelog
 Version 0.26.3-dev
 ------------------
 
+Backward incompatible changes:
+
+- Dropped support for Python 2.6.
+
+Enhancements:
+
 - Support introspection of function signature behind `@wraps` decorator.
 
 Fixed bugs:
