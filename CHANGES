@@ -5,6 +5,8 @@ Changelog
 Version 0.26.3-dev
 ------------------
 
+- Support introspection of function signature behind `@wraps` decorator.
+
 Fixed bugs:
 
 - When command function signature contained ``**kwargs`` *and* positionals
