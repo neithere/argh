@@ -30,6 +30,7 @@ and generally made *Argh* better:
 :Felix Yan:           Fix missing test dependencies
 :David Warde-Farley:  Bugfix
 :Jakub Wilk:          Fix spelling in docs
+:Brian Lee:           Support for signatures of funcs behind @wraps deco
 
 ...you? :-)
     Patches, ideas and any feedback is highly appreciated.

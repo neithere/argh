@@ -15,6 +15,13 @@ from argh.utils import get_arg_spec
 def function(x, y=0):
     return
 
+def decorated(f):
+    @functools.wraps(f)
+    def wrapped(*args, **kwargs):
+        print("Wrapping function call")
+        return f(*args, **kwargs)
+    return wrapped
+
 
 def _assert_spec(f, **overrides):
     spec = get_arg_spec(f)
@@ -34,12 +41,10 @@ def _assert_spec(f, **overrides):
         assert actual == expected
 
 
-
 @pytest.mark.skipif(sys.version_info < (3,5),
                     reason="requires python3.5")
 def test_get_arg_spec__plain_func():
     _assert_spec(function)
-
 
 
 @pytest.mark.skipif(sys.version_info < (3,5),
@@ -52,20 +57,18 @@ def test_get_arg_spec__decorated_func():
     _assert_spec(decorated)
 
 
-
 @pytest.mark.skipif(sys.version_info < (3,5),
                     reason="requires python3.5")
 def test_get_arg_spec__wrapped():
-    def wrapper_deco(f):
-        @functools.wraps(f)
-        def _inner(*args, **kwargs):
-            return f(*args, **kwargs)
-        return _inner
-
-    wrapped = wrapper_deco(function)
-
+    wrapped = decorated(function)
     _assert_spec(wrapped)
 
+
+@pytest.mark.skipif(sys.version_info < (3,5),
+                    reason="requires python3.5")
+def test_get_arg_spec__wrapped_nested():
+    wrapped = decorated(decorated(function))
+    _assert_spec(wrapped)
 
 
 @pytest.mark.skipif(sys.version_info < (3,5),
@@ -84,7 +87,6 @@ def test_get_arg_spec__wrapped_complex():
     _assert_spec(wrapped)
 
 
-
 @pytest.mark.skipif(sys.version_info < (3,5),
                     reason="requires python3.5")
 def test_get_arg_spec__static_method():
@@ -94,7 +96,6 @@ def test_get_arg_spec__static_method():
             return x
 
     _assert_spec(C.f)
-
 
 
 @pytest.mark.skipif(sys.version_info < (3,5),
