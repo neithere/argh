@@ -11,7 +11,8 @@ Backward incompatible changes:
 
 Enhancements:
 
-- Support introspection of function signature behind `@wraps` decorator.
+- Support introspection of function signature behind the `@wraps` decorator
+  (issue #111).
 
 Fixed bugs:
 
