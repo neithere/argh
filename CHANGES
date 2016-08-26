@@ -11,6 +11,7 @@ Backward incompatible changes:
 
 Enhancements:
 
+- Added support for Python 3.5.
 - Support introspection of function signature behind the `@wraps` decorator
   (issue #111).
 
