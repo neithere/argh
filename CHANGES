@@ -21,6 +21,10 @@ Fixed bugs:
   without defaults and with underscores in their names, a weird behaviour could
   be observed (issue #104).
 
+Other changes:
+
+- Include the license files in manifest (PR #112).
+
 Version 0.26.2
 --------------
 
