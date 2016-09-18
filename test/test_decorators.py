@@ -63,7 +63,7 @@ def test_expects_obj():
         pass
 
     attr = getattr(func, argh.constants.ATTR_EXPECTS_NAMESPACE_OBJECT)
-    assert attr == True
+    assert attr is True
 
 
 def test_parse_sphinx_params():
