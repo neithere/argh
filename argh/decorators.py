@@ -196,17 +196,11 @@ def expects_obj(func):
     return func
 
 
-
-def parse_docstring(format='sphinx'):
+def parse_docstring(func):
     """
     A decorator that automatically adds the parameter description and type to the argh parser
-    :param format: Which docstring format is being used
     :return: A function
     """
-
-    if format not in ['sphinx']:
-        raise NotImplementedError("sphinx is currently only supported")
-
     type_func_map = {
         'str': str,
         'int': int,
@@ -214,35 +208,30 @@ def parse_docstring(format='sphinx'):
         'open': open
     }
 
-    def wrapper(func):
-        doc = func.__doc__
-        doc = parse_sphinx_doc(doc)
-        declared_args = getattr(func, ATTR_ARGS, [])
+    doc = func.__doc__
+    doc = parse_sphinx_doc(doc)
+    declared_args = getattr(func, ATTR_ARGS, [])
+    kward_args = func_kwargs_args(func)
+    arguments = doc['arguments']
 
-        kward_args = func_kwargs_args(func)
-        arguments = doc['arguments']
+    # For each parsed argument
+    for name, attr in arguments.items():
+        add_args_settings = {}
+        add_args_settings['help'] = attr.get('description', None)
 
-        # For each parsed argument
-        for name, attr in arguments.items():
+        kward = kward_args[name]
+        if not kward:
+            name_str = name
+        else:
+            name_str = '--' + name
 
-            add_args_settings = {}
-            add_args_settings['help'] = attr.get('description', None)
+        type = attr.get('type_name', None)
+        if type is not None:
+            type = type_func_map[type]   # Needs to be a function
+            add_args_settings['type'] = type
+        if name_str not in [n for d in declared_args for n in d['option_strings']]:
+            declared_args.append(dict(option_strings=(name_str,), **add_args_settings))
 
-            kward = kward_args[name]
-            if not kward:
-                name_str = name
-            else:
-                name_str = '--' + name
+    setattr(func, ATTR_ARGS, declared_args)
 
-            type = attr.get('type_name', None)
-            if type is not None:
-                type = type_func_map[type]   # Needs to be a function
-                add_args_settings['type'] = type
-
-            declared_args.append(dict(option_strings=[name_str], **add_args_settings))
-
-        setattr(func, ATTR_ARGS, declared_args)
-        return func
-
-    return wrapper
-
+    return func

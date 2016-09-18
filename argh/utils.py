@@ -60,11 +60,13 @@ def get_arg_spec(function):
 
 def func_kwargs_args(function):
     """
-    Return a dict which specifies which arguments of a function are key-word (True) or positional (False)
+    Return a dict which specifies which arguments of a function are key-word (True) or
+    positional (False)
     :param func: A method or function
     :return: A dict - keys args/kwargs names : True if keyword arg, False if not
     """
-    args, varargs, varkw, argspec_defaults = get_arg_spec(function)
+    args, varargs, varkw, argspec_defaults, kwonlyargs, kwonlydefaults, annotations = \
+        get_arg_spec(function)
 
     defaults = {}
     if argspec_defaults is not None:
