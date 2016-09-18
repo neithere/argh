@@ -16,9 +16,10 @@ from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
                             ATTR_WRAPPED_EXCEPTIONS,
                             ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
                             ATTR_EXPECTS_NAMESPACE_OBJECT)
+from argh.parse_sphinx import parse_sphinx_doc
+from argh.utils import func_kwargs_args
 
-
-__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj']
+__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj', 'parse_docstring']
 
 
 def named(new_name):
@@ -192,4 +193,45 @@ def expects_obj(func):
     In most cases you don't need this decorator.
     """
     setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
+    return func
+
+
+def parse_docstring(func):
+    """
+    A decorator that automatically adds the parameter description and type to the argh parser
+    :return: A function
+    """
+    type_func_map = {
+        'str': str,
+        'int': int,
+        'float': float,
+        'open': open
+    }
+
+    doc = func.__doc__
+    doc = parse_sphinx_doc(doc)
+    declared_args = getattr(func, ATTR_ARGS, [])
+    kward_args = func_kwargs_args(func)
+    arguments = doc['arguments']
+
+    # For each parsed argument
+    for name, attr in arguments.items():
+        add_args_settings = {}
+        add_args_settings['help'] = attr.get('description', None)
+
+        kward = kward_args[name]
+        if not kward:
+            name_str = name
+        else:
+            name_str = '--' + name
+
+        type = attr.get('type_name', None)
+        if type is not None:
+            type = type_func_map[type]   # Needs to be a function
+            add_args_settings['type'] = type
+        if name_str not in [n for d in declared_args for n in d['option_strings']]:
+            declared_args.append(dict(option_strings=(name_str,), **add_args_settings))
+
+    setattr(func, ATTR_ARGS, declared_args)
+
     return func

@@ -16,6 +16,7 @@ import argparse
 import inspect
 
 from argh import compat
+from argh.parse_sphinx import parse_sphinx_doc
 
 
 def get_subparsers(parser, create=False):
@@ -55,3 +56,39 @@ def get_arg_spec(function):
     if inspect.ismethod(function):
         spec = spec._replace(args=spec.args[1:])
     return spec
+
+
+def func_kwargs_args(function):
+    """
+    Return a dict which specifies which arguments of a function are key-word (True) or
+    positional (False)
+    :param func: A method or function
+    :return: A dict - keys args/kwargs names : True if keyword arg, False if not
+    """
+    args, varargs, varkw, argspec_defaults, kwonlyargs, kwonlydefaults, annotations = \
+        get_arg_spec(function)
+
+    defaults = {}
+    if argspec_defaults is not None:
+        defaults = dict(zip(reversed(args), reversed(argspec_defaults)))
+
+    args_dict = {}
+    for arg in args:
+        args_dict[arg] = arg in defaults    # If in True, else False
+
+    return args_dict
+
+
+def parse_description(func, format='sphinx'):
+    """
+    Returns the function description from the docstring
+
+    :param func: A function
+    :param format: Which docstring format
+    :return: String of the description
+    """
+
+    if format not in ['sphinx']:
+        raise NotImplementedError("sphinx is currently only supported")
+
+    return parse_sphinx_doc(func.__doc__).get('description', None)
