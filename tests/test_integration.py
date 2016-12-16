@@ -7,7 +7,6 @@ import re
 import sys
 import unittest.mock as mock
 
-import iocapture
 import pytest
 
 import argh
@@ -762,7 +761,7 @@ def test_help_formatting_is_preserved():
     assert func.__doc__ in p.format_help()
 
 
-def test_prog():
+def test_prog(capsys: pytest.CaptureFixture[str]):
     "Program name propagates from sys.argv[0]"
 
     def cmd(foo=1):
@@ -773,9 +772,9 @@ def test_prog():
 
     usage = get_usage_string()
 
-    with iocapture.capture() as captured:
-        assert run(p, "-h", exit=True) == 0
-        assert captured.stdout.startswith(usage)
+    assert run(p, "-h", exit=True) == 0
+    captured = capsys.readouterr()
+    assert captured.out.startswith(usage)
 
 
 def test_unknown_args():
@@ -794,7 +793,7 @@ def test_unknown_args():
     )
 
 
-def test_add_commands_no_overrides():
+def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
     def first_func(foo=123):
         """Owl stretching time"""
         pass
@@ -807,44 +806,58 @@ def test_add_commands_no_overrides():
         [first_func, second_func],
     )
 
-    with iocapture.capture() as captured:
-        run(p, "--help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp [-h] {{first-func,second-func}} ...
+    run(p, "--help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp [-h] {{first-func,second-func}} ...
 
-            positional arguments:
-              {{first-func,second-func}}
-                first-func          Owl stretching time
-                second-func
+        positional arguments:
+          {{first-func,second-func}}
+            first-func          Owl stretching time
+            second-func
 
-            {HELP_OPTIONS_LABEL}:
-              -h, --help            show this help message and exit
-            """
-            )[1:]
-        )
-
-    with iocapture.capture() as captured:
-        run(p, "first-func --help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp first-func [-h] [-f FOO]
-
-            Owl stretching time
-
-            {HELP_OPTIONS_LABEL}:
-              -h, --help         show this help message and exit
-              -f FOO, --foo FOO  123
-            """
-            )[1:]
-        )
+        {HELP_OPTIONS_LABEL}:
+          -h, --help            show this help message and exit
+        """
+        )[1:]
+    )
 
 
-def test_add_commands_namespace_overrides():
+def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser(prog="myapp")
+    p.add_commands(
+        [first_func, second_func],
+    )
+
+    run(p, "first-func --help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp first-func [-h] [-f FOO]
+
+        Owl stretching time
+
+        {HELP_OPTIONS_LABEL}:
+          -h, --help         show this help message and exit
+          -f FOO, --foo FOO  123
+        """
+        )[1:]
+    )
+
+
+def test_add_commands_namespace_overrides1(capsys: pytest.CaptureFixture[str]):
     """
     When `namespace_kwargs` is passed to `add_commands()`, its members override
     whatever was specified on function level.
@@ -867,65 +880,113 @@ def test_add_commands_namespace_overrides():
         },
     )
 
-    with iocapture.capture() as captured:
-        run(p, "--help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp [-h] {{ns}} ...
+    run(p, "--help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp [-h] {{ns}} ...
 
-            positional arguments:
-              {{ns}}
-                ns
+        positional arguments:
+          {{ns}}
+            ns
 
-            {HELP_OPTIONS_LABEL}:
-              -h, --help  show this help message and exit
-            """
-            )[1:]
-        )
-
-    with iocapture.capture() as captured:
-        run(p, "ns --help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp ns [-h] {{first-func,second-func}} ...
-
-            {HELP_OPTIONS_LABEL}:
-              -h, --help            show this help message and exit
-
-            subcommands:
-              namespace description override
-
-              {{first-func,second-func}}
-                                    namespace help override
-                first-func          Owl stretching time
-                second-func
-            """
-            )[1:]
-        )
-
-    with iocapture.capture() as captured:
-        run(p, "ns first-func --help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp ns first-func [-h] [-f FOO]
-
-            Owl stretching time
-
-            {HELP_OPTIONS_LABEL}:
-              -h, --help         show this help message and exit
-              -f FOO, --foo FOO  123
-            """
-            )[1:]
-        )
+        {HELP_OPTIONS_LABEL}:
+          -h, --help  show this help message and exit
+        """
+        )[1:]
+    )
 
 
-def test_add_commands_func_overrides():
+def test_add_commands_namespace_overrides2(capsys: pytest.CaptureFixture[str]):
+    """
+    When `namespace_kwargs` is passed to `add_commands()`, its members override
+    whatever was specified on function level.
+    """
+
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser(prog="myapp")
+    p.add_commands(
+        [first_func, second_func],
+        namespace="ns",
+        namespace_kwargs={
+            "help": "namespace help override",
+            "description": "namespace description override",
+        },
+    )
+
+    run(p, "ns --help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp ns [-h] {{first-func,second-func}} ...
+
+        {HELP_OPTIONS_LABEL}:
+          -h, --help            show this help message and exit
+
+        subcommands:
+          namespace description override
+
+          {{first-func,second-func}}
+                                namespace help override
+            first-func          Owl stretching time
+            second-func
+        """
+        )[1:]
+    )
+
+
+def test_add_commands_namespace_overrides3(capsys: pytest.CaptureFixture[str]):
+    """
+    When `namespace_kwargs` is passed to `add_commands()`, its members override
+    whatever was specified on function level.
+    """
+
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser(prog="myapp")
+    p.add_commands(
+        [first_func, second_func],
+        namespace="ns",
+        namespace_kwargs={
+            "help": "namespace help override",
+            "description": "namespace description override",
+        },
+    )
+
+    run(p, "ns first-func --help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp ns first-func [-h] [-f FOO]
+
+        Owl stretching time
+
+        {HELP_OPTIONS_LABEL}:
+          -h, --help         show this help message and exit
+          -f FOO, --foo FOO  123
+        """
+        )[1:]
+    )
+
+
+def test_add_commands_func_overrides1(capsys: pytest.CaptureFixture[str]):
     """
     When `func_kwargs` is passed to `add_commands()`, its members override
     whatever was specified on function level.
@@ -947,38 +1008,61 @@ def test_add_commands_func_overrides():
         },
     )
 
-    with iocapture.capture() as captured:
-        run(p, "--help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp [-h] {{first-func,second-func}} ...
+    run(p, "--help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp [-h] {{first-func,second-func}} ...
 
-            positional arguments:
-              {{first-func,second-func}}
-                first-func          func help override
-                second-func         func help override
+        positional arguments:
+          {{first-func,second-func}}
+            first-func          func help override
+            second-func         func help override
 
-            {HELP_OPTIONS_LABEL}:
-              -h, --help            show this help message and exit
-            """
-            )[1:]
-        )
+        {HELP_OPTIONS_LABEL}:
+          -h, --help            show this help message and exit
+        """
+        )[1:]
+    )
 
-    with iocapture.capture() as captured:
-        run(p, "first-func --help", exit=True)
-        assert (
-            captured.stdout
-            == unindent(
-                f"""
-            usage: myapp first-func [-h] [-f FOO]
 
-            func description override
+def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
+    """
+    When `func_kwargs` is passed to `add_commands()`, its members override
+    whatever was specified on function level.
+    """
 
-            {HELP_OPTIONS_LABEL}:
-              -h, --help         show this help message and exit
-              -f FOO, --foo FOO  123
-            """
-            )[1:]
-        )
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser(prog="myapp")
+    p.add_commands(
+        [first_func, second_func],
+        func_kwargs={
+            "help": "func help override",
+            "description": "func description override",
+        },
+    )
+
+    run(p, "first-func --help", exit=True)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == unindent(
+            f"""
+        usage: myapp first-func [-h] [-f FOO]
+
+        func description override
+
+        {HELP_OPTIONS_LABEL}:
+          -h, --help         show this help message and exit
+          -f FOO, --foo FOO  123
+        """
+        )[1:]
+    )
