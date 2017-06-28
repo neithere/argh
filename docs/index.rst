@@ -10,6 +10,7 @@ the following versions of Python:
 * 3.1 (`argparse` library is required; **not** tested)
 * 3.4
 * 3.5
+* 3.6
 
 .. versionchanged:: 0.15
    Added support for Python 3.x, dropped support for Python ≤ 2.5.
