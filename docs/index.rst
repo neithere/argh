@@ -7,7 +7,6 @@ The `argh` library is supported (and tested unless otherwise specified) on
 the following versions of Python:
 
 * 2.7 (including PyPy 1.8)
-* 3.1 (`argparse` library is required; **not** tested)
 * 3.4
 * 3.5
 * 3.6
