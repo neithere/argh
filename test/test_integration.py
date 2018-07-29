@@ -112,7 +112,7 @@ def test_simple_function_kwargs():
         # `kwargs` contain all arguments not fitting ArgSpec.args and .varargs.
         # if ArgSpec.keywords in None, all @arg()'s will have to fit ArgSpec.args
         for k in sorted(kwargs):
-            yield '{0}: {1}'.format(k, kwargs[k])
+            yield '{}: {}'.format(k, kwargs[k])
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -149,11 +149,11 @@ def test_all_specs_in_one():
     @argh.arg('fox')
     @argh.arg('--baz')
     def cmd(foo, bar=1, *args, **kwargs):
-        yield 'foo: {0}'.format(foo)
-        yield 'bar: {0}'.format(bar)
-        yield '*args: {0}'.format(args)
+        yield 'foo: {}'.format(foo)
+        yield 'bar: {}'.format(bar)
+        yield '*args: {}'.format(args)
         for k in sorted(kwargs):
-            yield '** {0}: {1}'.format(k, kwargs[k])
+            yield '** {}: {}'.format(k, kwargs[k])
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -330,7 +330,7 @@ class TestErrorWrapping:
 def test_argv():
 
     def echo(text):
-        return 'you said {0}'.format(text)
+        return 'you said {}'.format(text)
 
     p = DebugArghParser()
     p.add_commands([echo])
@@ -426,7 +426,7 @@ def test_echo():
     "A simple command is resolved to a function."
 
     def echo(text):
-        return 'you said {0}'.format(text)
+        return 'you said {}'.format(text)
 
     p = DebugArghParser()
     p.add_commands([echo])
@@ -480,10 +480,10 @@ def test_namespaced_function():
     "A subcommand is resolved to a function."
 
     def hello(name='world'):
-        return 'Hello {0}!'.format(name or 'world')
+        return 'Hello {}!'.format(name or 'world')
 
     def howdy(buddy):
-        return 'Howdy {0}?'.format(buddy)
+        return 'Howdy {}?'.format(buddy)
 
     p = DebugArghParser()
     p.add_commands([hello, howdy], namespace='greet')

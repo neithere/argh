@@ -17,7 +17,7 @@ def test_regression_issue12():
     """
 
     def cmd(foo=1, fox=2):
-        yield 'foo {0}, fox {1}'.format(foo, fox)
+        yield 'foo {}, fox {}'.format(foo, fox)
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -35,7 +35,7 @@ def test_regression_issue12_help_flag():
     without decorators.
     """
     def ddos(host='localhost'):
-        return 'so be it, {0}!'.format(host)
+        return 'so be it, {}!'.format(host)
 
     # no help → no conflict
     p = DebugArghParser('PROG', add_help=False)
@@ -63,7 +63,7 @@ def test_regression_issue27():
         if count == 3:
             return 'Three shall be the number thou shalt count'
         else:
-            return '{0!r} is right out'.format(count)
+            return '{!r} is right out'.format(count)
 
     p = DebugArghParser()
     p.add_commands([parrot, grenade])

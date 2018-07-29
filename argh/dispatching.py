@@ -232,8 +232,8 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
         else:
             # namespace -> dictionary
             _flat_key = lambda key: key.replace('-', '_')
-            all_input = dict((_flat_key(k), v)
-                             for k,v in vars(namespace_obj).items())
+            all_input = {_flat_key(k): v
+                             for k,v in vars(namespace_obj).items()}
 
             # filter the namespace variables so that only those expected
             # by the actual function will pass
@@ -242,7 +242,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
 
             positional = [all_input[k] for k in spec.args]
             kwonly = getattr(spec, 'kwonlyargs', [])
-            keywords = dict((k, all_input[k]) for k in kwonly)
+            keywords = {k: all_input[k] for k in kwonly}
 
             # *args
             if spec.varargs:
@@ -374,7 +374,7 @@ class EntryPoint(object):
 
     def _dispatch(self):
         if not self.commands:
-            raise DispatchingError('no commands for entry point "{0}"'
+            raise DispatchingError('no commands for entry point "{}"'
                                    .format(self.name))
 
         parser = argparse.ArgumentParser(**self.parser_kwargs)

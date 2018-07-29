@@ -74,13 +74,13 @@ def _get_args_from_signature(function):
     if sys.version_info < (3,0):
         annotations = {}
     else:
-        annotations = dict((k,v) for k,v in function.__annotations__.items()
-                           if isinstance(v, str))
+        annotations = {k:v for k,v in function.__annotations__.items()
+                           if isinstance(v, str)}
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
     chars = [a[0] for a in spec.args + kwonly]
-    char_counts = dict((char, chars.count(char)) for char in set(chars))
+    char_counts = {char: chars.count(char) for char in set(chars)}
     conflicting_opts = tuple(char for char in char_counts
                              if 1 < char_counts[char])
 
@@ -97,7 +97,7 @@ def _get_args_from_signature(function):
                 akwargs.update(default=defaults.get(name))
             else:
                 akwargs.update(required=True)
-            flags = ('-{0}'.format(name[0]), '--{0}'.format(name))
+            flags = ('-{}'.format(name[0]), '--{}'.format(name))
             if name.startswith(conflicting_opts):
                 # remove short name
                 flags = flags[1:]
