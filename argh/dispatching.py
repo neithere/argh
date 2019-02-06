@@ -140,16 +140,16 @@ def dispatch(parser, argv=None, add_help_command=True,
             argv.pop(0)
             argv.append('--help')
 
-    if skip_unknown_args:
-        parse_args = parser.parse_known_args
-    else:
-        parse_args = parser.parse_args
-
     if not namespace:
         namespace = ArghNamespace()
 
     # this will raise SystemExit if parsing fails
-    namespace_obj = parse_args(argv, namespace=namespace)
+    if skip_unknown_args:
+        namespace_obj, unknown_args = parser.parse_known_args(argv, namespace=namespace)
+        # store unknown args on the namespace
+        namespace_obj._unknown_args = unknown_args
+    else:
+        namespace_obj = parser.parse_args(argv, namespace=namespace)
 
     function = _get_function_from_namespace_obj(namespace_obj)
 
