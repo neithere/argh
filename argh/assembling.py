@@ -114,7 +114,13 @@ def _get_args_from_signature(function):
 
     if spec.varargs:
         # *args
-        yield dict(option_strings=[spec.varargs], nargs='*')
+        akwargs = dict(nargs='*')
+        name = spec.varargs
+
+        if name in annotations:
+            akwargs.update(help=annotations.get(name))
+
+        yield dict(option_strings=[name], **akwargs)
 
 
 def _guess(kwargs):
