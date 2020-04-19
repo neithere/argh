@@ -31,7 +31,8 @@ class DispatchingError(Exception):
 class CommandError(Exception):
     """
     Intended to be raised from within a command.  The dispatcher wraps this
-    exception by default and prints its message without traceback.
+    exception by default and prints its message without traceback, then exits
+    with exit code 1.
 
     Useful for print-and-exit tasks when you expect a failure and don't want
     to startle the ordinary user by the cryptic output.
@@ -43,7 +44,7 @@ class CommandError(Exception):
                 ...
             except KeyError as e:
                 print(u'Could not fetch item: {0}'.format(e))
-                return
+                sys.exit(1)
 
     It is exactly the same as::
 
@@ -52,6 +53,9 @@ class CommandError(Exception):
                 ...
             except KeyError as e:
                 raise CommandError(u'Could not fetch item: {0}'.format(e))
+
+    To customize the exit status, pass an integer (as per sys.exit()) to the
+    ``code`` keyword arg.
 
     This exception can be safely used in both print-style and yield-style
     commands (see :doc:`tutorial`).
@@ -65,3 +69,7 @@ class CommandError(Exception):
     .. _issue118: https://github.com/neithere/argh/issues/118
 
     """
+
+    def __init__(self, *args, code=None):
+        self.code = code
+        super(CommandError, self).__init__(*args)
