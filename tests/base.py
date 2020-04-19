@@ -10,7 +10,10 @@ from collections import namedtuple
 
 from argh import ArghParser
 
-CmdResult = namedtuple("CmdResult", ("out", "err"))
+_CmdResult = namedtuple("CmdResult", ("out", "err", "exit"))
+# hacky constructor for default exit value
+def CmdResult(out, err, exit=None):
+    return _CmdResult(out, err, exit)
 
 
 class DebugArghParser(ArghParser):
@@ -36,42 +39,39 @@ def call_cmd(parser, command_string, **kwargs):
         kwargs["output_file"] = io_out
     kwargs["errors_file"] = io_err
 
-    result = parser.dispatch(args, **kwargs)
+    try:
+        result = parser.dispatch(args, **kwargs)
+    except SystemExit as e:
+        result = None
+        exit = e.code or 0 # e.code may be None
+    else:
+        exit = None
 
     if kwargs.get("output_file") is None:
-        return CmdResult(out=result, err=io_err.read())
+        return CmdResult(out=result, err=io_err.read(), exit=exit)
     else:
         io_out.seek(0)
         io_err.seek(0)
-        return CmdResult(out=io_out.read(), err=io_err.read())
+        return CmdResult(out=io_out.read(), err=io_err.read(), exit=exit)
 
 
 def run(parser, command_string, kwargs=None, exit=False):
-    """Calls the command and returns result.
-
-    If SystemExit is raised, it propagates.
+    """Calls the command and returns CmdResult(out, err, exit status),
+    with exit status None if no SystemExit was raised.
 
     :exit:
-        if set to `True`, then any SystemExit exception is caught and its
-        string representation is returned; if the exception is not raised,
-        an AssertionError is raised.  In other words, this parameter inverts
-        the function's behaviour and expects SystemExit as the correct event.
+        if set to `True` and a SystemExit is raised, the status code is returned;
+        if the exception is not raised, an AssertionError is raised.
 
     """
     kwargs = kwargs or {}
-    try:
-        return call_cmd(parser, command_string, **kwargs)
-    except SystemExit as error:
-        if exit:
-            if error.args == (None,):
-                return None
-            else:
-                return str(error)
-        else:
-            raise
-    else:
-        if exit:
+    result = call_cmd(parser, command_string, **kwargs)
+    if exit:
+        if result.exit is None:
             raise AssertionError("Did not exit")
+        else:
+            return result.exit
+    return result
 
 
 def get_usage_string(definitions="{cmd} ..."):

@@ -47,7 +47,7 @@ def test_regression_issue12_help_flag():
     # help added → conflict → short name ignored
     p = DebugArghParser("PROG", add_help=True)
     p.set_default_command(ddos)
-    assert run(p, "-h 127.0.0.1", exit=True) is None
+    assert run(p, "-h 127.0.0.1", exit=True) == 0
 
 
 def test_regression_issue27():
