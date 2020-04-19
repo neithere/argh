@@ -2,6 +2,14 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.29.0
+--------------
+
+Backwards incompatible changes:
+
+- Wrapped exceptions now cause ``dispatching.dispatch()`` to raise ``SystemExit``
+  instead of returning without error.
+
 Version 0.28.0
 --------------
 
