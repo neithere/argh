@@ -107,7 +107,7 @@ def dispatch(
 
     :param errors_file:
 
-        Same as `output_file` but for ``sys.stderr``.
+        Same as `output_file` but for ``sys.stderr``, and `None` is not accepted.
 
     :param raw_output:
 
@@ -219,7 +219,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
     Yields the results line by line.
 
     If :class:`~argh.exceptions.CommandError` is raised, its message is
-    appended to the results (i.e. yielded by the generator as a string).
+    written to the error file.
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
