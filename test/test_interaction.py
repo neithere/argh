@@ -4,7 +4,7 @@ Interaction Tests
 ~~~~~~~~~~~~~~~~~
 """
 import sys
-import mock
+import unittest.mock as mock
 
 import argh
 

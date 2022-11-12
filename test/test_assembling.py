@@ -4,7 +4,7 @@ Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import sys
-import mock
+import unittest.mock as mock
 import pytest
 
 import argh
