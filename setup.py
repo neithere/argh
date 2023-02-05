@@ -43,7 +43,7 @@ with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
 
 
 class PyTest(TestCommand):
-    # see http://pytest.org/latest/goodpractises.html#integration-with-setuptools-distribute-test-commands
+    # see https://docs.pytest.org/en/latest/goodpractices.html#integrating-with-setuptools-python-setup-py-test-pytest-runner
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
