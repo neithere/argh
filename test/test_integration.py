@@ -8,7 +8,7 @@ import re
 import argparse
 
 import iocapture
-import mock
+import unittest.mock as mock
 import pytest
 
 import argh
