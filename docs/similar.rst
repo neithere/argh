@@ -40,6 +40,7 @@ supports Python3.  Not every "yes" in this table would count as pro.
 * aaargh_
 * cliff_
 * cement_
+* autocommand_
 
 .. _argdeclare: http://code.activestate.com/recipes/576935-argdeclare-declarative-interface-to-argparse/
 .. _argparse-cli: http://code.google.com/p/argparse-cli/
@@ -57,4 +58,5 @@ supports Python3.  Not every "yes" in this table would count as pro.
 .. _aaargh: http://pypi.python.org/pypi/aaargh
 .. _cliff: http://pypi.python.org/pypi/cliff
 .. _cement: http://builtoncement.com/2.0/
+.. _autocommand: https://pypi.python.org/pypi/autocommand/
 
