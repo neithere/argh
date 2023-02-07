@@ -17,12 +17,6 @@ from argh.exceptions import AssemblingError
 from .base import DebugArghParser, get_usage_string, run, CmdResult as R
 
 
-@pytest.mark.xfail(reason='TODO')
-def test_guessing_integration():
-    "guessing is used in dispatching"
-    assert 0
-
-
 def test_set_default_command_integration():
     def cmd(foo=1):
         return foo
