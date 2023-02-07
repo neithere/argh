@@ -135,25 +135,6 @@ is displayed along with a short overview of the arguments.
 
 However, in many cases it's a good idea do add extra documentation per argument.
 
-In Python 3 it's easy:
-
-.. code-block:: python
-
-    def load(path : 'file to load', format : 'json or yaml' = 'yaml'):
-        "Loads given file as YAML (unless other format is specified)"
-        return loaders[format].load(path)
-
-Python 2 does not support annotations so the above example would raise a
-`SyntaxError`.  You would need to add help via `argparse` API::
-
-    parser.add_argument('path', help='file to load')
-
-...which is far from DRY and very impractical if the functions are dispatched
-in a different place.  This is when extended declarations become useful.
-
-Extended Argument Declaration
-.............................
-
 When function signature isn't enough to fine-tune the argument declarations,
 the :class:`~argh.decorators.arg` decorator comes in handy::
 
@@ -360,29 +341,6 @@ It's possible to augment a single-command application with nested commands:
     p = ArghParser()
     p.add_commands([foo, bar])
     p.set_default_command(foo)    # could be a `quux`
-
-However, this will raise an exception on assembling stage unless you have
-at least Python ≥ 3.4.  The reason is a bug in `argparse`.  Alright, what
-should you do then?  This is a simple workaround:
-
-.. code-block:: python
-
-    p = argh.ArghParser()
-    p.add_commands([foo, bar])
-    try:
-        p.set_default_command(quux)
-    except argh.AssemblingError:
-        print('Please upgrade to Python 3.4 or higher')
-        p.add_commands([quux])
-
-.. note::
-
-   If you are using `argh` with barebones `ArgumentParser`, make sure that
-   the `parse_args()` method gets :class:`~argh.dispatching.ArghNamespace`
-   as the namespace object, otherwise the correct choice of function cannot
-   be guaranteed.  The reason is that a higher-level parser has higher
-   priority than its nested ones when `argparse` picks a default dest from
-   defaults, which includes the function mapped to a certain endpoint.
 
 Generated help
 --------------

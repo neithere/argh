@@ -54,17 +54,6 @@ def aliases(*names):
 
     The resulting command will be available as ``checkout``, ``check`` and ``co``.
 
-    .. note::
-
-       This decorator only works with a recent version of argparse (see `Python
-       issue 9324`_ and `Python rev 4c0426`_).  Such version ships with
-       **Python 3.2+** and may be available in other environments as a separate
-       package.  Argh does not issue warnings and simply ignores aliases if
-       they are not supported.  See :attr:`~argh.assembling.SUPPORTS_ALIASES`.
-
-       .. _Python issue 9324: http://bugs.python.org/issue9324
-       .. _Python rev 4c0426: http://hg.python.org/cpython/rev/4c0426261148/
-
     .. versionadded:: 0.19
     """
     def wrapper(func):
