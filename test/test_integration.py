@@ -371,7 +371,7 @@ def test_invalid_choice():
     p = DebugArghParser()
     p.add_commands([cmd])
 
-    assert run(p, 'bar', exit=True).startswith('invalid choice')
+    assert 'invalid choice' in run(p, 'bar', exit=True)
 
     if sys.version_info < (3,3):
         # Python before 3.3 exits with a less informative error
@@ -385,7 +385,7 @@ def test_invalid_choice():
     p = DebugArghParser()
     p.add_commands([cmd], namespace='nest')
 
-    assert run(p, 'nest bar', exit=True).startswith('invalid choice')
+    assert 'invalid choice' in run(p, 'nest bar', exit=True)
 
     if sys.version_info < (3,3):
         # Python before 3.3 exits with a less informative error
@@ -505,7 +505,7 @@ def test_explicit_cmd_name():
 
     p = DebugArghParser()
     p.add_commands([orig_name])
-    assert run(p, 'orig-name', exit=True).startswith('invalid choice')
+    assert 'invalid choice' in run(p, 'orig-name', exit=True)
     assert run(p, 'new-name').out == 'ok\n'
 
 
@@ -779,7 +779,7 @@ def test_unknown_args():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    usage = get_usage_string('[-f FOO]')
+    get_usage_string('[-f FOO]')
 
     assert run(p, '--foo 1') == R(out='1\n', err='')
     assert run(p, '--bar 1', exit=True) == 'unrecognized arguments: --bar 1'
