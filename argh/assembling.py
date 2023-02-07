@@ -88,6 +88,7 @@ def _get_args_from_signature(function):
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
+        # XXX DEPRECATION WARNING: this will be removed after v.0.28
         if name in annotations:
             # help message:  func(a : "b")  ->  add_argument("a", help="b")
             akwargs.update(help=annotations.get(name))
