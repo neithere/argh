@@ -13,10 +13,10 @@ Dispatching
 ~~~~~~~~~~~
 """
 import argparse
+import io
 import sys
 from types import GeneratorType
 
-from argh import compat, io
 from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
@@ -163,10 +163,7 @@ def dispatch(parser, argv=None, add_help_command=True,
     if output_file is None:
         # user wants a string; we create an internal temporary file-like object
         # and will return its contents as a string
-        if sys.version_info < (3,0):
-            f = compat.BytesIO()
-        else:
-            f = compat.StringIO()
+        f = io.StringIO()
     else:
         # normally this is stdout; can be any file
         f = output_file
@@ -175,11 +172,10 @@ def dispatch(parser, argv=None, add_help_command=True,
         # print the line as soon as it is generated to ensure that it is
         # displayed to the user before anything else happens, e.g.
         # raw_input() is called
-
-        io.dump(line, f)
+        f.write(str(line))
         if not raw_output:
             # in most cases user wants one message per line
-            io.dump('\n', f)
+            f.write('\n')
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
@@ -280,7 +276,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
         processor = getattr(function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
                             lambda e: '{0.__class__.__name__}: {0}'.format(e))
 
-        errors_file.write(compat.text_type(processor(e)))
+        errors_file.write(str(processor(e)))
         errors_file.write('\n')
 
 

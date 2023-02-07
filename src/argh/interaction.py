@@ -12,7 +12,6 @@
 Interaction
 ~~~~~~~~~~~
 """
-from argh.compat import text_type
 from argh.io import safe_input
 
 
@@ -63,7 +62,7 @@ def confirm(action, default=None, skip=False):
             False: ('y','N'),
         }
         y, n = defaults[default]
-        prompt = text_type('{action}? ({y}/{n})').format(**locals())
+        prompt = str('{action}? ({y}/{n})').format(**locals())
         choice = None
         try:
             if default is None:

@@ -15,8 +15,6 @@ Utilities
 import argparse
 import inspect
 
-from argh import compat
-
 
 def get_subparsers(parser, create=False):
     """
@@ -51,7 +49,7 @@ def get_arg_spec(function):
     """
     while hasattr(function, '__wrapped__'):
         function = function.__wrapped__
-    spec = compat.getargspec(function)
+    spec = inspect.getfullargspec(function)
     if inspect.ismethod(function):
         spec = spec._replace(args=spec.args[1:])
     return spec

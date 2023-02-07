@@ -3,12 +3,12 @@
 Common stuff for tests
 ~~~~~~~~~~~~~~~~~~~~~~
 """
+import io
 import os
 import sys
 from collections import namedtuple
 
 from argh import ArghParser
-from argh.compat import BytesIO, StringIO
 
 
 CmdResult = namedtuple('CmdResult', ('out', 'err'))
@@ -24,22 +24,14 @@ class DebugArghParser(ArghParser):
         self.exit(2, message)
 
 
-def make_IO():
-    "Returns a file object of the same type as `sys.stdout`."
-    if sys.version_info < (3,0):
-        return BytesIO()
-    else:
-        return StringIO()
-
-
 def call_cmd(parser, command_string, **kwargs):
     if hasattr(command_string, 'split'):
         args = command_string.split()
     else:
         args = command_string
 
-    io_out = make_IO()
-    io_err = make_IO()
+    io_out = io.StringIO()
+    io_err = io.StringIO()
 
     if 'output_file' not in kwargs:
         kwargs['output_file'] = io_out

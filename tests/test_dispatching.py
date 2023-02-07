@@ -3,11 +3,11 @@
 Dispatching tests
 ~~~~~~~~~~~~~~~~~
 """
-import argh
+import io
 from unittest.mock import Mock, patch
-import pytest
 
-from .base import make_IO
+import argh
+import pytest
 
 
 def _dispatch_and_capture(func, command_string, **kwargs):
@@ -16,17 +16,17 @@ def _dispatch_and_capture(func, command_string, **kwargs):
     else:
         args = command_string
 
-    io = make_IO()
+    _io = io.StringIO()
     if 'output_file' not in kwargs:
-        kwargs['output_file'] = io
+        kwargs['output_file'] = _io
 
     result = argh.dispatch_command(func, args, **kwargs)
 
     if kwargs.get('output_file') is None:
         return result
     else:
-        io.seek(0)
-        return io.read()
+        _io.seek(0)
+        return _io.read()
 
 
 def run_func(func, command_string, **kwargs):

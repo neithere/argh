@@ -1,7 +1,7 @@
-# coding: utf-8
 """
 Unit Tests For Utility Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 """
 import functools
 import sys
@@ -15,16 +15,16 @@ from argh.utils import get_arg_spec
 def function(x, y=0):
     return
 
-def decorated(f):
-    @functools.wraps(f)
+def decorated(func):
+    @functools.wraps(func)
     def wrapped(*args, **kwargs):
         print("Wrapping function call")
-        return f(*args, **kwargs)
+        return func(*args, **kwargs)
     return wrapped
 
 
-def _assert_spec(f, **overrides):
-    spec = get_arg_spec(f)
+def _assert_spec(func, **overrides):
+    spec = get_arg_spec(func)
 
     defaults = {
         'args': ['x', 'y'],
@@ -41,14 +41,10 @@ def _assert_spec(f, **overrides):
         assert actual == expected
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__plain_func():
     _assert_spec(function)
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__decorated_func():
     def d(_f):
         return _f
@@ -57,28 +53,22 @@ def test_get_arg_spec__decorated_func():
     _assert_spec(decorated)
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__wrapped():
     wrapped = decorated(function)
     _assert_spec(wrapped)
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__wrapped_nested():
     wrapped = decorated(decorated(function))
     _assert_spec(wrapped)
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__wrapped_complex():
     def wrapper_deco(outer_arg):
-        def _outer(f):
-            @functools.wraps(f)
+        def _outer(func):
+            @functools.wraps(func)
             def _inner(*args, **kwargs):
-                return f(*args, **kwargs)
+                return func(*args, **kwargs)
             return _inner
         return _outer
 
@@ -87,22 +77,18 @@ def test_get_arg_spec__wrapped_complex():
     _assert_spec(wrapped)
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__static_method():
     class C:
         @staticmethod
-        def f(x, y=0):
+        def func(x, y=0):
             return x
 
-    _assert_spec(C.f)
+    _assert_spec(C.func)
 
 
-@pytest.mark.skipif(sys.version_info < (3,5),
-                    reason="requires python3.5")
 def test_get_arg_spec__method():
     class C:
-        def f(self, x, y=0):
+        def func(self, x, y=0):
             return x
 
-    _assert_spec(C.f, args=['self', 'x', 'y'])
+    _assert_spec(C.func, args=['self', 'x', 'y'])
