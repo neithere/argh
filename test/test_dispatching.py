@@ -4,7 +4,11 @@ Dispatching tests
 ~~~~~~~~~~~~~~~~~
 """
 import argh
-from unittest.mock import Mock, patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    # FIXME: remove in v.0.28
+    from mock import Mock, patch
 import pytest
 
 from .base import make_IO

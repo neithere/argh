@@ -4,7 +4,11 @@ Interaction Tests
 ~~~~~~~~~~~~~~~~~
 """
 import sys
-import unittest.mock as mock
+try:
+    import unittest.mock as mock
+except ImportError:
+    # FIXME: remove in v.0.28
+    import mock
 
 import argh
 
