@@ -15,29 +15,28 @@ Assembling
 Functions and classes to properly assemble your commands in a parser.
 """
 import argparse
-from collections import OrderedDict
 import sys
 import warnings
+from collections import OrderedDict
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
     ATTR_ALIASES,
     ATTR_ARGS,
-    ATTR_NAME,
     ATTR_EXPECTS_NAMESPACE_OBJECT,
-    PARSER_FORMATTER,
+    ATTR_NAME,
     DEFAULT_ARGUMENT_TEMPLATE,
     DEST_FUNCTION,
+    PARSER_FORMATTER
 )
-from argh.utils import get_subparsers, get_arg_spec
 from argh.exceptions import AssemblingError
-
+from argh.utils import get_arg_spec, get_subparsers
 
 __all__ = [
-    'SUPPORTS_ALIASES',
-    'set_default_command',
-    'add_commands',
-    'add_subcommands',
+    "SUPPORTS_ALIASES",
+    "set_default_command",
+    "add_commands",
+    "add_subcommands",
 ]
 
 

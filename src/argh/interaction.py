@@ -14,7 +14,6 @@ Interaction
 """
 from argh.io import safe_input
 
-
 __all__ = ['confirm', 'safe_input']
 
 

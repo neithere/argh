@@ -12,5 +12,5 @@ from .assembling import *
 from .decorators import *
 from .dispatching import *
 from .exceptions import *
-from .interaction import *
 from .helpers import *
+from .interaction import *

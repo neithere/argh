@@ -17,18 +17,17 @@ import io
 import sys
 from types import GeneratorType
 
+from argh.assembling import add_commands, set_default_command
+from argh.completion import autocomplete
 from argh.constants import (
+    ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-    ATTR_EXPECTS_NAMESPACE_OBJECT,
-    PARSER_FORMATTER,
     DEST_FUNCTION,
+    PARSER_FORMATTER
 )
-from argh.completion import autocomplete
-from argh.assembling import add_commands, set_default_command
-from argh.exceptions import DispatchingError, CommandError
+from argh.exceptions import CommandError, DispatchingError
 from argh.utils import get_arg_spec
-
 
 __all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
            'PARSER_FORMATTER', 'EntryPoint']

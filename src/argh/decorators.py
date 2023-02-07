@@ -12,11 +12,14 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
-from argh.constants import (ATTR_ALIASES, ATTR_ARGS, ATTR_NAME,
-                            ATTR_WRAPPED_EXCEPTIONS,
-                            ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            ATTR_EXPECTS_NAMESPACE_OBJECT)
-
+from argh.constants import (
+    ATTR_ALIASES,
+    ATTR_ARGS,
+    ATTR_EXPECTS_NAMESPACE_OBJECT,
+    ATTR_NAME,
+    ATTR_WRAPPED_EXCEPTIONS,
+    ATTR_WRAPPED_EXCEPTIONS_PROCESSOR
+)
 
 __all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj']
 

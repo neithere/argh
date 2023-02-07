@@ -54,6 +54,7 @@ flake8 = "^4.0"
 black = "^22.12"
 wemake-python-styleguide = "^0.17"
 flake8-pytest-style = "^1.6.0"
+isort = "^5"
 
 tox = "^3"
 
@@ -64,3 +65,6 @@ iocapture = "^0.1.2"
 
 [tool.poetry.extras]
 docs = ["Sphinx", "sphinx-rtd-theme"]
+
+[tool.isort]
+multi_line_output = 3

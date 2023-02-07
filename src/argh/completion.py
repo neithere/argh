@@ -61,7 +61,6 @@ It is recommended to use the :func:`~argh.decorators.arg` decorator::
 import logging
 import os
 
-
 COMPLETION_ENABLED = False
 """
 Dynamically set to `True` on load if argcomplete_ was successfully imported.
