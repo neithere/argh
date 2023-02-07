@@ -2,8 +2,19 @@
 Changelog
 ~~~~~~~~~
 
-Version 0.26.3-dev
-------------------
+Version 0.28.0
+--------------
+
+A major cleanup.
+
+Backward incompatible changes:
+
+- Dropped support for Python 2.7.
+
+Version 0.27.0
+--------------
+
+This is the last version to support Python 2.7.
 
 Backward incompatible changes:
 
@@ -11,7 +22,7 @@ Backward incompatible changes:
 
 Enhancements:
 
-- Added support for Python 3.5.
+- Added support for Python 3.7.
 - Support introspection of function signature behind the `@wraps` decorator
   (issue #111).
 

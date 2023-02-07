@@ -97,13 +97,9 @@ that a custom dispatcher may not do.
 Installation
 ------------
 
-Using pip::
+::
 
     $ pip install argh
-
-Arch Linux (AUR)::
-
-    $ yaourt python-argh
 
 Examples
 --------
@@ -126,7 +122,24 @@ Run it:
     $ ./app.py
     Hello world
 
-A potentially modular application with multiple commands:
+An app with multiple commands:
+
+.. code-block:: python
+
+    import argh
+
+    from my_commands import hello, echo
+
+    argh.dispatch_commands([hello, echo])
+
+Run it:
+
+.. code-block:: bash
+
+    $ ./app.py echo Hey
+    Hey
+
+A potentially modular application with more control over the process:
 
 .. code-block:: python
 
@@ -140,7 +153,7 @@ A potentially modular application with multiple commands:
 
     def greet(name, greeting='Hello'):
         "Greets the user with given name. The greeting is customizable."
-        return greeting + ', ' + name
+        return f'{greeting}, {name}!'
 
     # assembling:
 
@@ -151,8 +164,6 @@ A potentially modular application with multiple commands:
 
     if __name__ == '__main__':
         parser.dispatch()
-
-Of course it works:
 
 .. code-block:: bash
 
@@ -225,14 +236,12 @@ Links
 * Questions, requests, bug reports, etc.:
 
   * `Issue tracker`_ (GitHub)
-  * `Mailing list`_ (subscribe to get important announcements)
   * Direct e-mail (neithere at gmail com)
 
 .. _project home page: http://github.com/neithere/argh/
 .. _documentation: http://argh.readthedocs.org
 .. _package distribution: http://pypi.python.org/pypi/argh
 .. _issue tracker: http://github.com/neithere/argh/issues/
-.. _mailing list: http://groups.google.com/group/argh-users
 
 Author
 ------
@@ -247,11 +256,10 @@ Support
 The fastest way to improve this project is to submit tested and documented
 patches or detailed bug reports.
 
-Otherwise you can "flattr" me: |FlattrLink|_
+You can also `donate via Liberapay`_.  This may speed up development or simply
+make the original author happy :)
 
-.. _FlattrLink: https://flattr.com/submit/auto?user_id=neithere&url=http%3A%2F%2Fpypi.python.org%2Fpypi%2Fargh
-.. |FlattrLink| image:: https://api.flattr.com/button/flattr-badge-large.png
-   :alt: Flattr the Argh project
+.. _donate via Liberapay: https://liberapay.com/neithere/donate
 
 Licensing
 ---------
