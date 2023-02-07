@@ -24,7 +24,6 @@ import os
 import sys
 
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 
 
 if sys.version_info < (2,7):
@@ -42,21 +41,6 @@ with io.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
 	readme = f.read()
 
 
-class PyTest(TestCommand):
-    # see https://docs.pytest.org/en/latest/goodpractices.html#integrating-with-setuptools-python-setup-py-test-pytest-runner
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.test_args)
-        sys.exit(errno)
-
-
 setup(
     # overview
     name = 'argh',
@@ -68,10 +52,6 @@ setup(
     packages = ['argh'],
     provides = ['argh'],
     install_requires = install_requires,
-
-    # testing
-    tests_require = ['pytest', 'iocapture'],
-    cmdclass = {'test': PyTest},
 
     # copyright
     author = 'Andrey Mikhaylenko',
