@@ -17,6 +17,8 @@ version = '0.28.0'
 # let autodoc discover the module
 sys.path.insert(0, os.path.abspath('../../src'))
 
+master_doc = 'index'
+
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage']
 
 templates_path = ['_templates']
