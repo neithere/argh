@@ -86,72 +86,6 @@ def test_set_default_command_docstring():
     assert parser.description == 'docstring'
 
 
-@pytest.mark.skipif(sys.version_info >= (3,4), reason='supported since Python 3.4')
-def test_add_subparsers_when_default_command_exists__unsupported():
-
-    def one(): return 1
-    def two(): return 2
-
-    p = argh.ArghParser()
-    p.set_default_command(one)
-
-    with pytest.raises(argh.AssemblingError) as excinfo:
-        p.add_commands([two])
-
-    assert excinfo.exconly().endswith(
-        'Argparse library bundled with this version of Python '
-        'does not support combining a default command with nested ones.')
-
-
-@pytest.mark.skipif(sys.version_info >= (3,4), reason='supported since Python 3.4')
-def test_set_default_command_when_subparsers_exist__unsupported():
-    def one(): return 1
-    def two(): return 2
-
-    p = argh.ArghParser()
-    p.add_commands([one])
-
-    with pytest.raises(argh.AssemblingError) as excinfo:
-        p.set_default_command(two)
-
-    assert excinfo.exconly().endswith(
-        'Argparse library bundled with this version of Python '
-        'does not support combining a default command with nested ones.')
-
-
-@pytest.mark.skipif(sys.version_info < (3,4), reason='supported since Python 3.4')
-def test_add_subparsers_when_default_command_exists__supported():
-
-    def one(): return 1
-    def two(): return 2
-
-    p = argh.ArghParser()
-    p.set_default_command(one)
-    p.add_commands([two])
-
-    ns_one = p.parse_args([])
-    ns_two = p.parse_args(['two'])
-
-    assert ns_one.get_function() == one
-    assert ns_two.get_function() == two
-
-
-@pytest.mark.skipif(sys.version_info < (3,4), reason='supported since Python 3.4')
-def test_set_default_command_when_subparsers_exist__supported():
-    def one(): return 1
-    def two(): return 2
-
-    p = argh.ArghParser()
-    p.add_commands([one])
-    p.set_default_command(two)
-
-    ns_two = p.parse_args([])
-    ns_one = p.parse_args(['one'])
-
-    assert ns_one.get_function() == one
-    assert ns_two.get_function() == two
-
-
 def test_set_default_command_mixed_arg_types():
 
     def func():
@@ -206,17 +140,12 @@ def test_set_default_command_kwargs():
     ]
 
 
+# TODO: issue deprecation warnings if the annotation is a string instead of a type
 def test_annotation():
-    "Extracting argument help from function annotations (Python 3 only)."
-    if sys.version_info < (3,0):
-        pytest.skip('unsupported configuration')
+    "Extracting argument help from function annotations."
 
-    # Yes, this looks horrible, but otherwise Python 2 would die
-    # screaming and cursing as it is completely in the dark about the
-    # sweetness of annotations and we can but tolerate its ignorance.
-    ns = {}
-    exec("def cmd(foo : 'quux' = 123):\n    'bar'\npass", None, ns)
-    cmd = ns['cmd']
+    def cmd(foo: 'quux' = 123):
+        pass
     p = argh.ArghParser()
     p.set_default_command(cmd)
     prog_help = p.format_help()

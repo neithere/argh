@@ -360,12 +360,8 @@ def test_command_not_chosen():
     p = DebugArghParser()
     p.add_commands([cmd])
 
-    if sys.version_info < (3,3):
-        # Python before 3.3 exits with an error
-        assert 'too few arguments' in run(p, '', exit=True)
-    else:
-        # Python since 3.3 returns a help message and doesn't exit
-        assert 'usage:' in run(p, '').out
+    # returns a help message and doesn't exit
+    assert 'usage:' in run(p, '').out
 
 
 def test_invalid_choice():
@@ -379,12 +375,8 @@ def test_invalid_choice():
 
     assert run(p, 'bar', exit=True).startswith('invalid choice')
 
-    if sys.version_info < (3,3):
-        # Python before 3.3 exits with a less informative error
-        assert 'too few arguments' in run(p, '--bar', exit=True)
-    else:
-        # Python since 3.3 exits with a more informative error
-        assert run(p, '--bar', exit=True) == 'unrecognized arguments: --bar'
+    # exits with an informative error
+    assert run(p, '--bar', exit=True) == 'unrecognized arguments: --bar'
 
     # nested command
 
@@ -393,12 +385,8 @@ def test_invalid_choice():
 
     assert run(p, 'nest bar', exit=True).startswith('invalid choice')
 
-    if sys.version_info < (3,3):
-        # Python before 3.3 exits with a less informative error
-        assert 'too few arguments' in run(p, 'nest --bar', exit=True)
-    else:
-        # Python since 3.3 exits with a more informative error
-        assert run(p, 'nest --bar', exit=True) == 'unrecognized arguments: --bar'
+    # exits with an informative error
+    assert run(p, 'nest --bar', exit=True) == 'unrecognized arguments: --bar'
 
 
 def test_unrecognized_arguments():
@@ -458,21 +446,13 @@ def test_bare_namespace():
 
     # without arguments
 
-    if sys.version_info < (3,3):
-        # Python before 3.3 exits with an error
-        assert run(p, 'greet', exit=True) == 'too few arguments'
-    else:
-        # Python since 3.3 returns a help message and doesn't exit
-        assert 'usage:' in run(p, 'greet', exit=True).out
+    # returns a help message and doesn't exit
+    assert 'usage:' in run(p, 'greet', exit=True).out
 
     # with an argument
 
-    if sys.version_info < (3,3):
-        # Python before 3.3 exits with a less informative error
-        message = 'too few arguments'
-    else:
-        # Python since 3.3 exits with a more informative error
-        message = 'unrecognized arguments: --name=world'
+    # exits with an informative error
+    message = 'unrecognized arguments: --name=world'
     assert run(p, 'greet --name=world', exit=True) == message
 
 
@@ -492,12 +472,8 @@ def test_namespaced_function():
     assert run(p, 'greet hello --name=John').out == 'Hello John!\n'
     assert run(p, 'greet hello John', exit=True) == 'unrecognized arguments: John'
 
-    if sys.version_info < (3,3):
-        # Python before 3.3 exits with a less informative error
-        message = 'too few arguments'
-    else:
-        # Python since 3.3 exits with a more informative error
-        message = 'the following arguments are required: buddy'
+    # exits with an informative error
+    message = 'the following arguments are required: buddy'
 
     assert message in run(p, 'greet howdy --name=John', exit=True)
     assert run(p, 'greet howdy John').out == 'Howdy John?\n'

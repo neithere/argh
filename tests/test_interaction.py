@@ -61,10 +61,7 @@ def test_encoding():
     argh.io._input = raw_input_mock
 
     msg = 'привет'
-    if sys.version_info <= (3,0):
-        msg = msg.decode('utf-8')
 
     argh.confirm(msg)
 
-    # bytes in Python 2.x, Unicode in Python 3.x
     raw_input_mock.assert_called_once_with('привет? (y/n)')
