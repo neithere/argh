@@ -2,8 +2,10 @@
 Changelog
 ~~~~~~~~~
 
-Version 0.26.3-dev
-------------------
+Version 0.27.0
+--------------
+
+This is the last version to support Python 2.7.
 
 Backward incompatible changes:
 
@@ -20,10 +22,17 @@ Fixed bugs:
 - When command function signature contained ``**kwargs`` *and* positionals
   without defaults and with underscores in their names, a weird behaviour could
   be observed (issue #104).
+- Fixed introspection through decorators (issue #111).
+- Switched to Python's built-in `unittest.mock` (PR #154).
+- Fixed bug with `skip_unknown_args=True` (PR #134).
+- Fixed tests for Python 3.9.7+ (issue #148).
 
 Other changes:
 
-- Include the license files in manifest (PR #112).
+- Included the license files in manifest (PR #112).
+- Extended the list of similar projects (PR #87).
+- Fixed typos and links in documentation (PR #110, #116, #156).
+- Switched CI to Github Actions (PR #153).
 
 Version 0.26.2
 --------------

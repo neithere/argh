@@ -133,23 +133,8 @@ The function's docstring is automatically included in the help message.
 When the script is called as ``./app.py my-command --help``, the docstring
 is displayed along with a short overview of the arguments.
 
-However, in many cases it's a good idea do add extra documentation per argument.
-
-In Python 3 it's easy:
-
-.. code-block:: python
-
-    def load(path : 'file to load', format : 'json or yaml' = 'yaml'):
-        "Loads given file as YAML (unless other format is specified)"
-        return loaders[format].load(path)
-
-Python 2 does not support annotations so the above example would raise a
-`SyntaxError`.  You would need to add help via `argparse` API::
-
-    parser.add_argument('path', help='file to load')
-
-...which is far from DRY and very impractical if the functions are dispatched
-in a different place.  This is when extended declarations become useful.
+In many cases it's a good idea do add extra documentation per argument.
+Extended argument declaration can be helpful in that case.
 
 Extended Argument Declaration
 .............................
