@@ -128,32 +128,40 @@ def test_add_subparsers_when_default_command_exists__supported():
 
     def one(): return 1
     def two(): return 2
+    def three(): return 3
 
     p = argh.ArghParser()
     p.set_default_command(one)
-    p.add_commands([two])
+    p.add_commands([two, three])
 
-    ns_one = p.parse_args([])
-    ns_two = p.parse_args(['two'])
+    ns_default = p.parse_args([])
 
-    assert ns_one.get_function() == one
-    assert ns_two.get_function() == two
+    ns_explicit_two = p.parse_args(['two'])
+    ns_explicit_three = p.parse_args(['three'])
+
+    assert ns_default.get_function() == one
+    assert ns_explicit_two.get_function() == two
+    assert ns_explicit_three.get_function() == three
 
 
 @pytest.mark.skipif(sys.version_info < (3,4), reason='supported since Python 3.4')
 def test_set_default_command_when_subparsers_exist__supported():
     def one(): return 1
     def two(): return 2
+    def three(): return 3
 
     p = argh.ArghParser()
-    p.add_commands([one])
-    p.set_default_command(two)
+    p.add_commands([one, two])
+    p.set_default_command(three)
 
-    ns_two = p.parse_args([])
-    ns_one = p.parse_args(['one'])
+    ns_default = p.parse_args([])
+    ns_explicit_one = p.parse_args(['one'])
+    ns_explicit_two = p.parse_args(['two'])
 
-    assert ns_one.get_function() == one
-    assert ns_two.get_function() == two
+
+    assert ns_explicit_one.get_function() == one
+    assert ns_explicit_two.get_function() == two
+    assert ns_default.get_function() == three
 
 
 def test_set_default_command_mixed_arg_types():
