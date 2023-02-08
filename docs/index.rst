@@ -11,6 +11,7 @@ the following versions of Python:
 * 3.8
 * 3.9
 * 3.10
+* 3.11
 * PyPy 7.3.1+ (2.7, 3.6)
 
 .. versionchanged:: 0.15
