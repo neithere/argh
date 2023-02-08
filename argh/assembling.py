@@ -195,12 +195,6 @@ def set_default_command(parser, function):
 
     .. note::
 
-       An attempt to set default command to a parser which already has
-       subparsers (e.g. added with :func:`~argh.assembling.add_commands`)
-       results in a `AssemblingError`.
-
-    .. note::
-
        If there are both explicitly declared arguments (e.g. via
        :func:`~argh.decorators.arg`) and ones inferred from the function
        signature (e.g. via :func:`~argh.decorators.command`), declared ones
