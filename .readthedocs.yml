@@ -15,6 +15,12 @@ build:
 sphinx:
    configuration: docs/conf.py
 
+# NOTE: PDF generation was intentionally disabled due to failed builds.
+# Should you require enabling this, please make sure that it's tested.
+# Note that a PR build may only include HTML, so a successful RTD build on push
+# does not mean that PDF generation is working properly.
+# See PR #160 for details.
+#
 # If using Sphinx, optionally build your docs in additional formats such as PDF
 # formats:
 #    - pdf
