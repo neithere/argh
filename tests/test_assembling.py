@@ -257,16 +257,16 @@ def test_set_default_command_deprecation_warnings():
         DeprecationWarning,
         match='Argument `title` is deprecated in add_commands()'
     ):
-        argh.add_commands(parser, [], namespace='foo', title='bar')
+        argh.add_commands(parser, [], namespace='a', title='bar')
 
     with pytest.warns(
         DeprecationWarning,
         match='Argument `description` is deprecated in add_commands()'
     ):
-        argh.add_commands(parser, [], namespace='foo', description='bar')
+        argh.add_commands(parser, [], namespace='b', description='bar')
 
     with pytest.warns(
         DeprecationWarning,
         match='Argument `help` is deprecated in add_commands()'
     ):
-        argh.add_commands(parser, [], namespace='foo', help='bar')
+        argh.add_commands(parser, [], namespace='c', help='bar')
