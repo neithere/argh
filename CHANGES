@@ -2,6 +2,14 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.27.1
+--------------
+
+Minor building and packaging fixes:
+
+* docs: add Read the Docs config (#160)
+* chore: include tox.ini in the sdist (#155)
+
 Version 0.27.0
 --------------
 
