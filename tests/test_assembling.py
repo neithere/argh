@@ -193,9 +193,6 @@ def test_annotation():
 
 def test_kwonlyargs():
     "Correctly processing required and optional keyword-only arguments"
-    if sys.version_info < (3,0):
-        pytest.skip('unsupported configuration')
-
     ns = {}
     exec("def cmd(*args, foo='abcd', bar):\n"
          "    return (args, foo, bar)",

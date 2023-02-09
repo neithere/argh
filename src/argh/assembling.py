@@ -70,11 +70,9 @@ def _get_args_from_signature(function):
 
     kwonly = getattr(spec, 'kwonlyargs', [])
 
-    if sys.version_info < (3,0):
-        annotations = {}
-    else:
-        annotations = dict((k,v) for k,v in function.__annotations__.items()
-                           if isinstance(v, str))
+    annotations = dict(
+        (k, v) for k, v in function.__annotations__.items() if isinstance(v, str)
+    )
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
@@ -178,13 +176,6 @@ def _get_dest(parser, argspec):
     return kwargs['dest']
 
 
-def _require_support_for_default_command_with_subparsers():
-    if sys.version_info < (3,4):
-        raise AssemblingError(
-            'Argparse library bundled with this version of Python '
-            'does not support combining a default command with nested ones.')
-
-
 def set_default_command(parser, function):
     """
     Sets default command (i.e. a function) for given parser.
@@ -206,9 +197,6 @@ def set_default_command(parser, function):
        option name ``-h`` is silently removed from any argument.
 
     """
-    if parser._subparsers:
-        _require_support_for_default_command_with_subparsers()
-
     spec = get_arg_spec(function)
 
     declared_args = getattr(function, ATTR_ARGS, [])
@@ -399,10 +387,6 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
     # FIXME "namespace" is a correct name but it clashes with the "namespace"
     # that represents arguments (argparse.Namespace and our ArghNamespace).
     # We should rename the argument here.
-
-    if DEST_FUNCTION in parser._defaults:
-        _require_support_for_default_command_with_subparsers()
-
     namespace_kwargs = namespace_kwargs or {}
 
     # FIXME remove this by 1.0

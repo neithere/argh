@@ -64,11 +64,7 @@ def test_simple_function_positional():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    if sys.version_info < (3,3):
-        msg = 'too few arguments'
-    else:
-        msg = 'the following arguments are required: x'
-    assert run(p, '', exit=True) == msg
+    assert run(p, '', exit=True) == 'the following arguments are required: x'
     assert run(p, 'foo') == R(out='foo\n', err='')
 
 
@@ -111,13 +107,10 @@ def test_simple_function_kwargs():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    if sys.version_info < (3,3):
-        msg = 'too few arguments'
-    else:
-        msg = 'the following arguments are required: foo'
-    assert run(p, '', exit=True) == msg
+    message = 'the following arguments are required: foo'
+    assert run(p, '', exit=True) == message
     assert run(p, 'hello') == R(out='bar: None\nfoo: hello\n', err='')
-    assert run(p, '--bar 123', exit=True) == msg
+    assert run(p, '--bar 123', exit=True) == message
     assert run(p, 'hello --bar 123') == R(out='bar: 123\nfoo: hello\n', err='')
 
 
@@ -648,9 +641,6 @@ def test_class_members():
 
 def test_kwonlyargs():
     "Correct dispatch in presence of keyword-only arguments"
-    if sys.version_info < (3,0):
-        pytest.skip('unsupported configuration')
-
     ns = {}
 
     exec("""def cmd(*args, foo='1', bar, baz='3', **kwargs):
@@ -663,10 +653,7 @@ def test_kwonlyargs():
 
     assert (run(p, '--baz=done test  this --bar=do').out ==
             'test this\n1\ndo\ndone\n0\n')
-    if sys.version_info < (3,3):
-        message = 'argument --bar is required'
-    else:
-        message = 'the following arguments are required: --bar'
+    message = 'the following arguments are required: --bar'
     assert run(p, 'test --foo=do', exit=True) == message
 
 
