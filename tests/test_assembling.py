@@ -86,7 +86,7 @@ def test_set_default_command_docstring():
     assert parser.description == 'docstring'
 
 
-def test_add_subparsers_when_default_command_exists__supported():
+def test_add_subparsers_when_default_command_exists():
 
     def one(): return 1
     def two(): return 2
@@ -106,7 +106,7 @@ def test_add_subparsers_when_default_command_exists__supported():
     assert ns_explicit_three.get_function() == three
 
 
-def test_set_default_command_when_subparsers_exist__supported():
+def test_set_default_command_when_subparsers_exist():
     def one(): return 1
     def two(): return 2
     def three(): return 3
