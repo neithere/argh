@@ -5,3 +5,5 @@ include COPYING.LESSER
 # needed for `python setup.py test`
 include test/__init__.py
 include test/base.py
+
+include tox.ini
