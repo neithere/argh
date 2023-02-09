@@ -85,10 +85,18 @@ def _get_args_from_signature(function):
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
-        # XXX DEPRECATION WARNING: this will be removed after v.0.28
+        # TODO: remove this in v.0.30.
         if name in annotations:
             # help message:  func(a : "b")  ->  add_argument("a", help="b")
-            akwargs.update(help=annotations.get(name))
+            value = annotations.get(name)
+            if isinstance(value, str):
+                warnings.warn(
+                    'Defining argument help messages via annotations is ' +
+                    'deprecated and will be removed in Argh 0.30.  Please ' +
+                    'replace `f(a:"foo")` with `@arg("-a", help="foo")(a)`.',
+                    DeprecationWarning
+                )
+                akwargs.update(help=value)
 
         if name in defaults or name in kwonly:
             if name in defaults:

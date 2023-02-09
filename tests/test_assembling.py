@@ -179,15 +179,20 @@ def test_set_default_command_kwargs():
     ]
 
 
-# TODO: issue deprecation warnings if the annotation is a string instead of a type
+# TODO: remove in v.0.30
 def test_annotation():
     "Extracting argument help from function annotations."
 
     def cmd(foo: 'quux' = 123):
         pass
-    p = argh.ArghParser()
-    p.set_default_command(cmd)
-    prog_help = p.format_help()
+
+    parser = argh.ArghParser()
+
+    with pytest.warns(DeprecationWarning, match='will be removed in Argh 0.30'):
+        parser.set_default_command(cmd)
+
+    prog_help = parser.format_help()
+
     assert 'quux' in prog_help
 
 
