@@ -18,11 +18,11 @@ import inspect
 
 def get_subparsers(parser, create=False):
     """
-    Returns the :class:`argparse._SubParsersAction` instance for given
-    :class:`ArgumentParser` instance as would have been returned by
-    :meth:`ArgumentParser.add_subparsers`. The problem with the latter is that
-    it only works once and raises an exception on the second attempt, and the
-    public API seems to lack a method to get *existing* subparsers.
+    Returns the `argparse._SubParsersAction` instance for given
+    :class:`argparse.ArgumentParser` instance as would have been returned by
+    :meth:`argparse.ArgumentParser.add_subparsers`. The problem with the latter
+    is that it only works once and raises an exception on the second attempt,
+    and the public API seems to lack a method to get *existing* subparsers.
 
     :param create:
         If `True`, creates the subparser if it does not exist. Default if

@@ -23,8 +23,8 @@ __all__ = ['ArghParser']
 
 class ArghParser(argparse.ArgumentParser):
     """
-    A subclass of :class:`ArgumentParser` with support for and a couple
-    of convenience methods.
+    A subclass of :class:`argparse.ArgumentParser` with support for and a
+    couple of convenience methods.
 
     All methods are but wrappers for stand-alone functions
     :func:`~argh.assembling.add_commands`,

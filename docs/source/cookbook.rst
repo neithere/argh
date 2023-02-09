@@ -5,7 +5,7 @@ Multiple values per argument
 ----------------------------
 
 Use `nargs` from argparse by amending the function signature with the
-:func:`arg` decorator:
+:func:`argh.decorators.arg` decorator:
 
 .. code-block:: python
 

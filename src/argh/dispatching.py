@@ -29,15 +29,19 @@ from argh.constants import (
 from argh.exceptions import CommandError, DispatchingError
 from argh.utils import get_arg_spec
 
-__all__ = ['dispatch', 'dispatch_command', 'dispatch_commands',
-           'PARSER_FORMATTER', 'EntryPoint']
+__all__ = [
+    'ArghNamespace',
+    'dispatch',
+    'dispatch_command',
+    'dispatch_commands',
+    'PARSER_FORMATTER',
+    'EntryPoint',
+]
 
 
 class ArghNamespace(argparse.Namespace):
     """
-    A namespace object which collects the stack of functions (the
-    :attr:`~argh.constants.DEST_FUNCTION` arguments passed to it via
-    parser's defaults).
+    A namespace object which collects the stack of functions.
     """
     def __init__(self, *args, **kwargs):
         super(ArghNamespace, self).__init__(*args, **kwargs)
@@ -71,10 +75,7 @@ def dispatch(parser, argv=None, add_help_command=True,
     function and prints the result.
 
     The target function should expect one positional argument: the
-    :class:`argparse.Namespace` object. However, if the function is decorated with
-    :func:`~argh.decorators.plain_signature`, the positional and named
-    arguments from the namespace object are passed to the function instead
-    of the object itself.
+    :class:`argparse.Namespace` object.
 
     :param parser:
 
@@ -118,9 +119,9 @@ def dispatch(parser, argv=None, add_help_command=True,
     :param namespace:
 
         An `argparse.Namespace`-like object.  By default an
-        :class:`ArghNamespace` object is used.  Please note that support for
-        combined default and nested functions may be broken if a different
-        type of object is forced.
+        :class:`argh.dispatching.ArghNamespace` object is used.  Please note
+        that support for combined default and nested functions may be broken
+        if a different type of object is forced.
 
     By default the exceptions are not wrapped and will propagate. The only
     exception that is always wrapped is :class:`~argh.exceptions.CommandError`

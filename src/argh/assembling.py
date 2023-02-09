@@ -195,9 +195,9 @@ def set_default_command(parser, function):
 
        If there are both explicitly declared arguments (e.g. via
        :func:`~argh.decorators.arg`) and ones inferred from the function
-       signature (e.g. via :func:`~argh.decorators.command`), declared ones
-       will be merged into inferred ones. If an argument does not conform
-       function signature, `AssemblingError` is raised.
+       signature, declared ones will be merged into inferred ones.
+       If an argument does not conform to the function signature,
+       `AssemblingError` is raised.
 
     .. note::
 
@@ -323,7 +323,7 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
         a list of functions. A subparser is created for each of them.
         If the function is decorated with :func:`~argh.decorators.arg`, the
-        arguments are passed to :class:`argparse.ArgumentParser.add_argument`.
+        arguments are passed to :meth:`argparse.ArgumentParser.add_argument`.
         See also :func:`~argh.dispatching.dispatch` for requirements
         concerning function signatures. The command name is inferred from the
         function name. Note that the underscores in the name are replaced with
@@ -385,7 +385,7 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
         This function modifies the parser object. Generally side effects are
         bad practice but we don't seem to have any choice as ArgumentParser is
         pretty opaque.
-        You may prefer :class:`~argh.helpers.ArghParser.add_commands` for a bit
+        You may prefer :meth:`~argh.helpers.ArghParser.add_commands` for a bit
         more predictable API.
 
     .. note::

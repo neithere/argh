@@ -60,6 +60,6 @@ to write something like this (generic argparse API)::
 
     You don't have to use :class:`~argh.helpers.ArghParser`; the standard
     :class:`argparse.ArgumentParser` will do. You will just need to call
-    stand-alone functions :func:`~argh.helpers.add_commands` and
-    :func:`~argh.helpers.dispatch` instead of :class:`~argh.helpers.ArghParser`
-    methods.
+    stand-alone functions :func:`argh.assembling.add_commands` and
+    :func:`argh.dispatching.dispatch` instead of
+    :class:`argh.helpers.ArghParser` methods.
