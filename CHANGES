@@ -2,6 +2,13 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.27.2
+--------------
+
+Minor packaging fix:
+
+* chore: include file required by tox.ini in the sdist (#155)
+
 Version 0.27.1
 --------------
 

@@ -7,3 +7,4 @@ include test/__init__.py
 include test/base.py
 
 include tox.ini
+include reqs-dev.txt
