@@ -244,3 +244,24 @@ def test_custom_argument_completer_no_backend():
     p.set_default_command(func)
 
     assert not hasattr(p._actions[-1], 'completer')
+
+def test_set_default_command_deprecation_warnings():
+    parser = argh.ArghParser()
+
+    with pytest.warns(
+        DeprecationWarning,
+        match='Argument `title` is deprecated in add_commands()'
+    ):
+        argh.add_commands(parser, [], namespace='foo', title='bar')
+
+    with pytest.warns(
+        DeprecationWarning,
+        match='Argument `description` is deprecated in add_commands()'
+    ):
+        argh.add_commands(parser, [], namespace='foo', description='bar')
+
+    with pytest.warns(
+        DeprecationWarning,
+        match='Argument `help` is deprecated in add_commands()'
+    ):
+        argh.add_commands(parser, [], namespace='foo', help='bar')

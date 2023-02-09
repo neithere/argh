@@ -350,6 +350,7 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
         .. deprecated:: 0.26.0
 
+           This argument will be removed in Argh v.0.30.
            Please use `namespace_kwargs` instead.
 
     :param description:
@@ -359,6 +360,7 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
         .. deprecated:: 0.26.0
 
+           This argument will be removed in Argh v.0.30.
            Please use `namespace_kwargs` instead.
 
     :param help:
@@ -367,6 +369,7 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
         .. deprecated:: 0.26.0
 
+           This argument will be removed in Argh v.0.30.
            Please use `namespace_kwargs` instead.
 
     .. note::
@@ -389,19 +392,31 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
     # We should rename the argument here.
     namespace_kwargs = namespace_kwargs or {}
 
-    # FIXME remove this by 1.0
+    # TODO remove this in 0.30
     #
     if title:
-        warnings.warn('argument `title` is deprecated in add_commands(),'
-                      ' use `parser_kwargs` instead', DeprecationWarning)
+        warnings.warn(
+            'Argument `title` is deprecated in add_commands(), ' +
+            'it will be removed in Argh 0.30. ' +
+            'Please use `parser_kwargs` instead.',
+            DeprecationWarning
+        )
         namespace_kwargs['description'] = title
     if help:
-        warnings.warn('argument `help` is deprecated in add_commands(),'
-                      ' use `parser_kwargs` instead', DeprecationWarning)
+        warnings.warn(
+            'Argument `help` is deprecated in add_commands(), ' +
+            'it will be removed in Argh 0.30. ' +
+            'Please use `parser_kwargs` instead.',
+            DeprecationWarning
+        )
         namespace_kwargs['help'] = help
     if description:
-        warnings.warn('argument `description` is deprecated in add_commands(),'
-                      ' use `parser_kwargs` instead', DeprecationWarning)
+        warnings.warn(
+            'Argument `description` is deprecated in add_commands(), ' +
+            'it will be removed in Argh 0.30. ' +
+            'Please use `parser_kwargs` instead.',
+            DeprecationWarning
+        )
         namespace_kwargs['description'] = description
     #
     # /
