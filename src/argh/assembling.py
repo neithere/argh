@@ -87,6 +87,7 @@ def _get_args_from_signature(function):
         flags = []    # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
+        # XXX DEPRECATION WARNING: this will be removed after v.0.28
         if name in annotations:
             # help message:  func(a : "b")  ->  add_argument("a", help="b")
             akwargs.update(help=annotations.get(name))
@@ -190,12 +191,6 @@ def set_default_command(parser, function):
 
     If `parser.description` is empty and the function has a docstring,
     it is used as the description.
-
-    .. note::
-
-       An attempt to set default command to a parser which already has
-       subparsers (e.g. added with :func:`~argh.assembling.add_commands`)
-       results in a `AssemblingError`.
 
     .. note::
 

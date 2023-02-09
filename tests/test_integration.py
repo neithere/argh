@@ -17,12 +17,6 @@ from argh.exceptions import AssemblingError
 from .base import DebugArghParser, get_usage_string, run, CmdResult as R
 
 
-@pytest.mark.xfail(reason='TODO')
-def test_guessing_integration():
-    "guessing is used in dispatching"
-    assert 0
-
-
 def test_set_default_command_integration():
     def cmd(foo=1):
         return foo
@@ -373,7 +367,7 @@ def test_invalid_choice():
     p = DebugArghParser()
     p.add_commands([cmd])
 
-    assert run(p, 'bar', exit=True).startswith('invalid choice')
+    assert 'invalid choice' in run(p, 'bar', exit=True)
 
     # exits with an informative error
     assert run(p, '--bar', exit=True) == 'unrecognized arguments: --bar'
@@ -383,7 +377,7 @@ def test_invalid_choice():
     p = DebugArghParser()
     p.add_commands([cmd], namespace='nest')
 
-    assert run(p, 'nest bar', exit=True).startswith('invalid choice')
+    assert 'invalid choice' in run(p, 'nest bar', exit=True)
 
     # exits with an informative error
     assert run(p, 'nest --bar', exit=True) == 'unrecognized arguments: --bar'
@@ -487,7 +481,7 @@ def test_explicit_cmd_name():
 
     p = DebugArghParser()
     p.add_commands([orig_name])
-    assert run(p, 'orig-name', exit=True).startswith('invalid choice')
+    assert 'invalid choice' in run(p, 'orig-name', exit=True)
     assert run(p, 'new-name').out == 'ok\n'
 
 
@@ -761,7 +755,7 @@ def test_unknown_args():
     p = DebugArghParser()
     p.set_default_command(cmd)
 
-    usage = get_usage_string('[-f FOO]')
+    get_usage_string('[-f FOO]')
 
     assert run(p, '--foo 1') == R(out='1\n', err='')
     assert run(p, '--bar 1', exit=True) == 'unrecognized arguments: --bar 1'

@@ -133,7 +133,11 @@ The function's docstring is automatically included in the help message.
 When the script is called as ``./app.py my-command --help``, the docstring
 is displayed along with a short overview of the arguments.
 
-However, in many cases it's a good idea do add extra documentation per argument.
+In many cases it's a good idea do add extra documentation per argument.
+Extended argument declaration can be helpful in that case.
+
+Extended Argument Declaration
+.............................
 
 When function signature isn't enough to fine-tune the argument declarations,
 the :class:`~argh.decorators.arg` decorator comes in handy::

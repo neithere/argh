@@ -39,8 +39,8 @@ class ArghNamespace(argparse.Namespace):
     :attr:`~argh.constants.DEST_FUNCTION` arguments passed to it via
     parser's defaults).
     """
-    def __init__(self, *args, **kw):
-        super(ArghNamespace, self).__init__(*args, **kw)
+    def __init__(self, *args, **kwargs):
+        super(ArghNamespace, self).__init__(*args, **kwargs)
         self._functions_stack = []
 
     def __setattr__(self, k, v):

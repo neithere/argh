@@ -86,6 +86,45 @@ def test_set_default_command_docstring():
     assert parser.description == 'docstring'
 
 
+def test_add_subparsers_when_default_command_exists__supported():
+
+    def one(): return 1
+    def two(): return 2
+    def three(): return 3
+
+    p = argh.ArghParser()
+    p.set_default_command(one)
+    p.add_commands([two, three])
+
+    ns_default = p.parse_args([])
+
+    ns_explicit_two = p.parse_args(['two'])
+    ns_explicit_three = p.parse_args(['three'])
+
+    assert ns_default.get_function() == one
+    assert ns_explicit_two.get_function() == two
+    assert ns_explicit_three.get_function() == three
+
+
+def test_set_default_command_when_subparsers_exist__supported():
+    def one(): return 1
+    def two(): return 2
+    def three(): return 3
+
+    p = argh.ArghParser()
+    p.add_commands([one, two])
+    p.set_default_command(three)
+
+    ns_default = p.parse_args([])
+    ns_explicit_one = p.parse_args(['one'])
+    ns_explicit_two = p.parse_args(['two'])
+
+
+    assert ns_explicit_one.get_function() == one
+    assert ns_explicit_two.get_function() == two
+    assert ns_default.get_function() == three
+
+
 def test_set_default_command_mixed_arg_types():
 
     def func():
