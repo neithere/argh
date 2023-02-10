@@ -4,9 +4,6 @@ Unit Tests For Utility Functions
 
 """
 import functools
-import sys
-
-import pytest
 
 from argh.utils import get_arg_spec
 

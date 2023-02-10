@@ -3,7 +3,6 @@
 Interaction Tests
 ~~~~~~~~~~~~~~~~~
 """
-import sys
 import unittest.mock as mock
 
 import argh
@@ -15,22 +14,22 @@ def parse_choice(choice, **kwargs):
 
 
 def test_simple():
-    assert None == parse_choice("")
-    assert None == parse_choice("", default=None)
-    assert True == parse_choice("", default=True)
-    assert False == parse_choice("", default=False)
+    assert parse_choice("") is None
+    assert parse_choice("", default=None) is None
+    assert parse_choice("", default=True) is True
+    assert parse_choice("", default=False) is False
 
-    assert True == parse_choice("y")
-    assert True == parse_choice("y", default=True)
-    assert True == parse_choice("y", default=False)
-    assert True == parse_choice("y", default=None)
+    assert parse_choice("y") is True
+    assert parse_choice("y", default=True) is True
+    assert parse_choice("y", default=False) is True
+    assert parse_choice("y", default=None) is True
 
-    assert False == parse_choice("n")
-    assert False == parse_choice("n", default=True)
-    assert False == parse_choice("n", default=False)
-    assert False == parse_choice("n", default=None)
+    assert parse_choice("n") is False
+    assert parse_choice("n", default=True) is False
+    assert parse_choice("n", default=False) is False
+    assert parse_choice("n", default=None) is False
 
-    assert None == parse_choice("x") == None
+    assert parse_choice("x") is None
 
 
 def test_prompt():

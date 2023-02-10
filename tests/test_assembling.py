@@ -3,8 +3,7 @@
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
-import sys
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 
@@ -199,7 +198,7 @@ def test_set_default_command_kwargs():
 def test_annotation():
     "Extracting argument help from function annotations."
 
-    def cmd(foo: "quux" = 123):
+    def cmd(foo: "quux" = 123):  # noqa: F821
         pass
 
     parser = argh.ArghParser()

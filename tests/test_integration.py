@@ -27,7 +27,7 @@ def test_set_default_command_integration():
 
     assert run(p, "") == R(out="1\n", err="")
     assert run(p, "--foo 2") == R(out="2\n", err="")
-    assert run(p, "--help", exit=True) == None
+    assert run(p, "--help", exit=True) is None
 
 
 def test_set_default_command_integration_merging():
@@ -502,13 +502,13 @@ def test_help_alias():
 
     # assert the commands don't fail
 
-    assert None == run(p, "--help", exit=True)
-    assert None == run(p, "greet --help", exit=True)
-    assert None == run(p, "greet hello --help", exit=True)
+    assert run(p, "--help", exit=True) is None
+    assert run(p, "greet --help", exit=True) is None
+    assert run(p, "greet hello --help", exit=True) is None
 
-    assert None == run(p, "help", exit=True)
-    assert None == run(p, "help greet", exit=True)
-    assert None == run(p, "help greet hello", exit=True)
+    assert run(p, "help", exit=True) is None
+    assert run(p, "help greet", exit=True) is None
+    assert run(p, "help greet hello", exit=True) is None
 
 
 def test_arg_order():
@@ -741,7 +741,7 @@ def test_prog():
     usage = get_usage_string()
 
     with iocapture.capture() as captured:
-        assert run(p, "-h", exit=True) == None
+        assert run(p, "-h", exit=True) is None
         assert captured.stdout.startswith(usage)
 
 

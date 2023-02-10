@@ -236,7 +236,9 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
             result = function(namespace_obj)
         else:
             # namespace -> dictionary
-            _flat_key = lambda key: key.replace("-", "_")
+            def _flat_key(key):
+                return key.replace("-", "_")
+
             all_input = dict((_flat_key(k), v) for k, v in vars(namespace_obj).items())
 
             # filter the namespace variables so that only those expected
