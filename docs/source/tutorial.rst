@@ -49,8 +49,9 @@ with ordinary signatures:
 
 * Declare them somewhere, dispatch them elsewhere.  This ensures **loose
   coupling** of components in your application.
-* They are **natural** and pythonic. No fiddling with the parser and the related
-  intricacies like ``action='store_true'`` which you could never remember.
+* They are **natural** and pythonic. No fiddling with the parser and the
+  related intricacies like ``action='store_true'`` which you could never
+  remember.
 
 Still, there's much more to commands than this.
 
@@ -445,7 +446,7 @@ message (depending on how :func:`~argh.dispatching.dispatch` was called).
 
 Decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 
-    @wrap_errors([KeyError])  # catch KeyError, show the message, hide traceback
+    @wrap_errors([KeyError])  # show error message, hide traceback
     def show_item(key):
         return items[key]     # raise KeyError
 

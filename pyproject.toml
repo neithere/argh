@@ -60,10 +60,5 @@ docs = [
     "readthedocs-sphinx-search == 0.2.0",
 ]
 
-[tool.isort]
-multi_line_output = 3
-
-
-
 [tool.distutils.bdist_wheel]
 universal = 1
