@@ -1,20 +1,22 @@
-# Configuration file for the Sphinx documentation builder.
-from datetime import date
+"""Configuration file for the Sphinx documentation builder."""
 import os
 import sys
+from datetime import date
+
+from sphinx_pyproject import SphinxConfig
 
 
 current_year = date.today().year
 
+config = SphinxConfig('../../pyproject.toml')
+
 # -- Project information
 
-project = 'argh'
-copyright = f'2010—{current_year}, Andrey Mikhaylenko'
-author = 'Andrey Mikhaylenko'
-
-# TODO: replace with getting the version via sphinx-pyproject
-release = '0.28'
-version = '0.28.0'
+project = config.name
+author = config.author
+copyright = f'2010—{current_year}, {author}'
+version = config.version
+release = version
 
 # -- General configuration
 
