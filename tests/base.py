@@ -10,7 +10,6 @@ from collections import namedtuple
 
 from argh import ArghParser
 
-
 CmdResult = namedtuple('CmdResult', ('out', 'err'))
 
 

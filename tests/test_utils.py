@@ -8,7 +8,6 @@ import sys
 
 import pytest
 
-
 from argh.utils import get_arg_spec
 
 

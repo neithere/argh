@@ -3,18 +3,19 @@
 Integration Tests
 ~~~~~~~~~~~~~~~~~
 """
-import sys
-import re
 import argparse
+import re
+import sys
+import unittest.mock as mock
 
 import iocapture
-import unittest.mock as mock
 import pytest
 
 import argh
 from argh.exceptions import AssemblingError
 
-from .base import DebugArghParser, get_usage_string, run, CmdResult as R
+from .base import CmdResult as R
+from .base import DebugArghParser, get_usage_string, run
 
 
 def test_set_default_command_integration():

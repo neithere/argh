@@ -4,6 +4,7 @@ Regression tests
 ~~~~~~~~~~~~~~~~
 """
 import pytest
+
 import argh
 
 from .base import DebugArghParser, run

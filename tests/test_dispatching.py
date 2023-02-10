@@ -6,8 +6,9 @@ Dispatching tests
 import io
 from unittest.mock import Mock, patch
 
-import argh
 import pytest
+
+import argh
 
 
 def _dispatch_and_capture(func, command_string, **kwargs):
