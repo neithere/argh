@@ -74,7 +74,7 @@ else:
     COMPLETION_ENABLED = True
 
 
-__all__ = ['autocomplete', 'COMPLETION_ENABLED']
+__all__ = ["autocomplete", "COMPLETION_ENABLED"]
 
 
 logger = logging.getLogger(__package__)
@@ -89,5 +89,5 @@ def autocomplete(parser):
     """
     if COMPLETION_ENABLED:
         argcomplete.autocomplete(parser)
-    elif 'bash' in os.getenv('SHELL', ''):
-        logger.debug('Bash completion not available. Install argcomplete.')
+    elif "bash" in os.getenv("SHELL", ""):
+        logger.debug("Bash completion not available. Install argcomplete.")

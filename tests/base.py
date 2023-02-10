@@ -10,7 +10,7 @@ from collections import namedtuple
 
 from argh import ArghParser
 
-CmdResult = namedtuple('CmdResult', ('out', 'err'))
+CmdResult = namedtuple("CmdResult", ("out", "err"))
 
 
 class DebugArghParser(ArghParser):
@@ -24,7 +24,7 @@ class DebugArghParser(ArghParser):
 
 
 def call_cmd(parser, command_string, **kwargs):
-    if hasattr(command_string, 'split'):
+    if hasattr(command_string, "split"):
         args = command_string.split()
     else:
         args = command_string
@@ -32,13 +32,13 @@ def call_cmd(parser, command_string, **kwargs):
     io_out = io.StringIO()
     io_err = io.StringIO()
 
-    if 'output_file' not in kwargs:
-        kwargs['output_file'] = io_out
-    kwargs['errors_file'] = io_err
+    if "output_file" not in kwargs:
+        kwargs["output_file"] = io_out
+    kwargs["errors_file"] = io_err
 
     result = parser.dispatch(args, **kwargs)
 
-    if kwargs.get('output_file') is None:
+    if kwargs.get("output_file") is None:
         return CmdResult(out=result, err=io_err.read())
     else:
         io_out.seek(0)
@@ -47,7 +47,7 @@ def call_cmd(parser, command_string, **kwargs):
 
 
 def run(parser, command_string, kwargs=None, exit=False):
-    """ Calls the command and returns result.
+    """Calls the command and returns result.
 
     If SystemExit is raised, it propagates.
 
@@ -71,9 +71,9 @@ def run(parser, command_string, kwargs=None, exit=False):
             raise
     else:
         if exit:
-            raise AssertionError('Did not exit')
+            raise AssertionError("Did not exit")
 
 
-def get_usage_string(definitions='{cmd} ...'):
+def get_usage_string(definitions="{cmd} ..."):
     prog = os.path.basename(sys.argv[0])
-    return 'usage: ' + prog + ' [-h] ' + definitions + '\n\n'
+    return "usage: " + prog + " [-h] " + definitions + "\n\n"

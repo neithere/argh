@@ -24,18 +24,18 @@ from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
     DEST_FUNCTION,
-    PARSER_FORMATTER
+    PARSER_FORMATTER,
 )
 from argh.exceptions import CommandError, DispatchingError
 from argh.utils import get_arg_spec
 
 __all__ = [
-    'ArghNamespace',
-    'dispatch',
-    'dispatch_command',
-    'dispatch_commands',
-    'PARSER_FORMATTER',
-    'EntryPoint',
+    "ArghNamespace",
+    "dispatch",
+    "dispatch_command",
+    "dispatch_commands",
+    "PARSER_FORMATTER",
+    "EntryPoint",
 ]
 
 
@@ -43,6 +43,7 @@ class ArghNamespace(argparse.Namespace):
     """
     A namespace object which collects the stack of functions.
     """
+
     def __init__(self, *args, **kwargs):
         super(ArghNamespace, self).__init__(*args, **kwargs)
         self._functions_stack = []
@@ -65,11 +66,18 @@ class ArghNamespace(argparse.Namespace):
         return self._functions_stack[-1]
 
 
-def dispatch(parser, argv=None, add_help_command=True,
-             completion=True, pre_call=None,
-             output_file=sys.stdout, errors_file=sys.stderr,
-             raw_output=False, namespace=None,
-             skip_unknown_args=False):
+def dispatch(
+    parser,
+    argv=None,
+    add_help_command=True,
+    completion=True,
+    pre_call=None,
+    output_file=sys.stdout,
+    errors_file=sys.stderr,
+    raw_output=False,
+    namespace=None,
+    skip_unknown_args=False,
+):
     """
     Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
@@ -136,9 +144,9 @@ def dispatch(parser, argv=None, add_help_command=True,
         argv = sys.argv[1:]
 
     if add_help_command:
-        if argv and argv[0] == 'help':
+        if argv and argv[0] == "help":
             argv.pop(0)
-            argv.append('--help')
+            argv.append("--help")
 
     if not namespace:
         namespace = ArghNamespace()
@@ -154,8 +162,9 @@ def dispatch(parser, argv=None, add_help_command=True,
     function = _get_function_from_namespace_obj(namespace_obj)
 
     if function:
-        lines = _execute_command(function, namespace_obj, errors_file,
-                                 pre_call=pre_call)
+        lines = _execute_command(
+            function, namespace_obj, errors_file, pre_call=pre_call
+        )
     else:
         # no commands declared, can't dispatch; display help message
         lines = [parser.format_usage()]
@@ -175,7 +184,7 @@ def dispatch(parser, argv=None, add_help_command=True,
         f.write(str(line))
         if not raw_output:
             # in most cases user wants one message per line
-            f.write('\n')
+            f.write("\n")
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
@@ -197,7 +206,7 @@ def _get_function_from_namespace_obj(namespace_obj):
             return None
         function = getattr(namespace_obj, DEST_FUNCTION)
 
-    if not function or not hasattr(function, '__call__'):
+    if not function or not hasattr(function, "__call__"):
         return None
 
     return function
@@ -227,9 +236,8 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
             result = function(namespace_obj)
         else:
             # namespace -> dictionary
-            _flat_key = lambda key: key.replace('-', '_')
-            all_input = dict((_flat_key(k), v)
-                             for k,v in vars(namespace_obj).items())
+            _flat_key = lambda key: key.replace("-", "_")
+            all_input = dict((_flat_key(k), v) for k, v in vars(namespace_obj).items())
 
             # filter the namespace variables so that only those expected
             # by the actual function will pass
@@ -237,7 +245,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
             spec = get_arg_spec(function)
 
             positional = [all_input[k] for k in spec.args]
-            kwonly = getattr(spec, 'kwonlyargs', [])
+            kwonly = getattr(spec, "kwonlyargs", [])
             keywords = dict((k, all_input[k]) for k in kwonly)
 
             # *args
@@ -245,11 +253,11 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
                 positional += getattr(namespace_obj, spec.varargs)
 
             # **kwargs
-            varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
+            varkw = getattr(spec, "varkw", getattr(spec, "keywords", []))
             if varkw:
                 not_kwargs = [DEST_FUNCTION] + spec.args + [spec.varargs] + kwonly
                 for k in vars(namespace_obj):
-                    if k.startswith('_') or k in not_kwargs:
+                    if k.startswith("_") or k in not_kwargs:
                         continue
                     keywords[k] = getattr(namespace_obj, k)
 
@@ -273,11 +281,14 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
         for line in result:
             yield line
     except tuple(wrappable_exceptions) as e:
-        processor = getattr(function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-                            lambda e: '{0.__class__.__name__}: {0}'.format(e))
+        processor = getattr(
+            function,
+            ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
+            lambda e: "{0.__class__.__name__}: {0}".format(e),
+        )
 
         errors_file.write(str(processor(e)))
-        errors_file.write('\n')
+        errors_file.write("\n")
 
 
 def dispatch_command(function, *args, **kwargs):
@@ -353,8 +364,9 @@ class EntryPoint(object):
             app()
 
     """
+
     def __init__(self, name=None, parser_kwargs=None):
-        self.name = name or 'unnamed'
+        self.name = name or "unnamed"
         self.commands = []
         self.parser_kwargs = parser_kwargs or {}
 
@@ -370,8 +382,9 @@ class EntryPoint(object):
 
     def _dispatch(self):
         if not self.commands:
-            raise DispatchingError('no commands for entry point "{0}"'
-                                   .format(self.name))
+            raise DispatchingError(
+                'no commands for entry point "{0}"'.format(self.name)
+            )
 
         parser = argparse.ArgumentParser(**self.parser_kwargs)
         add_commands(parser, self.commands)

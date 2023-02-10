@@ -14,7 +14,7 @@ Interaction
 """
 from argh.io import safe_input
 
-__all__ = ['confirm', 'safe_input']
+__all__ = ["confirm", "safe_input"]
 
 
 def confirm(action, default=None, skip=False):
@@ -56,12 +56,12 @@ def confirm(action, default=None, skip=False):
         return default
     else:
         defaults = {
-            None: ('y','n'),
-            True: ('Y','n'),
-            False: ('y','N'),
+            None: ("y", "n"),
+            True: ("Y", "n"),
+            False: ("y", "N"),
         }
         y, n = defaults[default]
-        prompt = str('{action}? ({y}/{n})').format(**locals())
+        prompt = str("{action}? ({y}/{n})").format(**locals())
         choice = None
         try:
             if default is None:
@@ -73,9 +73,9 @@ def confirm(action, default=None, skip=False):
                 choice = safe_input(prompt)
         except KeyboardInterrupt:
             return None
-    if choice in ('yes', 'y', 'Y'):
+    if choice in ("yes", "y", "Y"):
         return True
-    if choice in ('no', 'n', 'N'):
+    if choice in ("no", "n", "N"):
         return False
     if default is not None:
         return default

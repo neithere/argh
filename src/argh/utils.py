@@ -32,8 +32,9 @@ def get_subparsers(parser, create=False):
     # note that ArgumentParser._subparsers is *not* what is returned by
     # ArgumentParser.add_subparsers().
     if parser._subparsers:
-        actions = [a for a in parser._actions
-                   if isinstance(a, argparse._SubParsersAction)]
+        actions = [
+            a for a in parser._actions if isinstance(a, argparse._SubParsersAction)
+        ]
         assert len(actions) == 1
         return actions[0]
     else:
@@ -47,7 +48,7 @@ def get_arg_spec(function):
     arguments of instance methods (`self`) and static methods (usually `cls`
     or something like this).
     """
-    while hasattr(function, '__wrapped__'):
+    while hasattr(function, "__wrapped__"):
         function = function.__wrapped__
     spec = inspect.getfullargspec(function)
     if inspect.ismethod(function):

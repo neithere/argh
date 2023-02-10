@@ -12,7 +12,7 @@
 Output Processing
 ~~~~~~~~~~~~~~~~~
 """
-__all__ = ['safe_input']
+__all__ = ["safe_input"]
 
 
 def _input(prompt):

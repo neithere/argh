@@ -12,18 +12,18 @@ import argh
 
 
 def _dispatch_and_capture(func, command_string, **kwargs):
-    if hasattr(command_string, 'split'):
+    if hasattr(command_string, "split"):
         args = command_string.split()
     else:
         args = command_string
 
     _io = io.StringIO()
-    if 'output_file' not in kwargs:
-        kwargs['output_file'] = _io
+    if "output_file" not in kwargs:
+        kwargs["output_file"] = _io
 
     result = argh.dispatch_command(func, args, **kwargs)
 
-    if kwargs.get('output_file') is None:
+    if kwargs.get("output_file") is None:
         return result
     else:
         _io.seek(0)
@@ -40,27 +40,27 @@ def run_func(func, command_string, **kwargs):
 
 
 def test_dispatch_command_shortcut():
-
     def cmd(foo=1):
         return foo
 
-    assert run_func(cmd, '') == '1\n'
-    assert run_func(cmd, '--foo 2') == '2\n'
+    assert run_func(cmd, "") == "1\n"
+    assert run_func(cmd, "--foo 2") == "2\n"
 
 
-@patch('argh.dispatching.dispatch')
-@patch('argh.dispatching.add_commands')
-@patch('argparse.ArgumentParser')
+@patch("argh.dispatching.dispatch")
+@patch("argh.dispatching.add_commands")
+@patch("argparse.ArgumentParser")
 def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
 
-    entrypoint = argh.EntryPoint('my cool app')
+    entrypoint = argh.EntryPoint("my cool app")
 
     # no commands
 
     with pytest.raises(argh.exceptions.DispatchingError) as excinfo:
         entrypoint()
     assert excinfo.exconly().endswith(
-        'DispatchingError: no commands for entry point "my cool app"')
+        'DispatchingError: no commands for entry point "my cool app"'
+    )
 
     mocked_parser = Mock()
     ap_cls_mock.return_value = mocked_parser
@@ -69,7 +69,7 @@ def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
 
     @entrypoint
     def greet():
-        return 'hello'
+        return "hello"
 
     entrypoint()
 
@@ -85,7 +85,7 @@ def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
 
     @entrypoint
     def hit():
-        return 'knight with a chicken'
+        return "knight with a chicken"
 
     entrypoint()
 

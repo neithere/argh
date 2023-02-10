@@ -18,10 +18,10 @@ from argh.constants import (
     ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_NAME,
     ATTR_WRAPPED_EXCEPTIONS,
-    ATTR_WRAPPED_EXCEPTIONS_PROCESSOR
+    ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
 )
 
-__all__ = ['aliases', 'named', 'arg', 'wrap_errors', 'expects_obj']
+__all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
 
 
 def named(new_name):
@@ -40,9 +40,11 @@ def named(new_name):
 
     .. versionadded:: 0.19
     """
+
     def wrapper(func):
         setattr(func, ATTR_NAME, new_name)
         return func
+
     return wrapper
 
 
@@ -59,9 +61,11 @@ def aliases(*names):
 
     .. versionadded:: 0.19
     """
+
     def wrapper(func):
         setattr(func, ATTR_ALIASES, names)
         return func
+
     return wrapper
 
 
@@ -113,6 +117,7 @@ def arg(*args, **kwargs):
         function signatures.  Readability counts, don't repeat yourself.
 
     """
+
     def wrapper(func):
         declared_args = getattr(func, ATTR_ARGS, [])
         # The innermost decorator is called first but appears last in the code.
@@ -121,6 +126,7 @@ def arg(*args, **kwargs):
         declared_args.insert(0, dict(option_strings=args, **kwargs))
         setattr(func, ATTR_ARGS, declared_args)
         return func
+
     return wrapper
 
 
@@ -169,6 +175,7 @@ def wrap_errors(errors=None, processor=None, *args):
             setattr(func, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, processor)
 
         return func
+
     return wrapper
 
 

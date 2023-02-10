@@ -18,7 +18,7 @@ from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
 from argh.dispatching import PARSER_FORMATTER, ArghNamespace, dispatch
 
-__all__ = ['ArghParser']
+__all__ = ["ArghParser"]
 
 
 class ArghParser(argparse.ArgumentParser):
@@ -33,8 +33,9 @@ class ArghParser(argparse.ArgumentParser):
 
     Uses :attr:`~argh.dispatching.PARSER_FORMATTER`.
     """
+
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('formatter_class', PARSER_FORMATTER)
+        kwargs.setdefault("formatter_class", PARSER_FORMATTER)
         super(ArghParser, self).__init__(*args, **kwargs)
 
     def set_default_command(self, *args, **kwargs):

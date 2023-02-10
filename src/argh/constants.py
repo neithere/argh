@@ -15,10 +15,16 @@ Constants
 import argparse
 
 __all__ = (
-    'ATTR_NAME', 'ATTR_ALIASES', 'ATTR_ARGS', 'ATTR_WRAPPED_EXCEPTIONS',
-    'ATTR_WRAPPED_EXCEPTIONS_PROCESSOR', 'ATTR_EXPECTS_NAMESPACE_OBJECT',
-    'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE', 'DEST_FUNCTION',
-    'CustomFormatter',
+    "ATTR_NAME",
+    "ATTR_ALIASES",
+    "ATTR_ARGS",
+    "ATTR_WRAPPED_EXCEPTIONS",
+    "ATTR_WRAPPED_EXCEPTIONS_PROCESSOR",
+    "ATTR_EXPECTS_NAMESPACE_OBJECT",
+    "PARSER_FORMATTER",
+    "DEFAULT_ARGUMENT_TEMPLATE",
+    "DEST_FUNCTION",
+    "CustomFormatter",
 )
 
 
@@ -27,40 +33,43 @@ __all__ = (
 #
 
 #: explicit command name (differing from function name)
-ATTR_NAME = 'argh_name'
+ATTR_NAME = "argh_name"
 
 #: alternative command names
-ATTR_ALIASES = 'argh_aliases'
+ATTR_ALIASES = "argh_aliases"
 
 #: declared arguments
-ATTR_ARGS = 'argh_args'
+ATTR_ARGS = "argh_args"
 
 #: list of exception classes that should be wrapped and printed as results
-ATTR_WRAPPED_EXCEPTIONS = 'argh_wrap_errors'
+ATTR_WRAPPED_EXCEPTIONS = "argh_wrap_errors"
 
 #: a function to preprocess the exception object when it is wrapped
-ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = 'argh_wrap_errors_processor'
+ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = "argh_wrap_errors_processor"
 
 #: forcing argparse.Namespace object instead of signature introspection
-ATTR_EXPECTS_NAMESPACE_OBJECT = 'argh_expects_namespace_object'
+ATTR_EXPECTS_NAMESPACE_OBJECT = "argh_expects_namespace_object"
 
 #
 # Dest names in parser defaults
 #
 
 #: dest name for a function mapped to given endpoint (goes to Namespace obj)
-DEST_FUNCTION = 'function'
+DEST_FUNCTION = "function"
 
 #
 # Other library-wide stuff
 #
 
-class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
-                      argparse.RawDescriptionHelpFormatter):
+
+class CustomFormatter(
+    argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter
+):
     """
     A slightly customised :class:`argparse.ArgumentDefaultsHelpFormatter`
     + :class:`argparse.RawDescriptionHelpFormatter`.
     """
+
     def _expand_help(self, action):
         """
         This method is copied verbatim from ArgumentDefaultsHelpFormatter with
@@ -79,21 +88,21 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
             if params[name] is argparse.SUPPRESS:
                 del params[name]
         for name in list(params):
-            if hasattr(params[name], '__name__'):
+            if hasattr(params[name], "__name__"):
                 params[name] = params[name].__name__
-        if params.get('choices') is not None:
-            choices_str = ', '.join([str(c) for c in params['choices']])
-            params['choices'] = choices_str
+        if params.get("choices") is not None:
+            choices_str = ", ".join([str(c) for c in params["choices"]])
+            params["choices"] = choices_str
 
         # XXX this is added in Argh vs. argparse.ArgumentDefaultsHelpFormatter
         #     (avoiding empty strings, otherwise Argparse would die with
         #     an IndexError in _format_action)
         #
-        if 'default' in params:
-            if params['default'] is None:
-                params['default'] = '-'
+        if "default" in params:
+            if params["default"] is None:
+                params["default"] = "-"
             else:
-                params['default'] = repr(params['default'])
+                params["default"] = repr(params["default"])
         #
         # /
 
@@ -105,7 +114,7 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
 PARSER_FORMATTER = CustomFormatter
 
 
-DEFAULT_ARGUMENT_TEMPLATE = '%(default)s'
+DEFAULT_ARGUMENT_TEMPLATE = "%(default)s"
 """
 Default template of argument help message (see issue #64).
 The template ``%(default)s`` is used by `argparse` to display the argument's

@@ -14,11 +14,13 @@ from argh.utils import get_arg_spec
 def function(x, y=0):
     return
 
+
 def decorated(func):
     @functools.wraps(func)
     def wrapped(*args, **kwargs):
         print("Wrapping function call")
         return func(*args, **kwargs)
+
     return wrapped
 
 
@@ -26,12 +28,12 @@ def _assert_spec(func, **overrides):
     spec = get_arg_spec(func)
 
     defaults = {
-        'args': ['x', 'y'],
-        'varargs': None,
-        'varkw': None,
-        'defaults': (0,),
-        'kwonlyargs': [],
-        'annotations': {},
+        "args": ["x", "y"],
+        "varargs": None,
+        "varkw": None,
+        "defaults": (0,),
+        "kwonlyargs": [],
+        "annotations": {},
     }
 
     for k in defaults:
@@ -47,6 +49,7 @@ def test_get_arg_spec__plain_func():
 def test_get_arg_spec__decorated_func():
     def d(_f):
         return _f
+
     decorated = d(function)
 
     _assert_spec(decorated)
@@ -68,7 +71,9 @@ def test_get_arg_spec__wrapped_complex():
             @functools.wraps(func)
             def _inner(*args, **kwargs):
                 return func(*args, **kwargs)
+
             return _inner
+
         return _outer
 
     wrapped = wrapper_deco(5)(function)
@@ -90,4 +95,4 @@ def test_get_arg_spec__method():
         def func(self, x, y=0):
             return x
 
-    _assert_spec(C.func, args=['self', 'x', 'y'])
+    _assert_spec(C.func, args=["self", "x", "y"])

@@ -27,7 +27,7 @@ from argh.constants import (
     ATTR_NAME,
     DEFAULT_ARGUMENT_TEMPLATE,
     DEST_FUNCTION,
-    PARSER_FORMATTER
+    PARSER_FORMATTER,
 )
 from argh.exceptions import AssemblingError
 from argh.utils import get_arg_spec, get_subparsers
@@ -44,7 +44,7 @@ def _check_support_aliases():
     p = argparse.ArgumentParser()
     s = p.add_subparsers()
     try:
-        s.add_parser('x', aliases=[])
+        s.add_parser("x", aliases=[])
     except TypeError:
         return False
     else:
@@ -64,11 +64,10 @@ def _get_args_from_signature(function):
 
     spec = get_arg_spec(function)
 
-    defaults = dict(zip(*[reversed(x) for x in (spec.args,
-                                                spec.defaults or [])]))
-    defaults.update(getattr(spec, 'kwonlydefaults', None) or {})
+    defaults = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+    defaults.update(getattr(spec, "kwonlydefaults", None) or {})
 
-    kwonly = getattr(spec, 'kwonlyargs', [])
+    kwonly = getattr(spec, "kwonlyargs", [])
 
     annotations = dict(
         (k, v) for k, v in function.__annotations__.items() if isinstance(v, str)
@@ -78,11 +77,10 @@ def _get_args_from_signature(function):
     # (short forms, i.e. single-character ones)
     chars = [a[0] for a in spec.args + kwonly]
     char_counts = dict((char, chars.count(char)) for char in set(chars))
-    conflicting_opts = tuple(char for char in char_counts
-                             if 1 < char_counts[char])
+    conflicting_opts = tuple(char for char in char_counts if 1 < char_counts[char])
 
     for name in spec.args + kwonly:
-        flags = []    # name_or_flags
+        flags = []  # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
 
         # TODO: remove this in v.0.30.
@@ -91,10 +89,10 @@ def _get_args_from_signature(function):
             value = annotations.get(name)
             if isinstance(value, str):
                 warnings.warn(
-                    'Defining argument help messages via annotations is ' +
-                    'deprecated and will be removed in Argh 0.30.  Please ' +
-                    'replace `f(a:"foo")` with `@arg("-a", help="foo")(a)`.',
-                    DeprecationWarning
+                    "Defining argument help messages via annotations is "
+                    + "deprecated and will be removed in Argh 0.30.  Please "
+                    + 'replace `f(a:"foo")` with `@arg("-a", help="foo")(a)`.',
+                    DeprecationWarning,
                 )
                 akwargs.update(help=value)
 
@@ -103,7 +101,7 @@ def _get_args_from_signature(function):
                 akwargs.update(default=defaults.get(name))
             else:
                 akwargs.update(required=True)
-            flags = ('-{0}'.format(name[0]), '--{0}'.format(name))
+            flags = ("-{0}".format(name[0]), "--{0}".format(name))
             if name.startswith(conflicting_opts):
                 # remove short name
                 flags = flags[1:]
@@ -113,14 +111,13 @@ def _get_args_from_signature(function):
             flags = (name,)
 
         # cmd(foo_bar)  ->  add_argument('foo-bar')
-        flags = tuple(x.replace('_', '-') if x.startswith('-') else x
-                      for x in flags)
+        flags = tuple(x.replace("_", "-") if x.startswith("-") else x for x in flags)
 
         yield dict(option_strings=flags, **akwargs)
 
     if spec.varargs:
         # *args
-        yield dict(option_strings=[spec.varargs], nargs='*')
+        yield dict(option_strings=[spec.varargs], nargs="*")
 
 
 def _guess(kwargs):
@@ -133,29 +130,29 @@ def _guess(kwargs):
     guessed = {}
 
     # Parser actions that accept argument 'type'
-    TYPE_AWARE_ACTIONS = 'store', 'append'
+    TYPE_AWARE_ACTIONS = "store", "append"
 
     # guess type/action from default value
-    value = kwargs.get('default')
+    value = kwargs.get("default")
     if value is not None:
         if isinstance(value, bool):
-            if kwargs.get('action') is None:
+            if kwargs.get("action") is None:
                 # infer action from default value
-                guessed['action'] = 'store_false' if value else 'store_true'
-        elif kwargs.get('type') is None:
+                guessed["action"] = "store_false" if value else "store_true"
+        elif kwargs.get("type") is None:
             # infer type from default value
             # (make sure that action handler supports this keyword)
-            if kwargs.get('action', 'store') in TYPE_AWARE_ACTIONS:
-                guessed['type'] = type(value)
+            if kwargs.get("action", "store") in TYPE_AWARE_ACTIONS:
+                guessed["type"] = type(value)
 
     # guess type from choices (first item)
-    if kwargs.get('choices') and 'type' not in list(guessed) + list(kwargs):
-        guessed['type'] = type(kwargs['choices'][0])
+    if kwargs.get("choices") and "type" not in list(guessed) + list(kwargs):
+        guessed["type"] = type(kwargs["choices"][0])
 
     return dict(kwargs, **guessed)
 
 
-def _is_positional(args, prefix_chars='-'):
+def _is_positional(args, prefix_chars="-"):
     assert args
     if 1 < len(args) or args[0][0].startswith(tuple(prefix_chars)):
         return False
@@ -164,8 +161,8 @@ def _is_positional(args, prefix_chars='-'):
 
 
 def _get_parser_param_kwargs(parser, argspec):
-    argspec = argspec.copy()    # parser methods modify source data
-    args = argspec['option_strings']
+    argspec = argspec.copy()  # parser methods modify source data
+    args = argspec["option_strings"]
 
     if _is_positional(args, prefix_chars=parser.prefix_chars):
         get_kwargs = parser._get_positional_kwargs
@@ -174,14 +171,14 @@ def _get_parser_param_kwargs(parser, argspec):
 
     kwargs = get_kwargs(*args, **argspec)
 
-    kwargs['dest'] = kwargs['dest'].replace('-', '_')
+    kwargs["dest"] = kwargs["dest"].replace("-", "_")
 
     return kwargs
 
 
 def _get_dest(parser, argspec):
     kwargs = _get_parser_param_kwargs(parser, argspec)
-    return kwargs['dest']
+    return kwargs["dest"]
 
 
 def set_default_command(parser, function):
@@ -227,7 +224,7 @@ def set_default_command(parser, function):
         dests = OrderedDict()
 
         for argspec in inferred_args:
-            dest = _get_parser_param_kwargs(parser, argspec)['dest']
+            dest = _get_parser_param_kwargs(parser, argspec)["dest"]
             dests[dest] = argspec
 
         for declared_kw in declared_args:
@@ -243,39 +240,41 @@ def set_default_command(parser, function):
                 #      @arg('--my-bar')  maps to  func(my_bar=...)
 
                 # either both arguments are positional or both are optional
-                decl_positional = _is_positional(declared_kw['option_strings'])
-                infr_positional = _is_positional(dests[dest]['option_strings'])
+                decl_positional = _is_positional(declared_kw["option_strings"])
+                infr_positional = _is_positional(dests[dest]["option_strings"])
                 if decl_positional != infr_positional:
-                    kinds = {True: 'positional', False: 'optional'}
+                    kinds = {True: "positional", False: "optional"}
                     raise AssemblingError(
                         '{func}: argument "{dest}" declared as {kind_i} '
-                        '(in function signature) and {kind_d} (via decorator)'
-                        .format(
+                        "(in function signature) and {kind_d} (via decorator)".format(
                             func=function.__name__,
                             dest=dest,
                             kind_i=kinds[infr_positional],
                             kind_d=kinds[decl_positional],
-                        ))
+                        )
+                    )
 
                 # merge explicit argument declaration into the inferred one
                 # (e.g. `help=...`)
                 dests[dest].update(**declared_kw)
             else:
                 # the argument is not in function signature
-                varkw = getattr(spec, 'varkw', getattr(spec, 'keywords', []))
+                varkw = getattr(spec, "varkw", getattr(spec, "keywords", []))
                 if varkw:
                     # function accepts **kwargs; the argument goes into it
                     dests[dest] = declared_kw
                 else:
                     # there's no way we can map the argument declaration
                     # to function signature
-                    xs = (dests[x]['option_strings'] for x in dests)
+                    xs = (dests[x]["option_strings"] for x in dests)
                     raise AssemblingError(
-                        '{func}: argument {flags} does not fit '
-                        'function signature: {sig}'.format(
-                            flags=', '.join(declared_kw['option_strings']),
+                        "{func}: argument {flags} does not fit "
+                        "function signature: {sig}".format(
+                            flags=", ".join(declared_kw["option_strings"]),
                             func=function.__name__,
-                            sig=', '.join('/'.join(x) for x in xs)))
+                            sig=", ".join("/".join(x) for x in xs),
+                        )
+                    )
 
         # pack the modified data back into a list
         inferred_args = dests.values()
@@ -287,31 +286,43 @@ def set_default_command(parser, function):
 
     for draft in command_args:
         draft = draft.copy()
-        if 'help' not in draft:
+        if "help" not in draft:
             draft.update(help=DEFAULT_ARGUMENT_TEMPLATE)
-        dest_or_opt_strings = draft.pop('option_strings')
-        if parser.add_help and '-h' in dest_or_opt_strings:
-            dest_or_opt_strings = [x for x in dest_or_opt_strings if x != '-h']
-        completer = draft.pop('completer', None)
+        dest_or_opt_strings = draft.pop("option_strings")
+        if parser.add_help and "-h" in dest_or_opt_strings:
+            dest_or_opt_strings = [x for x in dest_or_opt_strings if x != "-h"]
+        completer = draft.pop("completer", None)
         try:
             action = parser.add_argument(*dest_or_opt_strings, **draft)
             if COMPLETION_ENABLED and completer:
                 action.completer = completer
         except Exception as e:
-            raise type(e)('{func}: cannot add arg {args}: {msg}'.format(
-                args='/'.join(dest_or_opt_strings), func=function.__name__, msg=e))
+            raise type(e)(
+                "{func}: cannot add arg {args}: {msg}".format(
+                    args="/".join(dest_or_opt_strings), func=function.__name__, msg=e
+                )
+            )
 
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__
-    parser.set_defaults(**{
-        DEST_FUNCTION: function,
-    })
+    parser.set_defaults(
+        **{
+            DEST_FUNCTION: function,
+        }
+    )
 
 
-def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
-                 func_kwargs=None,
-                 # deprecated args:
-                 title=None, description=None, help=None):
+def add_commands(
+    parser,
+    functions,
+    namespace=None,
+    namespace_kwargs=None,
+    func_kwargs=None,
+    # deprecated args:
+    title=None,
+    description=None,
+    help=None,
+):
     """
     Adds given functions as commands to given parser.
 
@@ -397,28 +408,28 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
     #
     if title:
         warnings.warn(
-            'Argument `title` is deprecated in add_commands(), ' +
-            'it will be removed in Argh 0.30. ' +
-            'Please use `parser_kwargs` instead.',
-            DeprecationWarning
+            "Argument `title` is deprecated in add_commands(), "
+            + "it will be removed in Argh 0.30. "
+            + "Please use `parser_kwargs` instead.",
+            DeprecationWarning,
         )
-        namespace_kwargs['description'] = title
+        namespace_kwargs["description"] = title
     if help:
         warnings.warn(
-            'Argument `help` is deprecated in add_commands(), ' +
-            'it will be removed in Argh 0.30. ' +
-            'Please use `parser_kwargs` instead.',
-            DeprecationWarning
+            "Argument `help` is deprecated in add_commands(), "
+            + "it will be removed in Argh 0.30. "
+            + "Please use `parser_kwargs` instead.",
+            DeprecationWarning,
         )
-        namespace_kwargs['help'] = help
+        namespace_kwargs["help"] = help
     if description:
         warnings.warn(
-            'Argument `description` is deprecated in add_commands(), ' +
-            'it will be removed in Argh 0.30. ' +
-            'Please use `parser_kwargs` instead.',
-            DeprecationWarning
+            "Argument `description` is deprecated in add_commands(), "
+            + "it will be removed in Argh 0.30. "
+            + "Please use `parser_kwargs` instead.",
+            DeprecationWarning,
         )
-        namespace_kwargs['description'] = description
+        namespace_kwargs["description"] = description
     #
     # /
 
@@ -433,13 +444,14 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
         # Normally `title` is shown above the list of commands
         # in ``app.py my-namespace --help``.
         subsubparser_kw = {
-            'help': namespace_kwargs.get('title'),
+            "help": namespace_kwargs.get("title"),
         }
         subsubparser = subparsers_action.add_parser(namespace, **subsubparser_kw)
         subparsers_action = subsubparser.add_subparsers(**namespace_kwargs)
     else:
-        assert not namespace_kwargs, ('`parser_kwargs` only makes sense '
-                                      'with `namespace`.')
+        assert not namespace_kwargs, (
+            "`parser_kwargs` only makes sense " "with `namespace`."
+        )
 
     for func in functions:
         cmd_name, func_parser_kwargs = _extract_command_meta_from_func(func)
@@ -455,22 +467,18 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
 def _extract_command_meta_from_func(func):
     # use explicitly defined name; if none, use function name (a_b → a-b)
-    cmd_name = getattr(func, ATTR_NAME,
-                       func.__name__.replace('_','-'))
+    cmd_name = getattr(func, ATTR_NAME, func.__name__.replace("_", "-"))
 
     func_parser_kwargs = {
-
         # add command help from function's docstring
-        'help': func.__doc__,
-
+        "help": func.__doc__,
         # set default formatter
-        'formatter_class': PARSER_FORMATTER,
-
+        "formatter_class": PARSER_FORMATTER,
     }
 
     # try adding aliases for command name
     if SUPPORTS_ALIASES:
-        func_parser_kwargs['aliases'] = getattr(func, ATTR_ALIASES, [])
+        func_parser_kwargs["aliases"] = getattr(func, ATTR_ALIASES, [])
 
     return cmd_name, func_parser_kwargs
 
@@ -492,5 +500,6 @@ def add_subcommands(parser, namespace, functions, **namespace_kwargs):
                         help='CRUD for our silly database')
 
     """
-    add_commands(parser, functions, namespace=namespace,
-                 namespace_kwargs=namespace_kwargs)
+    add_commands(
+        parser, functions, namespace=namespace, namespace_kwargs=namespace_kwargs
+    )
