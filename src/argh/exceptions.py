@@ -53,4 +53,13 @@ class CommandError(Exception):
 
     This exception can be safely used in both print-style and yield-style
     commands (see :doc:`tutorial`).
+
+    .. warning::
+
+        Currently raising this exception leads to your app's return code being
+        ``0``, i.e. success.  This is a known bug (issue118_) which is due to
+        be fixed.  Please make sure you don't rely on this behaviour.
+
+    .. _issue118: https://github.com/neithere/argh/issues/118
+
     """

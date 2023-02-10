@@ -354,8 +354,6 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
     :param title:
 
-        passed to :meth:`argparse.ArgumentParser.add_subparsers` as `title`.
-
         .. deprecated:: 0.26.0
 
            This argument will be removed in Argh v.0.30.
@@ -363,17 +361,12 @@ def add_commands(parser, functions, namespace=None, namespace_kwargs=None,
 
     :param description:
 
-        passed to :meth:`argparse.ArgumentParser.add_subparsers` as
-        `description`.
-
         .. deprecated:: 0.26.0
 
            This argument will be removed in Argh v.0.30.
            Please use `namespace_kwargs` instead.
 
     :param help:
-
-        passed to :meth:`argparse.ArgumentParser.add_subparsers` as `help`.
 
         .. deprecated:: 0.26.0
 

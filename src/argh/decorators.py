@@ -151,6 +151,14 @@ def wrap_errors(errors=None, processor=None, *args):
             def my_command(...):
                 ...
 
+    .. warning::
+
+        Currently wrapping an exception in this way leads to your app's return
+        code being ``0``, i.e. success.  This is a known bug (issue118_) which
+        is due to be fixed.  Please make sure you don't rely on this behaviour.
+
+    .. _issue118: https://github.com/neithere/argh/issues/118
+
     """
 
     def wrapper(func):
