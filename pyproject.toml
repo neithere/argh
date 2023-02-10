@@ -44,7 +44,7 @@ classifiers  = [
 [project.urls]
 Homepage = "https://github.com/neithere/argh"
 "Issue Tracker" = "https://github.com/neithere/argh/issues"
-"Source Code" = "https://github.com/neithere/argh"
+"Releases" = "https://github.com/neithere/argh/releases"
 Documentation = "https://argh.readthedocs.io/en/latest"
 
 [project.optional-dependencies]

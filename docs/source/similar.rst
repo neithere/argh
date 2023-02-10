@@ -59,4 +59,3 @@ supports Python3.  Not every "yes" in this table would count as pro.
 .. _cliff: http://pypi.python.org/pypi/cliff
 .. _cement: http://builtoncement.com/2.0/
 .. _autocommand: https://pypi.python.org/pypi/autocommand/
-
