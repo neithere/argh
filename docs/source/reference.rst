@@ -30,3 +30,6 @@ API Reference
 
 .. automodule:: argh.utils
    :members:
+
+.. automodule:: argh.constants
+   :members:

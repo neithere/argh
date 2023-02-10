@@ -283,7 +283,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
 def dispatch_command(function, *args, **kwargs):
     """
     A wrapper for :func:`dispatch` that creates a one-command parser.
-    Uses :attr:`PARSER_FORMATTER`.
+    Uses :attr:`argh.constants.PARSER_FORMATTER`.
 
     This::
 

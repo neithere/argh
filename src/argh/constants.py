@@ -8,12 +8,17 @@
 #  General Public License version 3 (LGPLv3) as published by the Free
 #  Software Foundation. See the file README.rst for copying conditions.
 #
+"""
+Constants
+~~~~~~~~~
+"""
 import argparse
 
 __all__ = (
     'ATTR_NAME', 'ATTR_ALIASES', 'ATTR_ARGS', 'ATTR_WRAPPED_EXCEPTIONS',
     'ATTR_WRAPPED_EXCEPTIONS_PROCESSOR', 'ATTR_EXPECTS_NAMESPACE_OBJECT',
     'PARSER_FORMATTER', 'DEFAULT_ARGUMENT_TEMPLATE', 'DEST_FUNCTION',
+    'CustomFormatter',
 )
 
 
@@ -52,6 +57,10 @@ DEST_FUNCTION = 'function'
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
                       argparse.RawDescriptionHelpFormatter):
+    """
+    A slightly customised :class:`argparse.ArgumentDefaultsHelpFormatter`
+    + :class:`argparse.RawDescriptionHelpFormatter`.
+    """
     def _expand_help(self, action):
         """
         This method is copied verbatim from ArgumentDefaultsHelpFormatter with
@@ -91,7 +100,8 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
         return self._get_help_string(action) % params
 
 
-#: Default formatter to be used in implicitly instantiated ArgumentParser.
+#: Default formatter (:class:`CustomFormatter`) to be used in implicitly
+#: instantiated ArgumentParser.
 PARSER_FORMATTER = CustomFormatter
 
 
