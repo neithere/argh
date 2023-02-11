@@ -13,7 +13,7 @@ build:
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
-   configuration: docs/conf.py
+  configuration: docs/source/conf.py
 
 # NOTE: PDF generation was intentionally disabled due to failed builds.
 # Should you require enabling this, please make sure that it's tested.
@@ -26,6 +26,9 @@ sphinx:
 #    - pdf
 
 # Optionally declare the Python requirements required to build your docs
-#python:
-#   install:
-#   - requirements: docs/requirements.txt
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs

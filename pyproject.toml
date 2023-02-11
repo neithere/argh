@@ -1,0 +1,78 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "argh"
+version = "0.28.0"
+description = "An unobtrusive argparse wrapper with natural syntax"
+readme = "README.rst"
+requires-python = ">=3.8"
+license = { file = "COPYING.LESSER" }
+authors = [
+    { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
+]
+maintainers = [
+    { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
+]
+keywords = [
+  "cli",
+  "command line",
+  "argparse",
+  "optparse",
+  "argument",
+  "option",
+]
+classifiers  = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Software Development :: User Interfaces",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/neithere/argh"
+"Issue Tracker" = "https://github.com/neithere/argh/issues"
+"Releases" = "https://github.com/neithere/argh/releases"
+Documentation = "https://argh.readthedocs.io/en/latest"
+
+[project.optional-dependencies]
+completion = [
+    "argcomplete >= 2.0",
+]
+test = [
+    "tox >= 4.4",
+    "pytest >= 7.2",
+    "iocapture >= 0.1.2",
+    "pytest-cov >= 4.0",
+]
+docs = [
+    "sphinx >= 6.1",
+    "sphinx-pyproject == 0.1.0",
+    "sphinx_rtd_theme >= 1.2.0",
+    "readthedocs-sphinx-search == 0.2.0",
+]
+linters = [
+    "pre-commit >= 3.0.4",
+]
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.isort]
+multi_line_output = 3
+profile = "black"
+
+[tool.black]
+target-version = ["py38", "py39", "py310", "py311"]

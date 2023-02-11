@@ -2,6 +2,15 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.28.0
+--------------
+
+A major cleanup.
+
+Backward incompatible changes:
+
+- Dropped support for Python 2.7 and 3.7.
+
 Version 0.27.2
 --------------
 
@@ -126,7 +135,7 @@ Version 0.25
 - Added EntryPoint class as another way to assemble functions (issue #59).
 
 - Added support for Python 3.4; dropped support for Python 3.3
-  (this doesn't mean that Argh is necessarily broken under 3.3, 
+  (this doesn't mean that Argh is necessarily broken under 3.3,
   it's just that I'm not testing against it anymore).
 
 - Shell completion warnings are now deprecated in favour of `logging`.
