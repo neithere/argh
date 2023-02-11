@@ -248,7 +248,7 @@ Author
 
 Developed by Andrey Mikhaylenko since 2010.
 
-See file `AUTHORS` for a complete list of contributors to this library.
+See file `AUTHORS` for a list of contributors to this library.
 
 Support
 -------

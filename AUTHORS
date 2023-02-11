@@ -1,6 +1,25 @@
 Contributors
 ~~~~~~~~~~~~
 
+.. note::
+
+    This list used to be manually updated at the early stages of Argh
+    development.  As the list of contributions grew, it became increasingly
+    harder to track them.
+
+    Fortunately, Github offers this awesome tool:
+    https://github.com/neithere/argh/graphs/contributors
+
+    Please refer to the Github report for recent contributions.
+
+    Also, please don't hesitate to file issues_ and create pull requests
+    and *become a contributor*! ❤️
+
+.. _issues: https://github.com/neithere/argh/issues
+
+Historical List of Contributors
+-------------------------------
+
 Here is an inevitably incomplete list of contributors, i.e. people who have
 suggested features, reported bugs, submitted patches, wrote packaging scripts
 and generally made *Argh* better:
@@ -40,28 +59,33 @@ Acknowledgements
 
 Early versions were somewhat inspired by Alexander Solovyov's opster_.
 
-.. _opster: http://pypi.python.org/pypi/opster
+.. _opster: https://pypi.org/pypi/opster
 
 Thanks to the authors of argparse_ for the excellent library for which Argh
 is merely a wrapper.
 
-.. _argparse: http://docs.python.org/dev/library/argparse.html
+.. _argparse: https://docs.python.org/3/library/argparse.html
 
 Thanks to Andrey Kislyuk for writing argcomplete_ and thus allowing Argh
 to remain compact.
 
-.. _argcomplete: http://pypi.python.org/pypi/argcomplete
+.. _argcomplete: https://pypi.python.org/pypi/argcomplete
 
 Thanks to the authors of py.test_, tox_, virtualenv_, mock_ and related
 projects (or ideas) for automating the routine and letting the developer focus
 on the task and enjoy TDD.
 
-.. _py.test: http://pypi.python.org/pypi/pytest
-.. _tox: http://pypi.python.org/pypi/tox
-.. _virtualenv: http://pypi.python.org/pypi/virtualenv
-.. _mock: http://pypi.python.org/pypi/mock
+.. _py.test: https://pypi.org/pypi/pytest
+.. _tox: http://pypis.org/pypi/tox
+.. _virtualenv: https://pypi.org/pypi/virtualenv
+.. _mock: https://pypi.org/pypi/mock
 
 Thanks to Bitbucket_ team for the not-too-commercial approach to the excellent
-tools they provide.
+tools they provide.  The early years of Argh development were spent on that
+platform.
+
+Thanks to Github_ team for the place where Argh has been developed for over a
+decade.
 
 .. _bitbucket: https://bitbucket.org
+.. _github: https://github.com
