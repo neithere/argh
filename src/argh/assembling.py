@@ -14,7 +14,6 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
-import argparse
 import warnings
 from collections import OrderedDict
 
@@ -39,21 +38,16 @@ __all__ = [
 ]
 
 
-def _check_support_aliases():
-    p = argparse.ArgumentParser()
-    s = p.add_subparsers()
-    try:
-        s.add_parser("x", aliases=[])
-    except TypeError:
-        return False
-    else:
-        return True
-
-
-SUPPORTS_ALIASES = _check_support_aliases()
+# TODO: remove in v.0.30.
+SUPPORTS_ALIASES = True
 """
-Calculated on load. If `True`, current version of argparse supports
-alternative command names (can be set via :func:`~argh.decorators.aliases`).
+.. deprecated:: 0.28.0
+
+    This constant will be removed in Argh v.0.30.
+
+    It's not relevant anymore because it's always `True` for all Python
+    versions currently supported by Argh.
+
 """
 
 
@@ -475,9 +469,8 @@ def _extract_command_meta_from_func(func):
         "formatter_class": PARSER_FORMATTER,
     }
 
-    # try adding aliases for command name
-    if SUPPORTS_ALIASES:
-        func_parser_kwargs["aliases"] = getattr(func, ATTR_ALIASES, [])
+    # add aliases for command name
+    func_parser_kwargs["aliases"] = getattr(func, ATTR_ALIASES, [])
 
     return cmd_name, func_parser_kwargs
 
