@@ -13,9 +13,15 @@ import pytest
 
 import argh
 from argh.exceptions import AssemblingError
+from argh.utils import unindent
 
 from .base import CmdResult as R
 from .base import DebugArghParser, get_usage_string, run
+
+if sys.version_info < (3, 10):
+    HELP_OPTIONS_LABEL = "optional arguments"
+else:
+    HELP_OPTIONS_LABEL = "options"
 
 
 def test_set_default_command_integration():
@@ -759,3 +765,193 @@ def test_unknown_args():
     assert run(p, "--bar 1", exit=False, kwargs={"skip_unknown_args": True}) == R(
         out="1\n", err=""
     )
+
+
+def test_add_commands_no_overrides():
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser()
+    p.add_commands(
+        [first_func, second_func],
+    )
+
+    with iocapture.capture() as captured:
+        run(p, "--help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest [-h] {{first-func,second-func}} ...
+
+            positional arguments:
+              {{first-func,second-func}}
+                first-func          Owl stretching time
+                second-func
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help            show this help message and exit
+            """
+            )[1:]
+        )
+
+    with iocapture.capture() as captured:
+        run(p, "first-func --help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest first-func [-h] [-f FOO]
+
+            Owl stretching time
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help         show this help message and exit
+              -f FOO, --foo FOO  123
+            """
+            )[1:]
+        )
+
+
+def test_add_commands_namespace_overrides():
+    """
+    When `namespace_kwargs` is passed to `add_commands()`, its members override
+    whatever was specified on function level.
+    """
+
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser()
+    p.add_commands(
+        [first_func, second_func],
+        namespace="ns",
+        namespace_kwargs={
+            "help": "namespace help override",
+            "description": "namespace description override",
+        },
+    )
+
+    with iocapture.capture() as captured:
+        run(p, "--help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest [-h] {{ns}} ...
+
+            positional arguments:
+              {{ns}}
+                ns
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help  show this help message and exit
+            """
+            )[1:]
+        )
+
+    with iocapture.capture() as captured:
+        run(p, "ns --help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest ns [-h] {{first-func,second-func}} ...
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help            show this help message and exit
+
+            subcommands:
+              namespace description override
+
+              {{first-func,second-func}}
+                                    namespace help override
+                first-func          Owl stretching time
+                second-func
+            """
+            )[1:]
+        )
+
+    with iocapture.capture() as captured:
+        run(p, "ns first-func --help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest ns first-func [-h] [-f FOO]
+
+            Owl stretching time
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help         show this help message and exit
+              -f FOO, --foo FOO  123
+            """
+            )[1:]
+        )
+
+
+def test_add_commands_func_overrides():
+    """
+    When `func_kwargs` is passed to `add_commands()`, its members override
+    whatever was specified on function level.
+    """
+
+    def first_func(foo=123):
+        """Owl stretching time"""
+        pass
+
+    def second_func():
+        pass
+
+    p = argh.ArghParser()
+    p.add_commands(
+        [first_func, second_func],
+        func_kwargs={
+            "help": "func help override",
+            "description": "func description override",
+        },
+    )
+
+    with iocapture.capture() as captured:
+        run(p, "--help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest [-h] {{first-func,second-func}} ...
+
+            positional arguments:
+              {{first-func,second-func}}
+                first-func          func help override
+                second-func         func help override
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help            show this help message and exit
+            """
+            )[1:]
+        )
+
+    with iocapture.capture() as captured:
+        run(p, "first-func --help", exit=True)
+        assert (
+            captured.stdout
+            == unindent(
+                f"""
+            usage: pytest first-func [-h] [-f FOO]
+
+            func description override
+
+            {HELP_OPTIONS_LABEL}:
+              -h, --help         show this help message and exit
+              -f FOO, --foo FOO  123
+            """
+            )[1:]
+        )
