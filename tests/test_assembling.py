@@ -316,3 +316,11 @@ def test_add_subcommands(mock_add_commands):
             "help": "CRUD for our silly database",
         },
     )
+
+
+@mock.patch("argh.helpers.autocomplete")
+def test_arghparser_autocomplete_method(mock_autocomplete):
+    p = argh.ArghParser()
+    p.autocomplete()
+
+    mock_autocomplete.assert_called()
