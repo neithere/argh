@@ -223,10 +223,18 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
-    if pre_call:  # XXX undocumented because I'm unsure if it's OK
-        # Actually used in real projects:
-        # * https://google.com/search?q=argh+dispatch+pre_call
-        # * https://github.com/neithere/argh/issues/63
+    # TODO: remove in v.0.30
+    if pre_call:  # pragma: no cover
+        # This is NOT a documented and recommended API.
+        # The common use case for this hack is to inject shared arguments.
+        # Such approach would promote an approach which is not in line with the
+        # purpose of the library, i.e. to keep things natural and "pythonic".
+        # Argh is about keeping CLI in line with function signatures.
+        # The `pre_call` hack effectively destroys this mapping.
+        # There should be a better solution, e.g. decorators and/or some shared
+        # objects.
+        #
+        # See discussion here: https://github.com/neithere/argh/issues/63
         pre_call(namespace_obj)
 
     # the function is nested to catch certain exceptions (see below)

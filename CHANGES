@@ -21,6 +21,16 @@ Deprecated features, to be removed in v.0.30:
 
   - Not relevant anymore.  Please use the built-in `input()` instead.
 
+- argument `pre_call` in `dispatch()`.
+
+   Even though this hack seems to have been used in some projects, it was never
+   part of the official API and never recommended.
+
+   Describing your use case in the `discussion about shared arguments`_ can
+   help improve the library to accomodate it in a proper way.
+
+   .. _discussion about shared arguments: https://github.com/neithere/argh/issues/63
+
 - Argument help as annotations.
 
   - Annotations will only be used for types after v.0.30.
