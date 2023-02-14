@@ -584,6 +584,29 @@ def test_custom_namespace():
     assert run(p, "", {"namespace": namespace}).out == "foo\n"
 
 
+@pytest.mark.parametrize(
+    "namespace_class", [argparse.Namespace, argh.dispatching.ArghNamespace]
+)
+def test_get_function_from_namespace_obj(namespace_class):
+    namespace = namespace_class()
+
+    def func():
+        pass
+
+    retval = argh.dispatching._get_function_from_namespace_obj(namespace)
+    assert retval is None
+
+    setattr(namespace, argh.constants.DEST_FUNCTION, "")
+
+    retval = argh.dispatching._get_function_from_namespace_obj(namespace)
+    assert retval is None
+
+    setattr(namespace, argh.constants.DEST_FUNCTION, func)
+
+    retval = argh.dispatching._get_function_from_namespace_obj(namespace)
+    assert retval == func
+
+
 def test_normalized_keys():
     """Underscores in function args are converted to dashes and back."""
 

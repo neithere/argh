@@ -39,12 +39,34 @@ def run_func(func, command_string, **kwargs):
         return result
 
 
-def test_dispatch_command_shortcut():
-    def cmd(foo=1):
-        return foo
+@patch("argh.dispatching.argparse.ArgumentParser")
+@patch("argh.dispatching.dispatch")
+@patch("argh.dispatching.set_default_command")
+def test_dispatch_command(mock_set_default_command, mock_dispatch, mock_parser_class):
+    def func():
+        pass
 
-    assert run_func(cmd, "") == "1\n"
-    assert run_func(cmd, "--foo 2") == "2\n"
+    argh.dispatching.dispatch_command(func)
+
+    mock_parser_class.assert_called_once()
+    mock_parser = mock_parser_class.return_value
+    mock_set_default_command.assert_called_with(mock_parser, func)
+    mock_dispatch.assert_called_with(mock_parser)
+
+
+@patch("argh.dispatching.argparse.ArgumentParser")
+@patch("argh.dispatching.dispatch")
+@patch("argh.dispatching.add_commands")
+def test_dispatch_commands(mock_add_commands, mock_dispatch, mock_parser_class):
+    def func():
+        pass
+
+    argh.dispatching.dispatch_commands([func])
+
+    mock_parser_class.assert_called_once()
+    mock_parser = mock_parser_class.return_value
+    mock_add_commands.assert_called_with(mock_parser, [func])
+    mock_dispatch.assert_called_with(mock_parser)
 
 
 @patch("argh.dispatching.dispatch")

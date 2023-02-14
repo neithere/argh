@@ -316,7 +316,12 @@ def dispatch_command(function, *args, **kwargs):
         set_default_command(parser, foo)
         dispatch(parser)
 
-    This function can be also used as a decorator.
+    This function can be also used as a decorator::
+
+        @dispatch_command
+        def main(foo=123):
+            return foo + 1
+
     """
     parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
     set_default_command(parser, function)
