@@ -12,6 +12,7 @@
 Interaction
 ~~~~~~~~~~~
 """
+# TODO: remove in v.0.30
 from argh.io import safe_input
 
 __all__ = ["confirm", "safe_input"]
@@ -67,10 +68,10 @@ def confirm(action, default=None, skip=False):
             if default is None:
                 cnt = 1
                 while not choice and cnt < MAX_ITERATIONS:
-                    choice = safe_input(prompt)
+                    choice = input(prompt)
                     cnt += 1
             else:
-                choice = safe_input(prompt)
+                choice = input(prompt)
         except KeyboardInterrupt:
             return None
     if choice in ("yes", "y", "Y"):

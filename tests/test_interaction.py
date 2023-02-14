@@ -9,7 +9,7 @@ import argh
 
 
 def parse_choice(choice, **kwargs):
-    with mock.patch("argh.io._input", lambda prompt: choice):
+    with mock.patch("argh.interaction.input", lambda prompt: choice):
         return argh.confirm("test", **kwargs)
 
 
@@ -39,7 +39,7 @@ def test_prompt():
     def raw_input_mock(prompt):
         prompts.append(prompt)
 
-    with mock.patch("argh.io._input", raw_input_mock):
+    with mock.patch("argh.interaction.input", raw_input_mock):
         argh.confirm("do smth")
         assert prompts[-1] == "do smth? (y/n)"
 
@@ -53,7 +53,7 @@ def test_prompt():
         assert prompts[-1] == "do smth? (y/N)"
 
 
-@mock.patch("argh.io._input")
+@mock.patch("argh.interaction.input")
 def test_encoding(mock_input):
     "Unicode is accepted as prompt message"
 
@@ -64,7 +64,7 @@ def test_encoding(mock_input):
     mock_input.assert_called_once_with("привет? (y/n)")
 
 
-@mock.patch("argh.io._input")
+@mock.patch("argh.interaction.input")
 def test_skip(mock_input):
     retval = argh.confirm("test", default=123, skip=True)
 
@@ -72,7 +72,7 @@ def test_skip(mock_input):
     mock_input.assert_not_called()
 
 
-@mock.patch("argh.io._input")
+@mock.patch("argh.interaction.input")
 def test_keyboard_interrupt(mock_input):
     mock_input.side_effect = KeyboardInterrupt
     retval = argh.confirm("test")

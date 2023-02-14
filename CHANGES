@@ -17,6 +17,10 @@ Deprecated features, to be removed in v.0.30:
 
   - Always `True` for recent versions of Python.
 
+- `argh.io.safe_input()` AKA `argh.interaction.safe_input()`.
+
+  - Not relevant anymore.  Please use the built-in `input()` instead.
+
 - Argument help as annotations.
 
   - Annotations will only be used for types after v.0.30.
