@@ -1,4 +1,4 @@
-name: Test 🔬 and Publish 📦
+name: 🔬 Test and 📦 Publish
 
 on:  # yamllint disable-line rule:truthy
   push:
@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
       - master
 
 jobs:
-  Test 🔬:
+  Test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,8 +33,8 @@ jobs:
       - name: Test with tox
         run: tox
 
-  Publish 📦:
-    needs: Test 🔬
+  Publish:
+    needs: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
