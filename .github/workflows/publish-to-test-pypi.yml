@@ -2,7 +2,7 @@ name: 📦 Publish to PyPI and TestPyPI
 
 on:  # yamllint disable-line rule:truthy
   workflow_run:
-    workflows: ["🔬 Test"]
+    workflows: ["Test"]
     types:
       - completed
 

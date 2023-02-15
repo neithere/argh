@@ -1,8 +1,12 @@
-name: 🔬 Test
+name: Test
 
 on:  # yamllint disable-line rule:truthy
-  - push
-  - pull_request
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   test:
