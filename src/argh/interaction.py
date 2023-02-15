@@ -1,4 +1,3 @@
-# coding: utf-8
 #
 #  Copyright © 2010—2023 Andrey Mikhaylenko and contributors
 #
