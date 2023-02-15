@@ -1,4 +1,3 @@
-# coding: utf-8
 #
 #  Copyright © 2010—2023 Andrey Mikhaylenko and contributors
 #
@@ -69,9 +68,9 @@ Dynamically set to `True` on load if argcomplete_ was successfully imported.
 try:
     import argcomplete
 except ImportError:
-    pass
+    argcomplete = None
 else:
-    COMPLETION_ENABLED = True
+    COMPLETION_ENABLED = True  # pragma: no cover
 
 
 __all__ = ["autocomplete", "COMPLETION_ENABLED"]
@@ -90,4 +89,6 @@ def autocomplete(parser):
     if COMPLETION_ENABLED:
         argcomplete.autocomplete(parser)
     elif "bash" in os.getenv("SHELL", ""):
-        logger.debug("Bash completion not available. Install argcomplete.")
+        logger.debug("Bash completion is not available. Please install argcomplete.")
+    else:
+        pass

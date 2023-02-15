@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -290,3 +289,37 @@ def test_set_default_command_deprecation_warnings():
         DeprecationWarning, match="Argument `help` is deprecated in add_commands()"
     ):
         argh.add_commands(parser, [], namespace="c", help="bar")
+
+
+@mock.patch("argh.assembling.add_commands")
+def test_add_subcommands(mock_add_commands):
+    mock_parser = mock.MagicMock()
+
+    def get_items():
+        pass
+
+    argh.add_subcommands(
+        mock_parser,
+        "db",
+        [get_items],
+        title="database commands",
+        help="CRUD for our silly database",
+    )
+
+    mock_add_commands.assert_called_with(
+        mock_parser,
+        [get_items],
+        namespace="db",
+        namespace_kwargs={
+            "title": "database commands",
+            "help": "CRUD for our silly database",
+        },
+    )
+
+
+@mock.patch("argh.helpers.autocomplete")
+def test_arghparser_autocomplete_method(mock_autocomplete):
+    p = argh.ArghParser()
+    p.autocomplete()
+
+    mock_autocomplete.assert_called()

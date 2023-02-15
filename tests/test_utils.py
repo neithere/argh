@@ -5,7 +5,7 @@ Unit Tests For Utility Functions
 """
 import functools
 
-from argh.utils import get_arg_spec
+from argh.utils import get_arg_spec, unindent
 
 
 def function(x, y=0):
@@ -93,3 +93,47 @@ def test_get_arg_spec__method():
             return x
 
     _assert_spec(C.func, args=["self", "x", "y"])
+
+
+def test_util_unindent():
+    "Self-test the unindent() helper function"
+
+    # target case
+    one = """
+    a
+     b
+      c
+    """
+    assert (
+        unindent(one)
+        == """
+a
+ b
+  c
+"""
+    )
+
+    # edge case: lack of indentation on first non-empty line
+    two = """
+a
+  b
+    c
+"""
+
+    assert unindent(two) == two
+
+    # edge case: unexpectedly unindented in between
+    three = """
+    a
+b
+    c
+    """
+
+    assert (
+        unindent(three)
+        == """
+a
+b
+c
+"""
+    )

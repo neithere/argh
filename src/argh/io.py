@@ -1,4 +1,3 @@
-# coding: utf-8
 #
 #  Copyright © 2010—2023 Andrey Mikhaylenko and contributors
 #
@@ -15,16 +14,15 @@ Output Processing
 __all__ = ["safe_input"]
 
 
-def _input(prompt):
-    # this function can be mocked up in tests
-    return input(prompt)
-
-
-def safe_input(prompt):
+def safe_input(prompt):  # pragma: no cover
     """
-    Prompts user for input. Correctly handles prompt message encoding.
+    .. deprecated:: 0.28
+
+        This function will be removed in Argh v.0.30.
+        Please use the built-in function `input()` instead.
+
     """
     if not isinstance(prompt, str):
         prompt = prompt.decode()
 
-    return _input(prompt)
+    return input(prompt)

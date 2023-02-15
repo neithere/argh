@@ -11,6 +11,43 @@ Backward incompatible changes:
 
 - Dropped support for Python 2.7 and 3.7.
 
+Deprecated features, to be removed in v.0.30:
+
+- `argh.assembling.SUPPORTS_ALIASES`.
+
+  - Always `True` for recent versions of Python.
+
+- `argh.io.safe_input()` AKA `argh.interaction.safe_input()`.
+
+  - Not relevant anymore.  Please use the built-in `input()` instead.
+
+- argument `pre_call` in `dispatch()`.
+
+   Even though this hack seems to have been used in some projects, it was never
+   part of the official API and never recommended.
+
+   Describing your use case in the `discussion about shared arguments`_ can
+   help improve the library to accomodate it in a proper way.
+
+   .. _discussion about shared arguments: https://github.com/neithere/argh/issues/63
+
+- Argument help as annotations.
+
+  - Annotations will only be used for types after v.0.30.
+  - Please replace any instance of::
+
+      def func(foo: "Foobar"):
+
+    with the following::
+
+      @arg('-f', '--foo', help="Foobar")
+      def func(foo):
+
+    It will be decided later how to keep this functionality "DRY" (don't repeat
+    yourself) without conflicts with modern conventions and tools.
+
+- Added deprecation warnings for some arguments deprecated back in v.0.26.
+
 Version 0.27.2
 --------------
 
@@ -98,7 +135,7 @@ really outdated, please read this list carefully and grep your code.
   `argh.completion.autocomplete()`.  Debug-level logging is used instead.
   (The warnings were deprecated since v.0.25).
 
-Some more stuff has been scheduled **to be purged before 1.0**:
+Deprecated:
 
 - Deprecated arguments `title`, `help` and `description` in `add_commands()`
   helper function.  See documentation and issue #60.
