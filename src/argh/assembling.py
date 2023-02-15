@@ -145,8 +145,9 @@ def _guess(kwargs):
 
 
 def _is_positional(args, prefix_chars="-"):
-    assert args
-    if 1 < len(args) or args[0][0].startswith(tuple(prefix_chars)):
+    if not args or not args[0]:
+        raise ValueError("Expected at least one argument")
+    if args[0][0].startswith(tuple(prefix_chars)):
         return False
     else:
         return True
@@ -441,9 +442,8 @@ def add_commands(
         subsubparser = subparsers_action.add_parser(namespace, **subsubparser_kw)
         subparsers_action = subsubparser.add_subparsers(**namespace_kwargs)
     else:
-        assert not namespace_kwargs, (
-            "`parser_kwargs` only makes sense " "with `namespace`."
-        )
+        if namespace_kwargs:
+            raise ValueError("`parser_kwargs` only makes sense " "with `namespace`.")
 
     for func in functions:
         cmd_name, func_parser_kwargs = _extract_command_meta_from_func(func)

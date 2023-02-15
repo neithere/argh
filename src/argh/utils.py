@@ -35,11 +35,10 @@ def get_subparsers(parser, create=False):
         actions = [
             a for a in parser._actions if isinstance(a, argparse._SubParsersAction)
         ]
-        assert len(actions) == 1
         return actions[0]
-    else:
-        if create:
-            return parser.add_subparsers()
+
+    if create:
+        return parser.add_subparsers()
 
 
 def get_arg_spec(function):
