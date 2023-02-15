@@ -1,4 +1,4 @@
-name: 🔬 Test and 📦 Publish
+name: 🔬 Lint and Test
 
 on:  # yamllint disable-line rule:truthy
   push:
@@ -32,33 +32,3 @@ jobs:
           pip install tox tox-gh-actions
       - name: Test with tox
         run: tox
-
-  Publish:
-    needs: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-      - name: Install pypa/build
-        run: >-
-          python -m
-          pip install
-          build
-          --user
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
-          .
-      - name: Publish distribution to Test PyPI
-        if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
