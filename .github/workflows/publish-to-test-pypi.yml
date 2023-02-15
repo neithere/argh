@@ -1,11 +1,16 @@
-name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+name: 📦 Publish to PyPI and TestPyPI
 
-on: push  # yamllint disable-line rule:truthy
+on:  # yamllint disable-line rule:truthy
+  workflow_run:
+    workflows: ["🔬 Test"]
+    types:
+      - completed
 
 jobs:
   build-and-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
 
       - uses: actions/checkout@master
