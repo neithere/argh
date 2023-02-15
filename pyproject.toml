@@ -76,3 +76,6 @@ profile = "black"
 
 [tool.black]
 target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
