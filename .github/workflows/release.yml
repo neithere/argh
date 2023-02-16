@@ -24,7 +24,30 @@ jobs:
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
-      - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+
+# TODO:
+# Verify that the resulting sdist matches one created by `flit build`.
+# Currently it's not the case:
+#
+#   $ diff -r ci/argh-0.28.1 flit_local/argh-0.28.1
+#
+#   Only in flit_local/argh-0.28.1: AUTHORS
+#   Only in flit_local/argh-0.28.1: CHANGES
+#   Only in flit_local/argh-0.28.1: COPYING
+#   Only in flit_local/argh-0.28.1: docs
+#   Only in flit_local/argh-0.28.1: .flake8
+#   Only in flit_local/argh-0.28.1: .github
+#   Only in flit_local/argh-0.28.1: .gitignore
+#   Only in flit_local/argh-0.28.1: Makefile
+#   Only in flit_local/argh-0.28.1: MANIFEST.in
+#   Only in flit_local/argh-0.28.1: .pre-commit-config.yaml
+#   Only in flit_local/argh-0.28.1: .readthedocs.yml
+#   Only in flit_local/argh-0.28.1: tests
+#   Only in flit_local/argh-0.28.1: tox.ini
+#   Only in flit_local/argh-0.28.1: .yamllint.yaml
+#
+#
+#     - name: Publish package to PyPI
+#       uses: pypa/gh-action-pypi-publish@release/v1
+#       with:
+#         password: ${{ secrets.PYPI_API_TOKEN }}
