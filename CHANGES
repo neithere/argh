@@ -2,6 +2,11 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.28.1
+--------------
+
+- Fixed bugs in tests (#171, #172)
+
 Version 0.28.0
 --------------
 
