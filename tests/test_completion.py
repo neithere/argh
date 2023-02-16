@@ -20,8 +20,10 @@ def test_enabled(mock_argcomplete):
 
 @patch("argh.completion.COMPLETION_ENABLED", False)
 @patch("argh.completion.argcomplete")
+@patch("argh.completion.os.getenv")
 @patch("argh.completion.logger")
-def test_disabled_without_bash(mock_logger, mock_argcomplete):
+def test_disabled_without_bash(mock_logger, mock_getenv, mock_argcomplete):
+    mock_getenv.return_value = "/bin/sh"
     parser = argh.ArghParser()
 
     parser.autocomplete()
