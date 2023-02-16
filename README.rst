@@ -1,11 +1,8 @@
 Argh: The Natural CLI
 =====================
 
-.. image:: https://img.shields.io/coveralls/neithere/argh.svg
-    :target: https://coveralls.io/r/neithere/argh
-
-.. image:: https://img.shields.io/travis/neithere/argh.svg
-    :target: https://travis-ci.org/neithere/argh
+.. image:: https://github.com/neithere/argh/actions/workflows/test-and-publish.yml/badge.svg
+    :target: https://github.com/neithere/argh/actions/workflows/test-and-publish.yml
 
 .. image:: https://img.shields.io/pypi/format/argh.svg
     :target: https://pypi.python.org/pypi/argh
