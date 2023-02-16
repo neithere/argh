@@ -797,7 +797,7 @@ def test_add_commands_no_overrides():
     def second_func():
         pass
 
-    p = argh.ArghParser()
+    p = argh.ArghParser(prog="myapp")
     p.add_commands(
         [first_func, second_func],
     )
@@ -808,7 +808,7 @@ def test_add_commands_no_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest [-h] {{first-func,second-func}} ...
+            usage: myapp [-h] {{first-func,second-func}} ...
 
             positional arguments:
               {{first-func,second-func}}
@@ -827,7 +827,7 @@ def test_add_commands_no_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest first-func [-h] [-f FOO]
+            usage: myapp first-func [-h] [-f FOO]
 
             Owl stretching time
 
@@ -852,7 +852,7 @@ def test_add_commands_namespace_overrides():
     def second_func():
         pass
 
-    p = argh.ArghParser()
+    p = argh.ArghParser(prog="myapp")
     p.add_commands(
         [first_func, second_func],
         namespace="ns",
@@ -868,7 +868,7 @@ def test_add_commands_namespace_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest [-h] {{ns}} ...
+            usage: myapp [-h] {{ns}} ...
 
             positional arguments:
               {{ns}}
@@ -886,7 +886,7 @@ def test_add_commands_namespace_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest ns [-h] {{first-func,second-func}} ...
+            usage: myapp ns [-h] {{first-func,second-func}} ...
 
             {HELP_OPTIONS_LABEL}:
               -h, --help            show this help message and exit
@@ -908,7 +908,7 @@ def test_add_commands_namespace_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest ns first-func [-h] [-f FOO]
+            usage: myapp ns first-func [-h] [-f FOO]
 
             Owl stretching time
 
@@ -933,7 +933,7 @@ def test_add_commands_func_overrides():
     def second_func():
         pass
 
-    p = argh.ArghParser()
+    p = argh.ArghParser(prog="myapp")
     p.add_commands(
         [first_func, second_func],
         func_kwargs={
@@ -948,7 +948,7 @@ def test_add_commands_func_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest [-h] {{first-func,second-func}} ...
+            usage: myapp [-h] {{first-func,second-func}} ...
 
             positional arguments:
               {{first-func,second-func}}
@@ -967,7 +967,7 @@ def test_add_commands_func_overrides():
             captured.stdout
             == unindent(
                 f"""
-            usage: pytest first-func [-h] [-f FOO]
+            usage: myapp first-func [-h] [-f FOO]
 
             func description override
 
