@@ -80,3 +80,13 @@ target-version = ["py38", "py39", "py310", "py311"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
+
+[tool.flit.sdist]
+include = [
+  "AUTHORS",
+  "CHANGES",
+  "COPYING",
+  "COPYING.LESSER",
+  "tests/",
+  "tox.ini",
+]
