@@ -423,14 +423,13 @@ know that something can be wrong, you'll probably handle it this way::
             item = items[key]
         except KeyError as error:
             print(e)    # hide the traceback
-            sys.exit()  # bail out (unsafe!)
+            sys.exit(1)  # bail out (unsafe!)
         else:
             ... do something ...
             print(item)
 
-This works, but the print-and-exit tasks are repetitive; moreover, there are
-cases when you don't want to raise `SystemExit` and just need to collect the
-output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
+This works, but the print-and-exit tasks are repetitive.
+Instead, you can use :class:`~argh.exceptions.CommandError`::
 
     def show_item(key):
         try:
@@ -442,7 +441,8 @@ output in a uniform way. Use :class:`~argh.exceptions.CommandError`::
             return item
 
 `Argh` will wrap this exception and choose the right way to display its
-message (depending on how :func:`~argh.dispatching.dispatch` was called).
+message (depending on how :func:`~argh.dispatching.dispatch` was called),
+then exit with exit status 1 (indicating failure).
 
 Decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 
@@ -460,6 +460,21 @@ specified.  It also allows plugging in a preprocessor for the caught errors::
         raise CommandError('some error')
 
 The command above will print `ERR: some error`.
+
+If you want to print and exit while still indicating the command completed
+successfully, you can pass an optional `code` argument to the
+:class:`~argh.exceptions.CommandError`::
+
+    def show_item(key):
+        try:
+            item = items[key]
+        except KeyError as error:
+            raise CommandError(error, code=0)  # bail out, but exit with status 0
+        else:
+            ... do something ...
+            return item
+
+You can also pass any other code in order to exit with a specific error status.
 
 Packaging
 ---------

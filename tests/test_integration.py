@@ -32,7 +32,7 @@ def test_set_default_command_integration():
 
     assert run(p, "") == R(out="1\n", err="")
     assert run(p, "--foo 2") == R(out="2\n", err="")
-    assert run(p, "--help", exit=True) is None
+    assert run(p, "--help", exit=True) == 0
 
 
 def test_set_default_command_integration_merging():
@@ -297,7 +297,7 @@ class TestErrorWrapping:
         p.set_default_command(wrapped_parrot)
 
         assert run(p, "") == R("beautiful plumage\n", "")
-        assert run(p, "--dead") == R("", "ValueError: this parrot is no more\n")
+        assert run(p, "--dead") == R("", "ValueError: this parrot is no more\n", exit=1)
 
     def test_processor(self):
         parrot = self._get_parrot()
@@ -311,7 +311,7 @@ class TestErrorWrapping:
         p = argh.ArghParser()
         p.set_default_command(processed_parrot)
 
-        assert run(p, "--dead") == R("", "ERR: this parrot is no more!\n")
+        assert run(p, "--dead") == R("", "ERR: this parrot is no more!\n", exit=1)
 
     def test_stderr_vs_stdout(self):
         @argh.wrap_errors([KeyError])
@@ -323,7 +323,7 @@ class TestErrorWrapping:
         p.set_default_command(func)
 
         assert run(p, "a") == R(out="1\n", err="")
-        assert run(p, "b") == R(out="", err="KeyError: 'b'\n")
+        assert run(p, "b") == R(out="", err="KeyError: 'b'\n", exit=1)
 
 
 def test_argv():
@@ -445,7 +445,7 @@ def test_bare_namespace():
     # without arguments
 
     # returns a help message and doesn't exit
-    assert "usage:" in run(p, "greet", exit=True).out
+    assert "usage:" in run(p, "greet").out
 
     # with an argument
 
@@ -507,13 +507,13 @@ def test_help_alias():
 
     # assert the commands don't fail
 
-    assert run(p, "--help", exit=True) is None
-    assert run(p, "greet --help", exit=True) is None
-    assert run(p, "greet hello --help", exit=True) is None
+    assert run(p, "--help", exit=True) == 0
+    assert run(p, "greet --help", exit=True) == 0
+    assert run(p, "greet hello --help", exit=True) == 0
 
-    assert run(p, "help", exit=True) is None
-    assert run(p, "help greet", exit=True) is None
-    assert run(p, "help greet hello", exit=True) is None
+    assert run(p, "help", exit=True) == 0
+    assert run(p, "help greet", exit=True) == 0
+    assert run(p, "help greet hello", exit=True) == 0
 
 
 def test_arg_order():
@@ -554,8 +554,8 @@ def test_output_file():
 
 
 def test_command_error():
-    def whiner_plain():
-        raise argh.CommandError("I feel depressed.")
+    def whiner_plain(code=1):
+        raise argh.CommandError("I feel depressed.", code=code)
 
     def whiner_iterable():
         yield "Hello..."
@@ -564,9 +564,14 @@ def test_command_error():
     p = DebugArghParser()
     p.add_commands([whiner_plain, whiner_iterable])
 
-    assert run(p, "whiner-plain") == R(out="", err="CommandError: I feel depressed.\n")
+    assert run(p, "whiner-plain") == R(
+        out="", err="CommandError: I feel depressed.\n", exit=1
+    )
+    assert run(p, "whiner-plain --code=127") == R(
+        out="", err="CommandError: I feel depressed.\n", exit=127
+    )
     assert run(p, "whiner-iterable") == R(
-        out="Hello...\n", err="CommandError: I feel depressed.\n"
+        out="Hello...\n", err="CommandError: I feel depressed.\n", exit=1
     )
 
 
@@ -769,7 +774,7 @@ def test_prog():
     usage = get_usage_string()
 
     with iocapture.capture() as captured:
-        assert run(p, "-h", exit=True) is None
+        assert run(p, "-h", exit=True) == 0
         assert captured.stdout.startswith(usage)
 
 

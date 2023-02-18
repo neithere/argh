@@ -106,7 +106,7 @@ def dispatch(
 
     :param errors_file:
 
-        Same as `output_file` but for ``sys.stderr``.
+        Same as `output_file` but for ``sys.stderr``, and `None` is not accepted.
 
     :param raw_output:
 
@@ -135,6 +135,9 @@ def dispatch(
     which is interpreted as an expected event so the traceback is hidden.
     You can also mark arbitrary exceptions as "wrappable" by using the
     :func:`~argh.decorators.wrap_errors` decorator.
+
+    Wrapped exceptions, or other "expected errors" like parse failures,
+    will cause a SystemExit to be raised.
     """
     if completion:
         autocomplete(parser)
@@ -176,6 +179,7 @@ def dispatch(
         # normally this is stdout; can be any file
         f = output_file
 
+    # this may raise user exceptions, or SystemExit for wrapped exceptions
     for line in lines:
         # print the line as soon as it is generated to ensure that it is
         # displayed to the user before anything else happens, e.g.
@@ -218,7 +222,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
     Yields the results line by line.
 
     If :class:`~argh.exceptions.CommandError` is raised, its message is
-    appended to the results (i.e. yielded by the generator as a string).
+    written to the error file, and a SystemExit is raised.
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
@@ -298,6 +302,11 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
 
         errors_file.write(str(processor(e)))
         errors_file.write("\n")
+
+        # Use code from CommandError if available, otherwise default to 1
+        code = e.code if isinstance(e, CommandError) and e.code is not None else 1
+
+        sys.exit(code)
 
 
 def dispatch_command(function, *args, **kwargs):
