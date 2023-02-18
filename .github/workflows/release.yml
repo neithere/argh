@@ -1,11 +1,12 @@
-name: 📦 Publish Python Package to PyPI
+name: 📦 Publish package
 
 on:  # yamllint disable-line rule:truthy
   release:
     types: [published]
 
 jobs:
-  Publish:
+  pypi:
+    name: Build sdist+wheel, upload to PyPI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
