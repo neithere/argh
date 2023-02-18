@@ -10,10 +10,10 @@ readme = "README.rst"
 requires-python = ">=3.8"
 license = { file = "COPYING.LESSER" }
 authors = [
-    { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
+  { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
 ]
 maintainers = [
-    { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
+  { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
 ]
 keywords = [
   "cli",
@@ -50,22 +50,22 @@ Documentation = "https://argh.readthedocs.io/en/latest"
 
 [project.optional-dependencies]
 completion = [
-    "argcomplete >= 2.0",
+  "argcomplete >= 2.0",
 ]
 test = [
-    "tox >= 4.4",
-    "pytest >= 7.2",
-    "iocapture >= 0.1.2",
-    "pytest-cov >= 4.0",
+  "tox >= 4.4",
+  "pytest >= 7.2",
+  "iocapture >= 0.1.2",
+  "pytest-cov >= 4.0",
 ]
 docs = [
-    "sphinx >= 6.1",
-    "sphinx-pyproject == 0.1.0",
-    "sphinx_rtd_theme >= 1.2.0",
-    "readthedocs-sphinx-search == 0.2.0",
+  "sphinx >= 6.1",
+  "sphinx-pyproject == 0.1.0",
+  "sphinx_rtd_theme >= 1.2.0",
+  "readthedocs-sphinx-search == 0.2.0",
 ]
 linters = [
-    "pre-commit >= 3.0.4",
+  "pre-commit >= 3.0.4",
 ]
 
 [tool.distutils.bdist_wheel]
