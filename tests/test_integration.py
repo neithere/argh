@@ -564,7 +564,9 @@ def test_command_error():
     p = DebugArghParser()
     p.add_commands([whiner_plain, whiner_iterable])
 
-    assert run(p, "whiner-plain") == R(out="", err="CommandError: I feel depressed.\n", exit=1)
+    assert run(p, "whiner-plain") == R(
+        out="", err="CommandError: I feel depressed.\n", exit=1
+    )
     assert run(p, "whiner-plain --code=127") == R(
         out="", err="CommandError: I feel depressed.\n", exit=127
     )

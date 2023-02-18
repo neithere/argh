@@ -301,7 +301,7 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
         )
 
         errors_file.write(str(processor(e)))
-        errors_file.write('\n')
+        errors_file.write("\n")
 
         # Use code from CommandError if available, otherwise default to 1
         code = e.code if isinstance(e, CommandError) and e.code is not None else 1

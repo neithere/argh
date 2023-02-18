@@ -461,8 +461,9 @@ specified.  It also allows plugging in a preprocessor for the caught errors::
 
 The command above will print `ERR: some error`.
 
-If you want to print and exit while still indicating the command completed successfully,
-you can pass an optional `code` argument to the :class:`~argh.exceptions.CommandError`::
+If you want to print and exit while still indicating the command completed
+successfully, you can pass an optional `code` argument to the
+:class:`~argh.exceptions.CommandError`::
 
     def show_item(key):
         try:

@@ -9,9 +9,10 @@ from collections import namedtuple
 
 from argh import ArghParser
 
-_CmdResult = namedtuple("CmdResult", ("out", "err", "exit"))
+
 # hacky constructor for default exit value
 def CmdResult(out, err, exit=None):
+    _CmdResult = namedtuple("CmdResult", ("out", "err", "exit"))
     return _CmdResult(out, err, exit)
 
 
@@ -42,7 +43,7 @@ def call_cmd(parser, command_string, **kwargs):
         result = parser.dispatch(args, **kwargs)
     except SystemExit as e:
         result = None
-        exit = e.code or 0 # e.code may be None
+        exit = e.code or 0  # e.code may be None
     else:
         exit = None
 
