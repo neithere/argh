@@ -1,6 +1,0 @@
-# Including license files.
-include COPYING
-include COPYING.LESSER
-
-# Testing (see #155).
-include tox.ini

@@ -1,4 +1,3 @@
-# coding: utf-8
 #
 #  Copyright © 2010—2023 Andrey Mikhaylenko and contributors
 #
@@ -14,7 +13,6 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
-import argparse
 import warnings
 from collections import OrderedDict
 
@@ -39,21 +37,16 @@ __all__ = [
 ]
 
 
-def _check_support_aliases():
-    p = argparse.ArgumentParser()
-    s = p.add_subparsers()
-    try:
-        s.add_parser("x", aliases=[])
-    except TypeError:
-        return False
-    else:
-        return True
-
-
-SUPPORTS_ALIASES = _check_support_aliases()
+# TODO: remove in v.0.30.
+SUPPORTS_ALIASES = True
 """
-Calculated on load. If `True`, current version of argparse supports
-alternative command names (can be set via :func:`~argh.decorators.aliases`).
+.. deprecated:: 0.28.0
+
+    This constant will be removed in Argh v.0.30.
+
+    It's not relevant anymore because it's always `True` for all Python
+    versions currently supported by Argh.
+
 """
 
 
@@ -152,8 +145,9 @@ def _guess(kwargs):
 
 
 def _is_positional(args, prefix_chars="-"):
-    assert args
-    if 1 < len(args) or args[0][0].startswith(tuple(prefix_chars)):
+    if not args or not args[0]:
+        raise ValueError("Expected at least one argument")
+    if args[0][0].startswith(tuple(prefix_chars)):
         return False
     else:
         return True
@@ -448,9 +442,8 @@ def add_commands(
         subsubparser = subparsers_action.add_parser(namespace, **subsubparser_kw)
         subparsers_action = subsubparser.add_subparsers(**namespace_kwargs)
     else:
-        assert not namespace_kwargs, (
-            "`parser_kwargs` only makes sense " "with `namespace`."
-        )
+        if namespace_kwargs:
+            raise ValueError("`parser_kwargs` only makes sense " "with `namespace`.")
 
     for func in functions:
         cmd_name, func_parser_kwargs = _extract_command_meta_from_func(func)
@@ -475,9 +468,8 @@ def _extract_command_meta_from_func(func):
         "formatter_class": PARSER_FORMATTER,
     }
 
-    # try adding aliases for command name
-    if SUPPORTS_ALIASES:
-        func_parser_kwargs["aliases"] = getattr(func, ATTR_ALIASES, [])
+    # add aliases for command name
+    func_parser_kwargs["aliases"] = getattr(func, ATTR_ALIASES, [])
 
     return cmd_name, func_parser_kwargs
 

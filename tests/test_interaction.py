@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 Interaction Tests
 ~~~~~~~~~~~~~~~~~
@@ -9,8 +8,8 @@ import argh
 
 
 def parse_choice(choice, **kwargs):
-    argh.io._input = lambda prompt: choice
-    return argh.confirm("test", **kwargs)
+    with mock.patch("argh.interaction.input", lambda prompt: choice):
+        return argh.confirm("test", **kwargs)
 
 
 def test_simple():
@@ -39,29 +38,41 @@ def test_prompt():
     def raw_input_mock(prompt):
         prompts.append(prompt)
 
-    argh.io._input = raw_input_mock
+    with mock.patch("argh.interaction.input", raw_input_mock):
+        argh.confirm("do smth")
+        assert prompts[-1] == "do smth? (y/n)"
 
-    argh.confirm("do smth")
-    assert prompts[-1] == "do smth? (y/n)"
+        argh.confirm("do smth", default=None)
+        assert prompts[-1] == "do smth? (y/n)"
 
-    argh.confirm("do smth", default=None)
-    assert prompts[-1] == "do smth? (y/n)"
+        argh.confirm("do smth", default=True)
+        assert prompts[-1] == "do smth? (Y/n)"
 
-    argh.confirm("do smth", default=True)
-    assert prompts[-1] == "do smth? (Y/n)"
-
-    argh.confirm("do smth", default=False)
-    assert prompts[-1] == "do smth? (y/N)"
+        argh.confirm("do smth", default=False)
+        assert prompts[-1] == "do smth? (y/N)"
 
 
-def test_encoding():
+@mock.patch("argh.interaction.input")
+def test_encoding(mock_input):
     "Unicode is accepted as prompt message"
-    raw_input_mock = mock.MagicMock()
-
-    argh.io._input = raw_input_mock
 
     msg = "привет"
 
     argh.confirm(msg)
 
-    raw_input_mock.assert_called_once_with("привет? (y/n)")
+    mock_input.assert_called_once_with("привет? (y/n)")
+
+
+@mock.patch("argh.interaction.input")
+def test_skip(mock_input):
+    retval = argh.confirm("test", default=123, skip=True)
+
+    assert retval == 123
+    mock_input.assert_not_called()
+
+
+@mock.patch("argh.interaction.input")
+def test_keyboard_interrupt(mock_input):
+    mock_input.side_effect = KeyboardInterrupt
+    retval = argh.confirm("test")
+    assert retval is None

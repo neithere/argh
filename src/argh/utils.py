@@ -1,4 +1,3 @@
-# coding: utf-8
 #
 #  Copyright © 2010—2023 Andrey Mikhaylenko and contributors
 #
@@ -14,6 +13,7 @@ Utilities
 """
 import argparse
 import inspect
+import re
 
 
 def get_subparsers(parser, create=False):
@@ -35,11 +35,10 @@ def get_subparsers(parser, create=False):
         actions = [
             a for a in parser._actions if isinstance(a, argparse._SubParsersAction)
         ]
-        assert len(actions) == 1
         return actions[0]
-    else:
-        if create:
-            return parser.add_subparsers()
+
+    if create:
+        return parser.add_subparsers()
 
 
 def get_arg_spec(function):
@@ -54,3 +53,17 @@ def get_arg_spec(function):
     if inspect.ismethod(function):
         spec = spec._replace(args=spec.args[1:])
     return spec
+
+
+def unindent(text):
+    """
+    Given a multi-line string, decreases indentation of all lines so that the
+    first non-empty line has zero indentation and the remaining lines are
+    adjusted accordingly.
+    """
+    match = re.match("(^|\n)( +)", text)
+    if not match:
+        return text
+    first_line_indentation = match.group(2)
+    depth = len(first_line_indentation)
+    return re.sub(rf"(^|\n) {{{depth}}}", "\\1", text)

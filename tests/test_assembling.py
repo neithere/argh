@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,6 +141,16 @@ def test_set_default_command_when_subparsers_exist():
     assert ns_explicit_one.get_function() == one
     assert ns_explicit_two.get_function() == two
     assert ns_default.get_function() == three
+
+
+def test_add_command_with_namespace_kwargs_but_no_namespace_name():
+    def one():
+        return 1
+
+    p = argh.ArghParser()
+    err_msg = "`parser_kwargs` only makes sense with `namespace`"
+    with pytest.raises(ValueError, match=err_msg):
+        p.add_commands([one], namespace_kwargs={"help": "foo"})
 
 
 def test_set_default_command_mixed_arg_types():
@@ -290,3 +299,53 @@ def test_set_default_command_deprecation_warnings():
         DeprecationWarning, match="Argument `help` is deprecated in add_commands()"
     ):
         argh.add_commands(parser, [], namespace="c", help="bar")
+
+
+@mock.patch("argh.assembling.add_commands")
+def test_add_subcommands(mock_add_commands):
+    mock_parser = mock.MagicMock()
+
+    def get_items():
+        pass
+
+    argh.add_subcommands(
+        mock_parser,
+        "db",
+        [get_items],
+        title="database commands",
+        help="CRUD for our silly database",
+    )
+
+    mock_add_commands.assert_called_with(
+        mock_parser,
+        [get_items],
+        namespace="db",
+        namespace_kwargs={
+            "title": "database commands",
+            "help": "CRUD for our silly database",
+        },
+    )
+
+
+@mock.patch("argh.helpers.autocomplete")
+def test_arghparser_autocomplete_method(mock_autocomplete):
+    p = argh.ArghParser()
+    p.autocomplete()
+
+    mock_autocomplete.assert_called()
+
+
+def test_is_positional():
+    with pytest.raises(ValueError, match="Expected at least one"):
+        argh.assembling._is_positional([])
+    with pytest.raises(ValueError, match="Expected at least one"):
+        argh.assembling._is_positional([""])
+    assert argh.assembling._is_positional(["f"]) is True
+    assert argh.assembling._is_positional(["foo"]) is True
+    assert argh.assembling._is_positional(["--foo"]) is False
+    assert argh.assembling._is_positional(["-f"]) is False
+    assert argh.assembling._is_positional(["-f", "--foo"]) is False
+
+    # this spec is invalid but validation is out of scope of the function
+    # as it only checks if the first argument has the leading dash
+    assert argh.assembling._is_positional(["-f", "foo"]) is False
