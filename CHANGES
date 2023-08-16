@@ -16,6 +16,10 @@ Enhancements:
 - Can control exit status (see Backwards Incompatible Changes above) when raising
   ``CommandError`` using the ``code`` keyword arg.
 
+Other changes:
+
+- Avoid depending on iocapture by using pytest's built-in feature (#177)
+
 Version 0.28.1
 --------------
 
