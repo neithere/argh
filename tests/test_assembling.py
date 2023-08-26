@@ -143,14 +143,14 @@ def test_set_default_command_when_subparsers_exist():
     assert ns_default.get_function() == three
 
 
-def test_add_command_with_namespace_kwargs_but_no_namespace_name():
+def test_add_command_with_group_kwargs_but_no_group_name():
     def one():
         return 1
 
     p = argh.ArghParser()
-    err_msg = "`parser_kwargs` only makes sense with `namespace`"
+    err_msg = "`group_kwargs` only makes sense with `group_name`"
     with pytest.raises(ValueError, match=err_msg):
-        p.add_commands([one], namespace_kwargs={"help": "foo"})
+        p.add_commands([one], group_kwargs={"help": "foo"})
 
 
 def test_set_default_command_mixed_arg_types():
@@ -287,18 +287,18 @@ def test_set_default_command_deprecation_warnings():
     with pytest.warns(
         DeprecationWarning, match="Argument `title` is deprecated in add_commands()"
     ):
-        argh.add_commands(parser, [], namespace="a", title="bar")
+        argh.add_commands(parser, [], group_name="a", title="bar")
 
     with pytest.warns(
         DeprecationWarning,
         match="Argument `description` is deprecated in add_commands()",
     ):
-        argh.add_commands(parser, [], namespace="b", description="bar")
+        argh.add_commands(parser, [], group_name="b", description="bar")
 
     with pytest.warns(
         DeprecationWarning, match="Argument `help` is deprecated in add_commands()"
     ):
-        argh.add_commands(parser, [], namespace="c", help="bar")
+        argh.add_commands(parser, [], group_name="c", help="bar")
 
 
 @mock.patch("argh.assembling.add_commands")
@@ -319,8 +319,8 @@ def test_add_subcommands(mock_add_commands):
     mock_add_commands.assert_called_with(
         mock_parser,
         [get_items],
-        namespace="db",
-        namespace_kwargs={
+        group_name="db",
+        group_kwargs={
             "title": "database commands",
             "help": "CRUD for our silly database",
         },

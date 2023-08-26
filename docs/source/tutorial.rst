@@ -233,10 +233,9 @@ The commands will be accessible under the related functions' names::
 Subcommands
 ...........
 
-If the application has too many commands, they can be grouped into namespaces::
+If the application has too many commands, they can be grouped::
 
-    argh.add_commands(parser, [serve, ping], namespace='www',
-                      title='Web-related commands')
+    argh.add_commands(parser, [serve, ping], group_name='www')
 
 The resulting CLI is as follows::
 
