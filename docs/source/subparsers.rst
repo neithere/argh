@@ -2,7 +2,7 @@ Subparsers
 ~~~~~~~~~~
 
 The statement ``parser.add_commands([bar, quux])`` builds two subparsers named
-`bar` and `quux`. A "subparser" is an argument parser bound to a namespace. In
+`bar` and `quux`. A "subparser" is an argument parser bound to a group name. In
 other words, it works with everything after a certain positional argument.
 `Argh` implements commands by creating a subparser for every function.
 
@@ -31,7 +31,7 @@ The equivalent code without `Argh` would be::
 Now consider this expression::
 
     parser = ArghParser()
-    parser.add_commands([bar, quux], namespace='foo')
+    parser.add_commands([bar, quux], group_name='foo')
     parser.dispatch()
 
 It produces a command hierarchy for the command-line expressions ``foo bar``
