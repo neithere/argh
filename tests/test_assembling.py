@@ -84,6 +84,80 @@ def test_set_default_command():
     assert parser.set_defaults.mock_calls == [call(function=func)]
 
 
+def test_set_default_command_infer_cli_arg_names_from_func_signature():
+    # TODO: split into small tests where we'd check each combo and make sure
+    # they interact as expected (e.g. pos opt arg gets the short form even if
+    # there's a pos req arg, etc.)
+    #
+    # an arg with a unique first letter per arg type + every combination
+    # of conflicting first letters per every two arg types:
+    # - positional required (i.e. without a default value)
+    # - positional optional (i.e. with a default value)
+    # - named-only required (i.e. kwonly without a default value)
+    # - named-only optional (i.e. kwonly with a default valu)
+    def func(
+        alpha_pos_req,
+        beta_pos_req,
+        alpha_pos_opt="alpha",
+        beta_pos_opt_one="beta one",
+        beta_pos_opt_two="beta two",
+        gamma_pos_opt="gamma named",
+        delta_pos_opt="delta named",
+        theta_pos_opt="theta named",
+        *args,
+        gamma_kwonly_opt="gamma kwonly",
+        delta_kwonly_req,
+        epsilon_kwonly_req_one,
+        epsilon_kwonly_req_two,
+        zeta_kwonly_opt="zeta kwonly",
+        **kwargs,
+    ):
+        return (
+            alpha_pos_req,
+            beta_pos_req,
+            alpha_pos_opt,
+            beta_pos_opt_one,
+            beta_pos_opt_two,
+            gamma_pos_opt,
+            delta_pos_opt,
+            gamma_kwonly_opt,
+            delta_kwonly_req,
+            epsilon_kwonly_req_one,
+            epsilon_kwonly_req_two,
+            zeta_kwonly_opt,
+            args,
+            kwargs,
+        )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    argh.set_default_command(parser, func)
+
+    help_tmpl = argh.constants.DEFAULT_ARGUMENT_TEMPLATE
+    assert parser.add_argument.mock_calls == [
+        call("alpha_pos_req", help="%(default)s"),
+        call("beta_pos_req", help="%(default)s"),
+        call("-a", "--alpha-pos-opt", default="alpha", type=str, help=help_tmpl),
+        call("--beta-pos-opt-one", default="beta one", type=str, help=help_tmpl),
+        call("--beta-pos-opt-two", default="beta two", type=str, help=help_tmpl),
+        call("--gamma-pos-opt", default="gamma named", type=str, help=help_tmpl),
+        call("--delta-pos-opt", default="delta named", type=str, help=help_tmpl),
+        call("-t", "--theta-pos-opt", default="theta named", type=str, help=help_tmpl),
+        call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
+        call("--delta-kwonly-req", required=True, help=help_tmpl),
+        call("--epsilon-kwonly-req-one", required=True, help=help_tmpl),
+        call("--epsilon-kwonly-req-two", required=True, help=help_tmpl),
+        call(
+            "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
+        ),
+        call("args", nargs="*", help=help_tmpl),
+    ]
+    assert parser.set_defaults.mock_calls == [call(function=func)]
+
+
 def test_set_default_command_docstring():
     def func():
         "docstring"
@@ -161,9 +235,9 @@ def test_set_default_command_mixed_arg_types():
 
     p = argh.ArghParser()
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(argh.AssemblingError) as excinfo:
         p.set_default_command(func)
-    msg = "func: cannot add arg x/--y: invalid option string"
+    msg = "func: cannot add x/--y: invalid option string"
     assert msg in str(excinfo.value)
 
 
