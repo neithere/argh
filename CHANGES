@@ -25,6 +25,11 @@ Enhancements:
 - Can control exit status (see Backwards Incompatible Changes above) when raising
   ``CommandError`` using the ``code`` keyword arg.
 
+Bugs fixed:
+
+-  Positional arguments should not lead to removal of short form of keyword
+   arguments. (#115)
+
 Other changes:
 
 - Avoid depending on iocapture by using pytest's built-in feature (#177)

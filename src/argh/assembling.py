@@ -67,9 +67,14 @@ def _get_args_from_signature(function):
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args + kwonly]
-    char_counts = dict((char, chars.count(char)) for char in set(chars))
-    conflicting_opts = tuple(char for char in char_counts if 1 < char_counts[char])
+    named_args = set(list(defaults) + kwonly)
+    named_arg_chars = [a[0] for a in named_args]
+    named_arg_char_counts = dict(
+        (char, named_arg_chars.count(char)) for char in set(named_arg_chars)
+    )
+    conflicting_opts = tuple(
+        char for char in named_arg_char_counts if 1 < named_arg_char_counts[char]
+    )
 
     for name in spec.args + kwonly:
         flags = []  # name_or_flags
@@ -289,12 +294,11 @@ def set_default_command(parser, function):
             action = parser.add_argument(*dest_or_opt_strings, **draft)
             if COMPLETION_ENABLED and completer:
                 action.completer = completer
-        except Exception as e:
-            raise type(e)(
-                "{func}: cannot add arg {args}: {msg}".format(
-                    args="/".join(dest_or_opt_strings), func=function.__name__, msg=e
-                )
-            )
+        except Exception as exc:
+            err_args = "/".join(dest_or_opt_strings)
+            raise AssemblingError(
+                f"{function.__name__}: cannot add {err_args}: {exc}"
+            ) from exc
 
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__

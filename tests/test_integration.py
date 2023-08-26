@@ -731,16 +731,9 @@ def test_class_members():
 
 def test_kwonlyargs():
     "Correct dispatch in presence of keyword-only arguments"
-    ns = {}
 
-    exec(
-        """def cmd(*args, foo='1', bar, baz='3', **kwargs):
-                return ' '.join(args), foo, bar, baz, len(kwargs)
-         """,
-        None,
-        ns,
-    )
-    cmd = ns["cmd"]
+    def cmd(*args, foo="1", bar, baz="3", **kwargs):
+        return " ".join(args), foo, bar, baz, len(kwargs)
 
     p = DebugArghParser()
     p.set_default_command(cmd)
