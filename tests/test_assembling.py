@@ -2,7 +2,7 @@
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
-from unittest import mock
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -66,14 +66,14 @@ def test_set_default_command():
 
     parser = argh.ArghParser()
 
-    parser.add_argument = mock.MagicMock()
-    parser.set_defaults = mock.MagicMock()
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
 
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call("foo", nargs="+", choices=[1, 2], help="me", type=int),
-        mock.call(
+        call("foo", nargs="+", choices=[1, 2], help="me", type=int),
+        call(
             "-b",
             "--bar",
             default=False,
@@ -81,7 +81,81 @@ def test_set_default_command():
             help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
         ),
     ]
-    assert parser.set_defaults.mock_calls == [mock.call(function=func)]
+    assert parser.set_defaults.mock_calls == [call(function=func)]
+
+
+def test_set_default_command_infer_cli_arg_names_from_func_signature():
+    # TODO: split into small tests where we'd check each combo and make sure
+    # they interact as expected (e.g. pos opt arg gets the short form even if
+    # there's a pos req arg, etc.)
+    #
+    # an arg with a unique first letter per arg type + every combination
+    # of conflicting first letters per every two arg types:
+    # - positional required (i.e. without a default value)
+    # - positional optional (i.e. with a default value)
+    # - named-only required (i.e. kwonly without a default value)
+    # - named-only optional (i.e. kwonly with a default valu)
+    def func(
+        alpha_pos_req,
+        beta_pos_req,
+        alpha_pos_opt="alpha",
+        beta_pos_opt_one="beta one",
+        beta_pos_opt_two="beta two",
+        gamma_pos_opt="gamma named",
+        delta_pos_opt="delta named",
+        theta_pos_opt="theta named",
+        *args,
+        gamma_kwonly_opt="gamma kwonly",
+        delta_kwonly_req,
+        epsilon_kwonly_req_one,
+        epsilon_kwonly_req_two,
+        zeta_kwonly_opt="zeta kwonly",
+        **kwargs,
+    ):
+        return (
+            alpha_pos_req,
+            beta_pos_req,
+            alpha_pos_opt,
+            beta_pos_opt_one,
+            beta_pos_opt_two,
+            gamma_pos_opt,
+            delta_pos_opt,
+            gamma_kwonly_opt,
+            delta_kwonly_req,
+            epsilon_kwonly_req_one,
+            epsilon_kwonly_req_two,
+            zeta_kwonly_opt,
+            args,
+            kwargs,
+        )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    argh.set_default_command(parser, func)
+
+    help_tmpl = argh.constants.DEFAULT_ARGUMENT_TEMPLATE
+    assert parser.add_argument.mock_calls == [
+        call("alpha_pos_req", help="%(default)s"),
+        call("beta_pos_req", help="%(default)s"),
+        call("-a", "--alpha-pos-opt", default="alpha", type=str, help=help_tmpl),
+        call("--beta-pos-opt-one", default="beta one", type=str, help=help_tmpl),
+        call("--beta-pos-opt-two", default="beta two", type=str, help=help_tmpl),
+        call("--gamma-pos-opt", default="gamma named", type=str, help=help_tmpl),
+        call("--delta-pos-opt", default="delta named", type=str, help=help_tmpl),
+        call("-t", "--theta-pos-opt", default="theta named", type=str, help=help_tmpl),
+        call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
+        call("--delta-kwonly-req", required=True, help=help_tmpl),
+        call("--epsilon-kwonly-req-one", required=True, help=help_tmpl),
+        call("--epsilon-kwonly-req-two", required=True, help=help_tmpl),
+        call(
+            "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
+        ),
+        call("args", nargs="*", help=help_tmpl),
+    ]
+    assert parser.set_defaults.mock_calls == [call(function=func)]
 
 
 def test_set_default_command_docstring():
@@ -143,14 +217,14 @@ def test_set_default_command_when_subparsers_exist():
     assert ns_default.get_function() == three
 
 
-def test_add_command_with_namespace_kwargs_but_no_namespace_name():
+def test_add_command_with_group_kwargs_but_no_group_name():
     def one():
         return 1
 
     p = argh.ArghParser()
-    err_msg = "`parser_kwargs` only makes sense with `namespace`"
+    err_msg = "`group_kwargs` only makes sense with `group_name`"
     with pytest.raises(ValueError, match=err_msg):
-        p.add_commands([one], namespace_kwargs={"help": "foo"})
+        p.add_commands([one], group_kwargs={"help": "foo"})
 
 
 def test_set_default_command_mixed_arg_types():
@@ -161,9 +235,9 @@ def test_set_default_command_mixed_arg_types():
 
     p = argh.ArghParser()
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(argh.AssemblingError) as excinfo:
         p.set_default_command(func)
-    msg = "func: cannot add arg x/--y: invalid option string"
+    msg = "func: cannot add x/--y: invalid option string"
     assert msg in str(excinfo.value)
 
 
@@ -173,14 +247,12 @@ def test_set_default_command_varargs():
 
     parser = argh.ArghParser()
 
-    parser.add_argument = mock.MagicMock()
+    parser.add_argument = MagicMock()
 
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call(
-            "file_paths", nargs="*", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE
-        ),
+        call("file_paths", nargs="*", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
     ]
 
 
@@ -192,14 +264,14 @@ def test_set_default_command_kwargs():
 
     parser = argh.ArghParser()
 
-    parser.add_argument = mock.MagicMock()
+    parser.add_argument = MagicMock()
 
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        mock.call("x", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
-        mock.call("foo", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
-        mock.call("--bar", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("x", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("foo", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("--bar", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
     ]
 
 
@@ -222,28 +294,24 @@ def test_annotation():
 
 def test_kwonlyargs():
     "Correctly processing required and optional keyword-only arguments"
-    ns = {}
-    exec("def cmd(*args, foo='abcd', bar):\n" "    return (args, foo, bar)", None, ns)
-    cmd = ns["cmd"]
+
+    def cmd(foo_pos, bar_pos, *args, foo_kwonly="foo_kwonly", bar_kwonly):
+        return (foo_pos, bar_pos, args, foo_kwonly, bar_kwonly)
+
     p = argh.ArghParser()
-    p.add_argument = mock.MagicMock()
+    p.add_argument = MagicMock()
     p.set_default_command(cmd)
+    help_tmpl = argh.constants.DEFAULT_ARGUMENT_TEMPLATE
     assert p.add_argument.mock_calls == [
-        mock.call(
-            "-f",
-            "--foo",
-            type=str,
-            default="abcd",
-            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
-        ),
-        mock.call(
-            "-b", "--bar", required=True, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE
-        ),
-        mock.call("args", nargs="*", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("foo_pos", help=help_tmpl),
+        call("bar_pos", help=help_tmpl),
+        call("-f", "--foo-kwonly", default="foo_kwonly", type=str, help=help_tmpl),
+        call("-b", "--bar-kwonly", required=True, help=help_tmpl),
+        call("args", nargs="*", help=help_tmpl),
     ]
 
 
-@mock.patch("argh.assembling.COMPLETION_ENABLED", True)
+@patch("argh.assembling.COMPLETION_ENABLED", True)
 def test_custom_argument_completer():
     "Issue #33: Enable custom per-argument shell completion"
 
@@ -262,7 +330,7 @@ def test_custom_argument_completer():
     assert p._actions[-1].completer == "STUB"
 
 
-@mock.patch("argh.assembling.COMPLETION_ENABLED", False)
+@patch("argh.assembling.COMPLETION_ENABLED", False)
 def test_custom_argument_completer_no_backend():
     "If completion backend is not available, nothing breaks"
 
@@ -281,29 +349,30 @@ def test_custom_argument_completer_no_backend():
     assert not hasattr(p._actions[-1], "completer")
 
 
+# TODO: remove in v.0.30
 def test_set_default_command_deprecation_warnings():
     parser = argh.ArghParser()
 
     with pytest.warns(
         DeprecationWarning, match="Argument `title` is deprecated in add_commands()"
     ):
-        argh.add_commands(parser, [], namespace="a", title="bar")
+        argh.add_commands(parser, [], group_name="a", title="bar")
 
     with pytest.warns(
         DeprecationWarning,
         match="Argument `description` is deprecated in add_commands()",
     ):
-        argh.add_commands(parser, [], namespace="b", description="bar")
+        argh.add_commands(parser, [], group_name="b", description="bar")
 
     with pytest.warns(
         DeprecationWarning, match="Argument `help` is deprecated in add_commands()"
     ):
-        argh.add_commands(parser, [], namespace="c", help="bar")
+        argh.add_commands(parser, [], group_name="c", help="bar")
 
 
-@mock.patch("argh.assembling.add_commands")
+@patch("argh.assembling.add_commands")
 def test_add_subcommands(mock_add_commands):
-    mock_parser = mock.MagicMock()
+    mock_parser = MagicMock()
 
     def get_items():
         pass
@@ -319,15 +388,15 @@ def test_add_subcommands(mock_add_commands):
     mock_add_commands.assert_called_with(
         mock_parser,
         [get_items],
-        namespace="db",
-        namespace_kwargs={
+        group_name="db",
+        group_kwargs={
             "title": "database commands",
             "help": "CRUD for our silly database",
         },
     )
 
 
-@mock.patch("argh.helpers.autocomplete")
+@patch("argh.helpers.autocomplete")
 def test_arghparser_autocomplete_method(mock_autocomplete):
     p = argh.ArghParser()
     p.autocomplete()

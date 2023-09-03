@@ -67,9 +67,14 @@ def _get_args_from_signature(function):
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    chars = [a[0] for a in spec.args + kwonly]
-    char_counts = dict((char, chars.count(char)) for char in set(chars))
-    conflicting_opts = tuple(char for char in char_counts if 1 < char_counts[char])
+    named_args = set(list(defaults) + kwonly)
+    named_arg_chars = [a[0] for a in named_args]
+    named_arg_char_counts = dict(
+        (char, named_arg_chars.count(char)) for char in set(named_arg_chars)
+    )
+    conflicting_opts = tuple(
+        char for char in named_arg_char_counts if 1 < named_arg_char_counts[char]
+    )
 
     for name in spec.args + kwonly:
         flags = []  # name_or_flags
@@ -289,12 +294,11 @@ def set_default_command(parser, function):
             action = parser.add_argument(*dest_or_opt_strings, **draft)
             if COMPLETION_ENABLED and completer:
                 action.completer = completer
-        except Exception as e:
-            raise type(e)(
-                "{func}: cannot add arg {args}: {msg}".format(
-                    args="/".join(dest_or_opt_strings), func=function.__name__, msg=e
-                )
-            )
+        except Exception as exc:
+            err_args = "/".join(dest_or_opt_strings)
+            raise AssemblingError(
+                f"{function.__name__}: cannot add {err_args}: {exc}"
+            ) from exc
 
     if function.__doc__ and not parser.description:
         parser.description = function.__doc__
@@ -308,13 +312,15 @@ def set_default_command(parser, function):
 def add_commands(
     parser,
     functions,
-    namespace=None,
-    namespace_kwargs=None,
+    group_name=None,
+    group_kwargs=None,
     func_kwargs=None,
     # deprecated args:
     title=None,
     description=None,
     help=None,
+    namespace=None,
+    namespace_kwargs=None,
 ):
     """
     Adds given functions as commands to given parser.
@@ -333,13 +339,13 @@ def add_commands(
         function name. Note that the underscores in the name are replaced with
         hyphens, i.e. function name "foo_bar" becomes command name "foo-bar".
 
-    :param namespace:
+    :param group_name:
 
         an optional string representing the group of commands. For example, if
-        a command named "hello" is added without the namespace, it will be
-        available as "prog.py hello"; if the namespace if specified as "greet",
+        a command named "hello" is added without the group name, it will be
+        available as "prog.py hello"; if the group name if specified as "greet",
         then the command will be accessible as "prog.py greet hello". The
-        namespace itself is not callable, so "prog.py greet" will fail and only
+        group itself is not callable, so "prog.py greet" will fail and only
         display a help message.
 
     :param func_kwargs:
@@ -349,12 +355,28 @@ def add_commands(
         dictionary have the highest priority, so a function's docstring is
         overridden by a `help` in `func_kwargs` (if present).
 
-    :param namespace_kwargs:
+    :param group_kwargs:
 
         a `dict` of keyword arguments to be passed to the nested ArgumentParser
-        instance under given `namespace`.
+        instance under given `group_name`.
 
-    Deprecated params that should be moved into `namespace_kwargs`:
+    Deprecated params that should be renamed:
+
+    :param namespace:
+
+        .. deprecated:: 0.29.0
+
+           This argument will be removed in Argh v.0.30.
+           Please use `group_name` instead.
+
+    :param namespace_kwargs:
+
+        .. deprecated:: 0.29.0
+
+           This argument will be removed in Argh v.0.30.
+           Please use `group_kwargs` instead.
+
+    Deprecated params that should be moved into `group_kwargs`:
 
     :param title:
 
@@ -392,13 +414,27 @@ def add_commands(
        results in `AssemblingError`.
 
     """
-    # FIXME "namespace" is a correct name but it clashes with the "namespace"
-    # that represents arguments (argparse.Namespace and our ArghNamespace).
-    # We should rename the argument here.
-    namespace_kwargs = namespace_kwargs or {}
+    group_kwargs = group_kwargs or {}
 
-    # TODO remove this in 0.30
+    # ------------------------------------------------------------------------
+    # TODO remove all of these in 0.30
     #
+    if namespace:
+        warnings.warn(
+            "Argument `namespace` is deprecated in add_commands(), "
+            + "it will be removed in Argh 0.30. "
+            + "Please use `group_name` instead.",
+            DeprecationWarning,
+        )
+        group_name = namespace
+    if namespace_kwargs:
+        warnings.warn(
+            "Argument `namespace_kwargs` is deprecated in add_commands(), "
+            + "it will be removed in Argh 0.30. "
+            + "Please use `group_kwargs` instead.",
+            DeprecationWarning,
+        )
+        group_kwargs = namespace_kwargs
     if title:
         warnings.warn(
             "Argument `title` is deprecated in add_commands(), "
@@ -406,7 +442,7 @@ def add_commands(
             + "Please use `parser_kwargs` instead.",
             DeprecationWarning,
         )
-        namespace_kwargs["description"] = title
+        group_kwargs["description"] = title
     if help:
         warnings.warn(
             "Argument `help` is deprecated in add_commands(), "
@@ -414,7 +450,7 @@ def add_commands(
             + "Please use `parser_kwargs` instead.",
             DeprecationWarning,
         )
-        namespace_kwargs["help"] = help
+        group_kwargs["help"] = help
     if description:
         warnings.warn(
             "Argument `description` is deprecated in add_commands(), "
@@ -422,28 +458,28 @@ def add_commands(
             + "Please use `parser_kwargs` instead.",
             DeprecationWarning,
         )
-        namespace_kwargs["description"] = description
+        group_kwargs["description"] = description
     #
-    # /
+    # ------------------------------------------------------------------------
 
     subparsers_action = get_subparsers(parser, create=True)
 
-    if namespace:
+    if group_name:
         # Make a nested parser and init a deeper _SubParsersAction under it.
 
         # Create a named group of commands.  It will be listed along with
         # root-level commands in ``app.py --help``; in that context its `title`
         # can be used as a short description on the right side of its name.
         # Normally `title` is shown above the list of commands
-        # in ``app.py my-namespace --help``.
+        # in ``app.py my-group --help``.
         subsubparser_kw = {
-            "help": namespace_kwargs.get("title"),
+            "help": group_kwargs.get("title"),
         }
-        subsubparser = subparsers_action.add_parser(namespace, **subsubparser_kw)
-        subparsers_action = subsubparser.add_subparsers(**namespace_kwargs)
+        subsubparser = subparsers_action.add_parser(group_name, **subsubparser_kw)
+        subparsers_action = subsubparser.add_subparsers(**group_kwargs)
     else:
-        if namespace_kwargs:
-            raise ValueError("`parser_kwargs` only makes sense " "with `namespace`.")
+        if group_kwargs:
+            raise ValueError("`group_kwargs` only makes sense with `group_name`.")
 
     for func in functions:
         cmd_name, func_parser_kwargs = _extract_command_meta_from_func(func)
@@ -474,23 +510,21 @@ def _extract_command_meta_from_func(func):
     return cmd_name, func_parser_kwargs
 
 
-def add_subcommands(parser, namespace, functions, **namespace_kwargs):
+def add_subcommands(parser, group_name, functions, **group_kwargs):
     """
     A wrapper for :func:`add_commands`.
 
     These examples are equivalent::
 
-        add_commands(parser, [get, put], namespace='db',
-                     namespace_kwargs={
-                         'title': 'database commands',
-                         'help': 'CRUD for our silly database'
+        add_commands(parser, [get, put], group_name="db",
+                     group_kwargs={
+                         "title": "database commands",
+                         "help": "CRUD for our silly database"
                      })
 
-        add_subcommands(parser, 'db', [get, put],
-                        title='database commands',
-                        help='CRUD for our silly database')
+        add_subcommands(parser, "db", [get, put],
+                        title="database commands",
+                        help="CRUD for our database")
 
     """
-    add_commands(
-        parser, functions, namespace=namespace, namespace_kwargs=namespace_kwargs
-    )
+    add_commands(parser, functions, group_name=group_name, group_kwargs=group_kwargs)

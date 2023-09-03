@@ -11,10 +11,24 @@ Backwards incompatible changes:
   instead of returning without error. For most users, this means failed commands
   will now exit with a failure status instead of a success. (#161)
 
+Deprecated:
+
+- Renamed arguments in `add_commands()` (#165):
+
+  - `namespace` → `group_name`
+  - `namespace_kwargs` → `group_kwargs`
+
+  The old names are deprecated and will be removed in v.0.30.
+
 Enhancements:
 
 - Can control exit status (see Backwards Incompatible Changes above) when raising
   ``CommandError`` using the ``code`` keyword arg.
+
+Bugs fixed:
+
+-  Positional arguments should not lead to removal of short form of keyword
+   arguments. (#115)
 
 Other changes:
 
