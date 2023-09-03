@@ -4,6 +4,10 @@ on:  # yamllint disable-line rule:truthy
   release:
     types: [published]
 
+# https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect
+permissions:
+  id-token: write  # This is required for requesting the JWT
+
 jobs:
   pypi:
     name: Build sdist+wheel, upload to PyPI
@@ -24,7 +28,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.8.10
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@v1.8.10
