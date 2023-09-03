@@ -1255,3 +1255,30 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
         """
         )[1:]
     )
+
+
+def test_action_count__only_arg_decorator():
+    @argh.arg("-v", "--verbose", action="count", default=0)
+    def func(**kwargs):
+        verbosity = kwargs.get("verbose")
+        return f"verbosity: {verbosity}"
+
+    p = DebugArghParser()
+    p.set_default_command(func)
+
+    assert run(p, "").out == "verbosity: 0\n"
+    assert run(p, "-v").out == "verbosity: 1\n"
+    assert run(p, "-vvvv").out == "verbosity: 4\n"
+
+
+def test_action_count__mixed():
+    @argh.arg("-v", "--verbose", action="count")
+    def func(verbose=0):
+        return f"verbosity: {verbose}"
+
+    p = DebugArghParser()
+    p.set_default_command(func)
+
+    assert run(p, "").out == "verbosity: 0\n"
+    assert run(p, "-v").out == "verbosity: 1\n"
+    assert run(p, "-vvvv").out == "verbosity: 4\n"
