@@ -67,7 +67,7 @@ Dynamically set to `True` on load if argcomplete_ was successfully imported.
 
 try:
     import argcomplete
-except ImportError:
+except ImportError:  # pragma: no cover
     argcomplete = None
 else:
     COMPLETION_ENABLED = True  # pragma: no cover
