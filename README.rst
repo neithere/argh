@@ -107,7 +107,7 @@ A very simple application with one command:
 
     import argh
 
-    def main():
+    def main() -> str:
         return 'Hello world'
 
     argh.dispatch_command(main)
@@ -148,9 +148,9 @@ A potentially modular application with more control over the process:
         "Returns given word as is."
         return text
 
-    def greet(name, greeting='Hello'):
+    def greet(name, greeting: str = "Hello") -> str:
         "Greets the user with given name. The greeting is customizable."
-        return f'{greeting}, {name}!'
+        return f"{greeting}, {name}!"
 
     # assembling:
 
@@ -159,7 +159,7 @@ A potentially modular application with more control over the process:
 
     # dispatching:
 
-    if __name__ == '__main__':
+    if __name__ == "__main__":
         parser.dispatch()
 
 .. code-block:: bash
@@ -203,8 +203,8 @@ enough; in these cases the powerful API of `argparse` is also available:
 
 .. code-block:: python
 
-    @arg('text', default='hello world', nargs='+', help='The message')
-    def echo(text):
+    @arg("text", default="hello world", nargs="+", help="The message")
+    def echo(text: str) -> None:
         print text
 
 The approaches can be safely combined even up to this level:
@@ -212,17 +212,17 @@ The approaches can be safely combined even up to this level:
 .. code-block:: python
 
     # adding help to `foo` which is in the function signature:
-    @arg('foo', help='blah')
+    @arg("foo", help="blah")
     # these are not in the signature so they go to **kwargs:
-    @arg('baz')
-    @arg('-q', '--quux')
+    @arg("baz")
+    @arg("-q", "--quux")
     # the function itself:
-    def cmd(foo, bar=1, *args, **kwargs):
+    def cmd(foo: str, bar: int = 1, *args, **kwargs) -> Iterator[str]:
         yield foo
         yield bar
-        yield ', '.join(args)
-        yield kwargs['baz']
-        yield kwargs['quux']
+        yield ", ".join(args)
+        yield kwargs["baz"]
+        yield kwargs["quux"]
 
 Links
 -----

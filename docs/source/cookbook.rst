@@ -9,9 +9,9 @@ Use `nargs` from argparse by amending the function signature with the
 
 .. code-block:: python
 
-    @argh.arg('-p', '--patterns', nargs='*')
-    def cmd(patterns=None):
-        distros = ('abc', 'xyz')
+    @argh.arg("-p", "--patterns", nargs="*")
+    def cmd(patterns: list[str] | None = None) -> list:
+        distros = ("abc", "xyz")
         return [d for d in distros if not patterns
                                       or any(p in d for p in patterns)]
 

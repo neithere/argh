@@ -24,8 +24,8 @@ This is our business logic:
 
 .. code-block:: python
 
-    def main(name='unknown user'):
-        return 'Hello {0}!'.format(name)
+    def main(name: str = "unknown user") -> str:
+        return f"Hello {name}!"
 
 That was plain Python, nothing CLI-specific.
 Let's convert the function into a complete CLI application::
@@ -50,7 +50,7 @@ with ordinary signatures:
 * Declare them somewhere, dispatch them elsewhere.  This ensures **loose
   coupling** of components in your application.
 * They are **natural** and pythonic. No fiddling with the parser and the
-  related intricacies like ``action='store_true'`` which you could never
+  related intricacies like ``action="store_true"`` which you could never
   remember.
 
 Still, there's much more to commands than this.
@@ -98,10 +98,10 @@ The same result can be achieved with this chunk of `argparse` code (with the
 exception that in `argh` you don't immediately modify a parser but rather
 declare what's to be added to it later)::
 
-    parser.add_argument('alpha')
-    parser.add_argument('-b', '--beta', default=1, type=int)
-    parser.add_argument('-g', '--gamma', default=False, action='store_true')
-    parser.add_argument('delta', nargs='*')
+    parser.add_argument("alpha")
+    parser.add_argument("-b", "--beta", default=1, type=int)
+    parser.add_argument("-g", "--gamma", default=False, action="store_true")
+    parser.add_argument("delta", nargs="*")
 
 Verbose, hardly readable, requires learning another API.
 
@@ -143,10 +143,10 @@ Extended Argument Declaration
 When function signature isn't enough to fine-tune the argument declarations,
 the :class:`~argh.decorators.arg` decorator comes in handy::
 
-    @arg('path', help='file to load')
-    @arg('--format', help='json or yaml')
-    def load(path, format='yaml'):
-        return loaders[format].load(path)
+    @arg("path", help="file to load")
+    @arg("--input-format", help="'json' or 'yaml'")
+    def load_to_db(path: str, input_format: str = "json") -> None:
+        data = loaders[input_format].load(path)
 
 In this example we have declared a function with arguments `path` and `format`
 and then extended their declarations with help messages.
@@ -154,7 +154,7 @@ and then extended their declarations with help messages.
 The decorator mostly mimics `argparse`'s add_argument_.  The `name_or_flags`
 argument must match function signature, that is:
 
-1. ``path`` and ``--format`` map to ``func(path)`` and ``func(format='x')``
+1. ``path`` and ``--format`` map to ``func(path)`` and ``func(format="x")``
    respectively (short name like ``-f`` can be omitted);
 2. a name that doesn't map to anything in function signature is not allowed.
 
@@ -166,9 +166,9 @@ Sometimes the function is not likely to be used other than as a CLI command
 and all of its arguments are duplicated with decorators.  Not very DRY.
 In this case ``**kwargs`` can be used as follows::
 
-    @arg('number', default=0, help='the number to increment')
-    def increment(**kwargs):
-        return kwargs['number'] + 1
+    @arg("number", default=0, help="the number to increment")
+    def increment(**kwargs) -> int:
+        return kwargs["number"] + 1
 
 In other words, if ``**something`` is in the function signature, extra
 arguments are **allowed** to be specified via decorators; they all go into that
@@ -176,8 +176,8 @@ very dictionary.
 
 Mixing ``**kwargs`` with straightforward signatures is also possible::
 
-    @arg('--bingo')
-    def cmd(foo, bar=1, *maybe, **extra):
+    @arg("--bingo")
+    def cmd(foo: str, bar: int = 1, *maybe, **extra) -> ...:
         return ...
 
 .. note::
@@ -197,7 +197,7 @@ tell the latter that the function expects a namespace object.  This is done by
 wrapping the function into the :func:`~argh.decorators.expects_obj` decorator::
 
     @expects_obj
-    def cmd(args):
+    def cmd(args) -> str:
         return args.foo
 
 This way arguments cannot be defined in the Natural Way but the
@@ -235,7 +235,7 @@ Subcommands
 
 If the application has too many commands, they can be grouped::
 
-    argh.add_commands(parser, [serve, ping], group_name='www')
+    argh.add_commands(parser, [serve, ping], group_name="www")
 
 The resulting CLI is as follows::
 
@@ -249,7 +249,7 @@ Dispatching Commands
 The last thing is to actually parse the arguments and call the relevant command
 (function) when our module is called as a script::
 
-    if __name__ == '__main__':
+    if __name__ == "__main__":
         argh.dispatch(parser)
 
 The function :func:`~argh.dispatching.dispatch` uses the parser to obtain the
@@ -302,18 +302,18 @@ To do so, use :class:`~argh.dispatching.EntryPoint`::
    from argh import EntryPoint
 
 
-   app = EntryPoint('my cool app')
+   app = EntryPoint("my cool app")
 
    @app
-   def foo():
-       return 'hello'
+   def foo() -> str:
+       return "hello"
 
    @app
-   def bar():
-       return 'bye'
+   def bar() -> str:
+       return "bye"
 
 
-   if __name__ == '__main__':
+   if __name__ == "__main__":
        app()
 
 Single-command application
@@ -325,7 +325,7 @@ command like ``check_mail.py check --now`` while ``check_mail.py --now`` would
 suffice. In such cases :func:`~argh.assembling.add_commands` should be replaced
 with :func:`~argh.assembling.set_default_command`::
 
-    def main():
+    def main() -> int:
         return 1
 
     argh.set_default_command(parser, main)
@@ -365,51 +365,38 @@ Returning results
 
 Most commands print something. The traditional straightforward way is this::
 
-    def foo():
-        print('hello')
-        print('world')
+    def foo() -> None:
+        print("hello")
+        print("world")
 
-However, this approach has a couple of flaws:
+It works just fine.  However, there are cases when you would prefer a clean
+function with a return value instead of a side effect:
 
-    * it is difficult to test functions that print results: you are bound to
-      doctests or need to mess with replacing stdout;
-    * terminals and pipes frequently have different requirements for encoding,
-      so Unicode output may break the pipe (e.g. ``$ foo.py test | wc -l``). Of
-      course you don't want to do the checks on every `print` statement.
+* writing tests for the function without `capturing stdout`_ or using doctest_;
+* reusing the function for some other purpose: wrapping in another CLI
+  endpoint, exposing it via HTTP API, etc.
 
-Good news: if you return a string, `Argh` will take care of the encoding::
+.. _capturing stdout: https://docs.pytest.org/en/7.1.x/how-to/capture-stdout-stderr.html
+.. _doctest: https://docs.python.org/3/library/doctest.html
 
-    def foo():
-        return 'привет'
+Good news: you can stick to the return value; Argh will redirect it to `stdout`
+for you.  If it's a string, it will be printed verbatim.  If it's a sequence,
+each item will be printed on its own line.  This works with generators too.
 
-But what about multiple print statements?  Collecting the output in a list
-and bulk-processing it at the end would suffice.  Actually you can simply
-return a list and `Argh` will take care of it::
+The following functions are equivalent if dispatched with Argh::
 
-    def foo():
-        return ['hello', 'world']
+    def foo() -> str:
+        print("hello\nworld")
 
-.. note::
+    def foo() -> str:
+        return "hello\nworld"
 
-    If you return a string, it is printed as is.  A list or tuple is iterated
-    and printed line by line. This is how :func:`dispatcher
-    <argh.dispatching.dispatch>` works.
+    def foo() -> list:
+        return ["hello", "world"]
 
-This is fine, but what about non-linear code with if/else, exceptions and
-interactive prompts? Well, you don't need to manage the stack of results within
-the function. Just convert it to a generator and `Argh` will do the rest::
-
-    def foo():
-        yield 'hello'
-        yield 'world'
-
-Syntactically this is exactly the same as the first example, only with `yield`
-instead of `print`. But the function becomes much more flexible.
-
-.. hint::
-
-    If your command is likely to output Unicode and be used in pipes, you
-    should definitely use the last approach.
+    def foo() -> list:
+        yield "hello"
+        yield "world"
 
 Exceptions
 ----------
@@ -417,7 +404,7 @@ Exceptions
 Usually you only want to display the traceback on unexpected exceptions. If you
 know that something can be wrong, you'll probably handle it this way::
 
-    def show_item(key):
+    def show_item(key: str) -> None:
         try:
             item = items[key]
         except KeyError as error:
@@ -430,7 +417,7 @@ know that something can be wrong, you'll probably handle it this way::
 This works, but the print-and-exit tasks are repetitive.
 Instead, you can use :class:`~argh.exceptions.CommandError`::
 
-    def show_item(key):
+    def show_item(key: str) -> str:
         try:
             item = items[key]
         except KeyError as error:
@@ -446,7 +433,7 @@ then exit with exit status 1 (indicating failure).
 Decorator :func:`~argh.decorators.wrap_errors` reduces the code even further::
 
     @wrap_errors([KeyError])  # show error message, hide traceback
-    def show_item(key):
+    def show_item(key: str) -> str:
         return items[key]     # raise KeyError
 
 Of course it should be used with care in more complex commands.
@@ -454,9 +441,9 @@ Of course it should be used with care in more complex commands.
 The decorator accepts a list as its first argument, so multiple commands can be
 specified.  It also allows plugging in a preprocessor for the caught errors::
 
-    @wrap_errors(processor=lambda excinfo: 'ERR: {0}'.format(excinfo))
-    def func():
-        raise CommandError('some error')
+    @wrap_errors(processor=lambda excinfo: "ERR: {0}".format(excinfo))
+    def func() -> None:
+        raise CommandError("some error")
 
 The command above will print `ERR: some error`.
 
@@ -464,7 +451,7 @@ If you want to print and exit while still indicating the command completed
 successfully, you can pass an optional `code` argument to the
 :class:`~argh.exceptions.CommandError`::
 
-    def show_item(key):
+    def show_item(key: str) -> str:
         try:
             item = items[key]
         except KeyError as error:
@@ -477,6 +464,11 @@ You can also pass any other code in order to exit with a specific error status.
 
 Packaging
 ---------
+
+.. warning::
+
+    this section is outdated.  For modern instructions please refer to
+    https://setuptools.pypa.io/en/latest/userguide/entry_point.html
 
 So, you've done with the first version of your `Argh`-powered app.  The next
 step is to package it for distribution.  How to tell `setuptools` to create

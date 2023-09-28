@@ -4,8 +4,11 @@ Unit Tests For Utility Functions
 
 """
 import functools
+from argparse import ArgumentParser, _SubParsersAction
 
-from argh.utils import get_arg_spec, unindent
+import pytest
+
+from argh.utils import SubparsersNotDefinedError, get_arg_spec, get_subparsers, unindent
 
 
 def function(x, y=0):
@@ -137,3 +140,23 @@ b
 c
 """
     )
+
+
+def test_get_subparsers_existing() -> None:
+    parser = ArgumentParser()
+    parser.add_subparsers(help="hello")
+    sub_parsers_action = get_subparsers(parser)
+    assert isinstance(sub_parsers_action, _SubParsersAction)
+    assert sub_parsers_action.help == "hello"
+
+
+def test_get_subparsers_create() -> None:
+    parser = ArgumentParser()
+    sub_parsers_action = get_subparsers(parser, create=True)
+    assert isinstance(sub_parsers_action, _SubParsersAction)
+
+
+def test_get_subparsers_error() -> None:
+    parser = ArgumentParser()
+    with pytest.raises(SubparsersNotDefinedError):
+        get_subparsers(parser)

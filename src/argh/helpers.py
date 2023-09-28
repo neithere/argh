@@ -12,6 +12,7 @@ Helpers
 ~~~~~~~
 """
 import argparse
+from typing import Sequence
 
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
@@ -33,31 +34,35 @@ class ArghParser(argparse.ArgumentParser):
     Uses :attr:`~argh.dispatching.PARSER_FORMATTER`.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         kwargs.setdefault("formatter_class", PARSER_FORMATTER)
-        super(ArghParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-    def set_default_command(self, *args, **kwargs):
+    def set_default_command(self, *args, **kwargs) -> None:
         "Wrapper for :func:`~argh.assembling.set_default_command`."
         return set_default_command(self, *args, **kwargs)
 
-    def add_commands(self, *args, **kwargs):
+    def add_commands(self, *args, **kwargs) -> None:
         "Wrapper for :func:`~argh.assembling.add_commands`."
         return add_commands(self, *args, **kwargs)
 
-    def autocomplete(self):
+    def autocomplete(self) -> None:
         "Wrapper for :func:`~argh.completion.autocomplete`."
         return autocomplete(self)
 
-    def dispatch(self, *args, **kwargs):
+    def dispatch(self, *args, **kwargs) -> str | None:
         "Wrapper for :func:`~argh.dispatching.dispatch`."
         return dispatch(self, *args, **kwargs)
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args(
+        self,
+        args: Sequence[str] | None = None,
+        namespace=None,
+    ):
         """
         Wrapper for :meth:`argparse.ArgumentParser.parse_args`.  If `namespace`
         is not defined, :class:`argh.dispatching.ArghNamespace` is used.
         This is required for functions to be properly used as commands.
         """
         namespace = namespace or ArghNamespace()
-        return super(ArghParser, self).parse_args(args, namespace)
+        return super().parse_args(args, namespace)

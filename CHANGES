@@ -7,7 +7,7 @@ Version 0.30.0
 
 Backwards incompatible changes:
 
-- Removed previously deprecated features:
+- Removed previously deprecated features (#184 → #188):
 
   - argument help string in annotations — reserved for type hints;
   - `argh.SUPPORTS_ALIASES`;
@@ -17,6 +17,10 @@ Backwards incompatible changes:
 
   Note: the `pre_call` hack was scheduled to be removed but due to requests it
   will remain until a replacement is implemented.
+
+Enhancements:
+
+- Added type annotations to existing Argh code (#185 → #189).
 
 Version 0.29.4
 --------------

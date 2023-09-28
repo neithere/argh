@@ -19,10 +19,10 @@ The equivalent code without `Argh` would be::
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
-    foo_parser = subparsers.add_parser('foo')
+    foo_parser = subparsers.add_parser("foo")
     foo_parser.set_defaults(function=foo)
 
-    bar_parser = subparsers.add_parser('bar')
+    bar_parser = subparsers.add_parser("bar")
     bar_parser.set_defaults(function=bar)
 
     args = parser.parse_args()
@@ -31,7 +31,7 @@ The equivalent code without `Argh` would be::
 Now consider this expression::
 
     parser = ArghParser()
-    parser.add_commands([bar, quux], group_name='foo')
+    parser.add_commands([bar, quux], group_name="foo")
     parser.dispatch()
 
 It produces a command hierarchy for the command-line expressions ``foo bar``
@@ -44,13 +44,13 @@ to write something like this (generic argparse API)::
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
-    foo_parser = subparsers.add_parser('foo')
+    foo_parser = subparsers.add_parser("foo")
     foo_subparsers = foo_parser.add_subparsers()
 
-    foo_bar_parser = foo_subparsers.add_parser('bar')
+    foo_bar_parser = foo_subparsers.add_parser("bar")
     foo_bar_parser.set_defaults(function=bar)
 
-    foo_quux_parser = foo_subparsers.add_parser('quux')
+    foo_quux_parser = foo_subparsers.add_parser("quux")
     foo_quux_parser.set_defaults(function=quux)
 
     args = parser.parse_args()

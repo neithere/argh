@@ -11,6 +11,8 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
+from typing import Callable
+
 from argh.constants import (
     ATTR_ALIASES,
     ATTR_ARGS,
@@ -23,14 +25,14 @@ from argh.constants import (
 __all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
 
 
-def named(new_name):
+def named(new_name: str) -> Callable:
     """
     Sets given string as command name instead of the function name.
     The string is used verbatim without further processing.
 
     Usage::
 
-        @named('load')
+        @named("load")
         def do_load_some_stuff_and_keep_the_original_function_name(args):
             ...
 
@@ -40,19 +42,19 @@ def named(new_name):
     .. versionadded:: 0.19
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable) -> Callable:
         setattr(func, ATTR_NAME, new_name)
         return func
 
     return wrapper
 
 
-def aliases(*names):
+def aliases(*names: list[str]) -> Callable:
     """
     Defines alternative command name(s) for given function (along with its
     original name). Usage::
 
-        @aliases('co', 'check')
+        @aliases("co", "check")
         def checkout(args):
             ...
 
@@ -61,14 +63,14 @@ def aliases(*names):
     .. versionadded:: 0.19
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable) -> Callable:
         setattr(func, ATTR_ALIASES, names)
         return func
 
     return wrapper
 
 
-def arg(*args, **kwargs):
+def arg(*args, **kwargs) -> Callable:
     """
     Declares an argument for given function. Does not register the function
     anywhere, nor does it modify the function in any way.
@@ -88,16 +90,22 @@ def arg(*args, **kwargs):
 
         from argh import arg
 
-        @arg('path', help='path to the file to load')
-        @arg('--format', choices=['yaml','json'])
-        @arg('-v', '--verbosity', choices=range(0,3), default=2)
-        def load(path, something=None, format='json', dry_run=False, verbosity=1):
-            loaders = {'json': json.load, 'yaml': yaml.load}
+        @arg("path", help="path to the file to load")
+        @arg("--format", choices=["yaml","json"])
+        @arg("-v", "--verbosity", choices=range(0,3), default=2)
+        def load(
+            path: str,
+            something: str | None = None,
+            format: str = "json",
+            dry_run: bool = False,
+            verbosity: int = 1
+        ) -> None:
+            loaders = {"json": json.load, "yaml": yaml.load}
             loader = loaders[args.format]
             data = loader(args.path)
             if not args.dry_run:
                 if verbosity < 1:
-                    print('saving to the database')
+                    print("saving to the database")
                 put_to_database(data)
 
     In this example:
@@ -117,26 +125,29 @@ def arg(*args, **kwargs):
 
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable) -> Callable:
         declared_args = getattr(func, ATTR_ARGS, [])
         # The innermost decorator is called first but appears last in the code.
         # We need to preserve the expected order of positional arguments, so
         # the outermost decorator inserts its value before the innermost's:
-        declared_args.insert(0, dict(option_strings=args, **kwargs))
+        # TODO: validate the args?
+        declared_args.insert(0, {"option_strings": args, **kwargs})
         setattr(func, ATTR_ARGS, declared_args)
         return func
 
     return wrapper
 
 
-def wrap_errors(errors=None, processor=None, *args):
+def wrap_errors(
+    errors: list[Exception] | None = None, processor: Callable | None = None, *args
+) -> Callable:
     """
     Decorator. Wraps given exceptions into
     :class:`~argh.exceptions.CommandError`. Usage::
 
         @wrap_errors([AssertionError])
         def foo(x=None, y=None):
-            assert x or y, 'x or y must be specified'
+            assert x or y, "x or y must be specified"
 
     If the assertion fails, its message will be correctly printed and the
     stack hidden. This helps to avoid boilerplate code.
@@ -150,7 +161,7 @@ def wrap_errors(errors=None, processor=None, *args):
             from termcolor import colored
 
             def failure(err):
-                return colored(str(err), 'red')
+                return colored(str(err), "red")
 
             @wrap_errors(processor=failure)
             def my_command(...):
@@ -158,7 +169,7 @@ def wrap_errors(errors=None, processor=None, *args):
 
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable):
         if errors:
             setattr(func, ATTR_WRAPPED_EXCEPTIONS, errors)
 
@@ -170,14 +181,14 @@ def wrap_errors(errors=None, processor=None, *args):
     return wrapper
 
 
-def expects_obj(func):
+def expects_obj(func: Callable) -> Callable:
     """
     Marks given function as expecting a namespace object.
 
     Usage::
 
-        @arg('bar')
-        @arg('--quux', default=123)
+        @arg("bar")
+        @arg("--quux", default=123)
         @expects_obj
         def foo(args):
             yield args.bar, args.quux

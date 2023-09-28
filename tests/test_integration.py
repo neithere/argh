@@ -87,7 +87,7 @@ def test_simple_function_defaults():
 
 def test_simple_function_varargs():
     def func(*file_paths):
-        # `paths` is the single positional argument with nargs='*'
+        # `paths` is the single positional argument with nargs="*"
         yield ", ".join(file_paths)
 
     p = DebugArghParser()
@@ -105,7 +105,7 @@ def test_simple_function_kwargs():
         # `kwargs` contain all arguments not fitting ArgSpec.args and .varargs.
         # if ArgSpec.keywords in None, all @arg()'s will have to fit ArgSpec.args
         for k in sorted(kwargs):
-            yield "{0}: {1}".format(k, kwargs[k])
+            yield f"{k}: {kwargs[k]}"
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -138,18 +138,18 @@ def test_all_specs_in_one():
     @argh.arg("fox")
     @argh.arg("--baz")
     def cmd(foo, bar=1, *args, **kwargs):
-        yield "foo: {0}".format(foo)
-        yield "bar: {0}".format(bar)
-        yield "*args: {0}".format(args)
+        yield f"foo: {foo}"
+        yield f"bar: {bar}"
+        yield f"*args: {args}"
         for k in sorted(kwargs):
-            yield "** {0}: {1}".format(k, kwargs[k])
+            yield f"** {k}: {kwargs[k]}"
 
     p = DebugArghParser()
     p.set_default_command(cmd)
 
     # 1) bar=1 is treated as --bar so positionals from @arg that go **kwargs
     #    will still have higher priority than bar.
-    # 2) *args, a positional with nargs='*', sits between two required
+    # 2) *args, a positional with nargs="*", sits between two required
     #    positionals (foo and fox), so it gets nothing.
     assert run(p, "one two") == R(
         out="foo: one\n" "bar: 1\n" "*args: ()\n" "** baz: None\n" "** fox: two\n",
@@ -196,7 +196,7 @@ def test_arg_merged():
 
 
 def test_arg_mismatch_positional():
-    """An `@arg('positional')` must match function signature."""
+    """An `@arg("positional")` must match function signature."""
 
     @argh.arg("bogus-argument")
     def confuse_a_cat(vet, funny_things=123):
@@ -214,7 +214,7 @@ def test_arg_mismatch_positional():
 
 
 def test_arg_mismatch_flag():
-    """An `@arg('--flag')` must match function signature."""
+    """An `@arg("--flag")` must match function signature."""
 
     @argh.arg("--bogus-argument")
     def confuse_a_cat(vet, funny_things=123):
@@ -232,7 +232,7 @@ def test_arg_mismatch_flag():
 
 
 def test_arg_mismatch_positional_vs_flag():
-    """An `@arg('arg')` must match a positional arg in function signature."""
+    """An `@arg("arg")` must match a positional arg in function signature."""
 
     @argh.arg("foo")
     def func(foo=123):
@@ -250,7 +250,7 @@ def test_arg_mismatch_positional_vs_flag():
 
 
 def test_arg_mismatch_flag_vs_positional():
-    """An `@arg('--flag')` must match a keyword in function signature."""
+    """An `@arg("--flag")` must match a keyword in function signature."""
 
     @argh.arg("--foo")
     def func(foo):
@@ -327,7 +327,7 @@ class TestErrorWrapping:
 
 def test_argv():
     def echo(text):
-        return "you said {0}".format(text)
+        return f"you said {text}"
 
     p = DebugArghParser()
     p.add_commands([echo])
@@ -411,7 +411,7 @@ def test_echo():
     "A simple command is resolved to a function."
 
     def echo(text):
-        return "you said {0}".format(text)
+        return f"you said {text}"
 
     p = DebugArghParser()
     p.add_commands([echo])
@@ -457,10 +457,10 @@ def test_function_under_group_name():
     "A subcommand is resolved to a function."
 
     def hello(name="world"):
-        return "Hello {0}!".format(name or "world")
+        return f"Hello {name}!"
 
     def howdy(buddy):
-        return "Howdy {0}?".format(buddy)
+        return f"Howdy {buddy}?"
 
     p = DebugArghParser()
     p.add_commands([hello, howdy], group_name="greet")
