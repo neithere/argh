@@ -14,7 +14,12 @@ Interaction
 __all__ = ["confirm"]
 
 
-def confirm(action, default=None, skip=False):
+MAX_CONFIRM_ITERATIONS = 3
+
+
+def confirm(
+    action: str, default: bool | None = None, skip: bool = False
+) -> bool | None:
     """
     A shortcut for typical confirmation prompt.
 
@@ -27,7 +32,7 @@ def confirm(action, default=None, skip=False):
 
         `bool` or `None`. Determines what happens when user hits :kbd:`Enter`
         without typing in a choice. If `True`, default choice is "yes". If
-        `False`, it is "no". If `None` the prompt keeps reappearing until user
+        `False`, it is "no". If `None`, the prompt keeps reappearing until user
         types in a choice (not necessarily acceptable) or until the number of
         iteration reaches the limit. Default is `None`.
 
@@ -48,28 +53,29 @@ def confirm(action, default=None, skip=False):
 
     Returns `None` on `KeyboardInterrupt` event.
     """
-    MAX_ITERATIONS = 3
     if skip:
         return default
-    else:
-        defaults = {
-            None: ("y", "n"),
-            True: ("Y", "n"),
-            False: ("y", "N"),
-        }
-        y, n = defaults[default]
-        prompt = str("{action}? ({y}/{n})").format(**locals())
-        choice = None
-        try:
-            if default is None:
-                cnt = 1
-                while not choice and cnt < MAX_ITERATIONS:
-                    choice = input(prompt)
-                    cnt += 1
-            else:
+
+    # marking the default value with a capital letter
+    defaults = {
+        None: ("y", "n"),
+        True: ("Y", "n"),
+        False: ("y", "N"),
+    }
+    label_yes, label_no = defaults[default]
+    prompt = f"{action}? ({label_yes}/{label_no})"
+    choice = None
+    try:
+        if default is None:
+            cnt = 1
+            while not choice and cnt < MAX_CONFIRM_ITERATIONS:
                 choice = input(prompt)
-        except KeyboardInterrupt:
-            return None
+                cnt += 1
+        else:
+            choice = input(prompt)
+    except KeyboardInterrupt:
+        return None
+
     if choice in ("yes", "y", "Y"):
         return True
     if choice in ("no", "n", "N"):

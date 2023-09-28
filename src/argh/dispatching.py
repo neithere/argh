@@ -15,6 +15,7 @@ import argparse
 import io
 import sys
 from types import GeneratorType
+from typing import IO, Any, Callable, Iterator
 
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
@@ -43,12 +44,12 @@ class ArghNamespace(argparse.Namespace):
     A namespace object which collects the stack of functions.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(ArghNamespace, self).__init__(*args, **kwargs)
-        self._functions_stack = []
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._functions_stack: list[Callable] = []
 
-    def __setattr__(self, k, v):
-        if k == DEST_FUNCTION:
+    def __setattr__(self, key: str, value: Any) -> None:
+        if key == DEST_FUNCTION:
             # don't register the function under DEST_FUNCTION name.
             # If `ArgumentParser.parse_known_args()` sees that we already have
             # such attribute, it skips it.  However, it goes from the topmost
@@ -57,27 +58,27 @@ class ArghNamespace(argparse.Namespace):
             # didn't get a DEST_FUNCTION attribute; however, in fact we collect
             # all its values in a stack.  The last item in the stack would be
             # the function mapped to the innermost parser — the one we need.
-            self._functions_stack.append(v)
+            self._functions_stack.append(value)
         else:
-            super().__setattr__(k, v)
+            super().__setattr__(key, value)
 
-    def get_function(self):
+    def get_function(self) -> Callable:
         return self._functions_stack[-1]
 
 
 def dispatch(
-    parser,
-    argv=None,
-    add_help_command=True,
-    completion=True,
-    output_file=sys.stdout,
-    errors_file=sys.stderr,
-    raw_output=False,
-    namespace=None,
-    skip_unknown_args=False,
+    parser: argparse.ArgumentParser,
+    argv: list[str] | None = None,
+    add_help_command: bool = True,
+    completion: bool = True,
+    output_file: IO = sys.stdout,
+    errors_file: IO = sys.stderr,
+    raw_output: bool = False,
+    namespace: argparse.Namespace | None = None,
+    skip_unknown_args: bool = False,
     # deprecated args:
-    pre_call=None,
-):
+    pre_call: Callable | None = None,
+) -> str | None:
     """
     Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
@@ -170,33 +171,37 @@ def dispatch(
         )
     else:
         # no commands declared, can't dispatch; display help message
-        lines = [parser.format_usage()]
+        lines = iter([parser.format_usage()])
 
     if output_file is None:
         # user wants a string; we create an internal temporary file-like object
         # and will return its contents as a string
-        f = io.StringIO()
+        out_io = io.StringIO()
     else:
         # normally this is stdout; can be any file
-        f = output_file
+        out_io = output_file
 
     # this may raise user exceptions, or SystemExit for wrapped exceptions
     for line in lines:
         # print the line as soon as it is generated to ensure that it is
         # displayed to the user before anything else happens, e.g.
         # raw_input() is called
-        f.write(str(line))
+        out_io.write(str(line))
         if not raw_output:
             # in most cases user wants one message per line
-            f.write("\n")
+            out_io.write("\n")
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
-        f.seek(0)
-        return f.read()
+        out_io.seek(0)
+        return out_io.read()
+
+    return None
 
 
-def _get_function_from_namespace_obj(namespace_obj):
+def _get_function_from_namespace_obj(
+    namespace_obj: argparse.Namespace,
+) -> Callable | None:
     if isinstance(namespace_obj, ArghNamespace):
         # our special namespace object keeps the stack of assigned functions
         try:
@@ -210,13 +215,18 @@ def _get_function_from_namespace_obj(namespace_obj):
             return None
         function = getattr(namespace_obj, DEST_FUNCTION)
 
-    if not function or not hasattr(function, "__call__"):
+    if not hasattr(function, "__call__"):
         return None
 
     return function
 
 
-def _execute_command(function, namespace_obj, errors_file, pre_call=None):
+def _execute_command(
+    function: Callable,
+    namespace_obj: argparse.Namespace,
+    errors_file: IO,
+    pre_call: Callable | None = None,
+) -> Iterator[str]:
     """
     Assumes that `function` is a callable.  Tries different approaches
     to call it (with `namespace_obj` or with ordinary signature).
@@ -290,27 +300,29 @@ def _execute_command(function, namespace_obj, errors_file, pre_call=None):
     wrappable_exceptions = [CommandError]
     wrappable_exceptions += getattr(function, ATTR_WRAPPED_EXCEPTIONS, [])
 
+    def default_exception_processor(exc: Exception) -> str:
+        return f"{exc.__class__.__name__}: {exc}"
+
     try:
         result = _call()
         for line in result:
             yield line
-    except tuple(wrappable_exceptions) as e:
+    except tuple(wrappable_exceptions) as exc:
+
         processor = getattr(
-            function,
-            ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
-            lambda e: "{0.__class__.__name__}: {0}".format(e),
+            function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, default_exception_processor
         )
 
-        errors_file.write(str(processor(e)))
+        errors_file.write(str(processor(exc)))
         errors_file.write("\n")
 
         # Use code from CommandError if available, otherwise default to 1
-        code = e.code if isinstance(e, CommandError) and e.code is not None else 1
+        code = exc.code if isinstance(exc, CommandError) and exc.code is not None else 1
 
         sys.exit(code)
 
 
-def dispatch_command(function, *args, **kwargs):
+def dispatch_command(function: Callable, *args, **kwargs) -> None:
     """
     A wrapper for :func:`dispatch` that creates a one-command parser.
     Uses :attr:`argh.constants.PARSER_FORMATTER`.
@@ -337,7 +349,7 @@ def dispatch_command(function, *args, **kwargs):
     dispatch(parser, *args, **kwargs)
 
 
-def dispatch_commands(functions, *args, **kwargs):
+def dispatch_commands(functions: list[Callable], *args, **kwargs) -> None:
     """
     A wrapper for :func:`dispatch` that creates a parser, adds commands to
     the parser and dispatches them.
@@ -359,7 +371,7 @@ def dispatch_commands(functions, *args, **kwargs):
     dispatch(parser, *args, **kwargs)
 
 
-class EntryPoint(object):
+class EntryPoint:
     """
     An object to which functions can be attached and then dispatched.
 
@@ -389,26 +401,26 @@ class EntryPoint(object):
 
     """
 
-    def __init__(self, name=None, parser_kwargs=None):
+    def __init__(
+        self, name: str | None = None, parser_kwargs: dict[str, Any] | None = None
+    ) -> None:
         self.name = name or "unnamed"
-        self.commands = []
+        self.commands: list[Callable] = []
         self.parser_kwargs = parser_kwargs or {}
 
-    def __call__(self, f=None):
-        if f:
-            self._register_command(f)
-            return f
+    def __call__(self, function: Callable | None = None):
+        if function:
+            self._register_command(function)
+            return function
 
         return self._dispatch()
 
-    def _register_command(self, f):
-        self.commands.append(f)
+    def _register_command(self, function: Callable) -> None:
+        self.commands.append(function)
 
-    def _dispatch(self):
+    def _dispatch(self) -> None:
         if not self.commands:
-            raise DispatchingError(
-                'no commands for entry point "{0}"'.format(self.name)
-            )
+            raise DispatchingError(f'no commands for entry point "{self.name}"')
 
         parser = argparse.ArgumentParser(**self.parser_kwargs)
         add_commands(parser, self.commands)

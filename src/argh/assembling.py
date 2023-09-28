@@ -13,7 +13,9 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
+from argparse import ArgumentParser
 from collections import OrderedDict
+from typing import Any, Callable, Iterator
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
@@ -35,13 +37,15 @@ __all__ = [
 ]
 
 
-def _get_args_from_signature(function):
+def _get_args_from_signature(function: Callable) -> Iterator[dict]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
 
     spec = get_arg_spec(function)
 
-    defaults = dict(zip(*[reversed(x) for x in (spec.args, spec.defaults or [])]))
+    defaults: dict[str, Any] = dict(
+        zip(reversed(spec.args), reversed(spec.defaults or tuple()))
+    )
     defaults.update(getattr(spec, "kwonlydefaults", None) or {})
 
     kwonly = getattr(spec, "kwonlyargs", [])
@@ -58,41 +62,44 @@ def _get_args_from_signature(function):
     )
 
     for name in spec.args + kwonly:
-        flags = []  # name_or_flags
-        akwargs = {}  # keyword arguments for add_argument()
+        flags: list[str] = []  # name_or_flags
+        akwargs: dict[str, Any] = {}  # keyword arguments for add_argument()
 
         if name in defaults or name in kwonly:
             if name in defaults:
                 akwargs.update(default=defaults.get(name))
             else:
                 akwargs.update(required=True)
-            flags = ("-{0}".format(name[0]), "--{0}".format(name))
+            flags = [f"-{name[0]}", f"--{name}"]
             if name.startswith(conflicting_opts):
                 # remove short name
                 flags = flags[1:]
 
         else:
             # positional argument
-            flags = (name,)
+            flags = [name]
 
         # cmd(foo_bar)  ->  add_argument('foo-bar')
-        flags = tuple(x.replace("_", "-") if x.startswith("-") else x for x in flags)
+        flags = [x.replace("_", "-") if x.startswith("-") else x for x in flags]
 
-        yield dict(option_strings=flags, **akwargs)
+        yield {"option_strings": flags, **akwargs}
 
     if spec.varargs:
         # *args
-        yield dict(option_strings=[spec.varargs], nargs="*")
+        yield {
+            "option_strings": [spec.varargs],
+            "nargs": "*",
+        }
 
 
-def _guess(kwargs):
+def _guess(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
     Adds types, actions, etc. to given argument specification.
     For example, ``default=3`` implies ``type=int``.
 
     :param arg: a :class:`argh.utils.Arg` instance
     """
-    guessed = {}
+    guessed: dict[str, Any] = {}
 
     # Parser actions that accept argument 'type'
     TYPE_AWARE_ACTIONS = "store", "append"
@@ -117,16 +124,17 @@ def _guess(kwargs):
     return dict(kwargs, **guessed)
 
 
-def _is_positional(args, prefix_chars="-"):
+def _is_positional(args: list[str], prefix_chars: str = "-") -> bool:
     if not args or not args[0]:
         raise ValueError("Expected at least one argument")
     if args[0][0].startswith(tuple(prefix_chars)):
         return False
-    else:
-        return True
+    return True
 
 
-def _get_parser_param_kwargs(parser, argspec):
+def _get_parser_param_kwargs(
+    parser: ArgumentParser, argspec: dict[str, Any]
+) -> dict[str, Any]:
     argspec = argspec.copy()  # parser methods modify source data
     args = argspec["option_strings"]
 
@@ -142,12 +150,12 @@ def _get_parser_param_kwargs(parser, argspec):
     return kwargs
 
 
-def _get_dest(parser, argspec):
+def _get_dest(parser: ArgumentParser, argspec) -> str:
     kwargs = _get_parser_param_kwargs(parser, argspec)
     return kwargs["dest"]
 
 
-def set_default_command(parser, function):
+def set_default_command(parser, function: Callable) -> None:
     """
     Sets default command (i.e. a function) for given parser.
 
@@ -170,8 +178,8 @@ def set_default_command(parser, function):
     """
     spec = get_arg_spec(function)
 
-    declared_args = getattr(function, ATTR_ARGS, [])
-    inferred_args = list(_get_args_from_signature(function))
+    declared_args: list[dict] = getattr(function, ATTR_ARGS, [])
+    inferred_args: list[dict] = list(_get_args_from_signature(function))
 
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
@@ -210,14 +218,11 @@ def set_default_command(parser, function):
                 infr_positional = _is_positional(dests[dest]["option_strings"])
                 if decl_positional != infr_positional:
                     kinds = {True: "positional", False: "optional"}
+                    kind_inferred = kinds[infr_positional]
+                    kind_declared = kinds[decl_positional]
                     raise AssemblingError(
-                        '{func}: argument "{dest}" declared as {kind_i} '
-                        "(in function signature) and {kind_d} (via decorator)".format(
-                            func=function.__name__,
-                            dest=dest,
-                            kind_i=kinds[infr_positional],
-                            kind_d=kinds[decl_positional],
-                        )
+                        f'{function.__name__}: argument "{dest}" declared as {kind_inferred} '
+                        f"(in function signature) and {kind_declared} (via decorator)"
                     )
 
                 # merge explicit argument declaration into the inferred one
@@ -232,18 +237,16 @@ def set_default_command(parser, function):
                 else:
                     # there's no way we can map the argument declaration
                     # to function signature
-                    xs = (dests[x]["option_strings"] for x in dests)
+                    dest_option_strings = (dests[x]["option_strings"] for x in dests)
+                    msg_flags = ", ".join(declared_kw["option_strings"])
+                    msg_signature = ", ".join("/".join(x) for x in dest_option_strings)
                     raise AssemblingError(
-                        "{func}: argument {flags} does not fit "
-                        "function signature: {sig}".format(
-                            flags=", ".join(declared_kw["option_strings"]),
-                            func=function.__name__,
-                            sig=", ".join("/".join(x) for x in xs),
-                        )
+                        f"{function.__name__}: argument {msg_flags} does not fit "
+                        f"function signature: {msg_signature}"
                     )
 
         # pack the modified data back into a list
-        inferred_args = dests.values()
+        inferred_args = list(dests.values())
 
     command_args = inferred_args or declared_args
 
@@ -278,11 +281,11 @@ def set_default_command(parser, function):
 
 
 def add_commands(
-    parser,
-    functions,
-    group_name=None,
-    group_kwargs=None,
-    func_kwargs=None,
+    parser: ArgumentParser,
+    functions: list[Callable],
+    group_name: str | None = None,
+    group_kwargs: dict[str, Any] | None = None,
+    func_kwargs: dict[str, Any] | None = None,
 ) -> None:
     """
     Adds given functions as commands to given parser.
@@ -349,10 +352,9 @@ def add_commands(
         # can be used as a short description on the right side of its name.
         # Normally `title` is shown above the list of commands
         # in ``app.py my-group --help``.
-        subsubparser_kw = {
-            "help": group_kwargs.get("title"),
-        }
-        subsubparser = subparsers_action.add_parser(group_name, **subsubparser_kw)
+        subsubparser = subparsers_action.add_parser(
+            group_name, help=group_kwargs.get("title")
+        )
         subparsers_action = subsubparser.add_subparsers(**group_kwargs)
     else:
         if group_kwargs:
@@ -370,11 +372,11 @@ def add_commands(
         set_default_command(command_parser, func)
 
 
-def _extract_command_meta_from_func(func):
+def _extract_command_meta_from_func(func: Callable) -> tuple[str, dict]:
     # use explicitly defined name; if none, use function name (a_b → a-b)
     cmd_name = getattr(func, ATTR_NAME, func.__name__.replace("_", "-"))
 
-    func_parser_kwargs = {
+    func_parser_kwargs: dict[str, Any] = {
         # add command help from function's docstring
         "help": func.__doc__,
         # set default formatter
@@ -387,7 +389,9 @@ def _extract_command_meta_from_func(func):
     return cmd_name, func_parser_kwargs
 
 
-def add_subcommands(parser, group_name, functions, **group_kwargs):
+def add_subcommands(
+    parser: ArgumentParser, group_name: str, functions: list[Callable], **group_kwargs
+) -> None:
     """
     A wrapper for :func:`add_commands`.
 

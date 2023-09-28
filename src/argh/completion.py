@@ -59,6 +59,7 @@ It is recommended to use the :func:`~argh.decorators.arg` decorator::
 """
 import logging
 import os
+from argparse import ArgumentParser
 
 COMPLETION_ENABLED = False
 """
@@ -79,7 +80,7 @@ __all__ = ["autocomplete", "COMPLETION_ENABLED"]
 logger = logging.getLogger(__package__)
 
 
-def autocomplete(parser):
+def autocomplete(parser: ArgumentParser) -> None:
     """
     Adds support for shell completion via argcomplete_ by patching given
     `argparse.ArgumentParser` (sub)class.
