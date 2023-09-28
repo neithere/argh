@@ -11,7 +11,7 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from argh.constants import (
     ATTR_ALIASES,
@@ -49,7 +49,7 @@ def named(new_name: str) -> Callable:
     return wrapper
 
 
-def aliases(*names: list[str]) -> Callable:
+def aliases(*names: List[str]) -> Callable:
     """
     Defines alternative command name(s) for given function (along with its
     original name). Usage::
@@ -139,7 +139,7 @@ def arg(*args, **kwargs) -> Callable:
 
 
 def wrap_errors(
-    errors: Optional[list[Exception]] = None,
+    errors: Optional[List[Exception]] = None,
     processor: Optional[Callable] = None,
     *args,
 ) -> Callable:
