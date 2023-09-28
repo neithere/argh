@@ -15,7 +15,7 @@ Functions and classes to properly assemble your commands in a parser.
 """
 from argparse import ArgumentParser
 from collections import OrderedDict
-from typing import Any, Callable, Iterator, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
@@ -43,7 +43,7 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
 
     spec = get_arg_spec(function)
 
-    defaults: dict[str, Any] = dict(
+    defaults: Dict[str, Any] = dict(
         zip(reversed(spec.args), reversed(spec.defaults or tuple()))
     )
     defaults.update(getattr(spec, "kwonlydefaults", None) or {})
@@ -62,8 +62,8 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
     )
 
     for name in spec.args + kwonly:
-        flags: list[str] = []  # name_or_flags
-        akwargs: dict[str, Any] = {}  # keyword arguments for add_argument()
+        flags: List[str] = []  # name_or_flags
+        akwargs: Dict[str, Any] = {}  # keyword arguments for add_argument()
 
         if name in defaults or name in kwonly:
             if name in defaults:
@@ -92,14 +92,14 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
         }
 
 
-def _guess(kwargs: dict[str, Any]) -> dict[str, Any]:
+def _guess(kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
     Adds types, actions, etc. to given argument specification.
     For example, ``default=3`` implies ``type=int``.
 
     :param arg: a :class:`argh.utils.Arg` instance
     """
-    guessed: dict[str, Any] = {}
+    guessed: Dict[str, Any] = {}
 
     # Parser actions that accept argument 'type'
     TYPE_AWARE_ACTIONS = "store", "append"
@@ -124,7 +124,7 @@ def _guess(kwargs: dict[str, Any]) -> dict[str, Any]:
     return dict(kwargs, **guessed)
 
 
-def _is_positional(args: list[str], prefix_chars: str = "-") -> bool:
+def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
     if not args or not args[0]:
         raise ValueError("Expected at least one argument")
     if args[0][0].startswith(tuple(prefix_chars)):
@@ -133,8 +133,8 @@ def _is_positional(args: list[str], prefix_chars: str = "-") -> bool:
 
 
 def _get_parser_param_kwargs(
-    parser: ArgumentParser, argspec: dict[str, Any]
-) -> dict[str, Any]:
+    parser: ArgumentParser, argspec: Dict[str, Any]
+) -> Dict[str, Any]:
     argspec = argspec.copy()  # parser methods modify source data
     args = argspec["option_strings"]
 
@@ -178,8 +178,8 @@ def set_default_command(parser, function: Callable) -> None:
     """
     spec = get_arg_spec(function)
 
-    declared_args: list[dict] = getattr(function, ATTR_ARGS, [])
-    inferred_args: list[dict] = list(_get_args_from_signature(function))
+    declared_args: List[dict] = getattr(function, ATTR_ARGS, [])
+    inferred_args: List[dict] = list(_get_args_from_signature(function))
 
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
@@ -282,10 +282,10 @@ def set_default_command(parser, function: Callable) -> None:
 
 def add_commands(
     parser: ArgumentParser,
-    functions: list[Callable],
+    functions: List[Callable],
     group_name: Optional[str] = None,
-    group_kwargs: Optional[dict[str, Any]] = None,
-    func_kwargs: Optional[dict[str, Any]] = None,
+    group_kwargs: Optional[Dict[str, Any]] = None,
+    func_kwargs: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
     Adds given functions as commands to given parser.
@@ -372,11 +372,11 @@ def add_commands(
         set_default_command(command_parser, func)
 
 
-def _extract_command_meta_from_func(func: Callable) -> tuple[str, dict]:
+def _extract_command_meta_from_func(func: Callable) -> Tuple[str, dict]:
     # use explicitly defined name; if none, use function name (a_b → a-b)
     cmd_name = getattr(func, ATTR_NAME, func.__name__.replace("_", "-"))
 
-    func_parser_kwargs: dict[str, Any] = {
+    func_parser_kwargs: Dict[str, Any] = {
         # add command help from function's docstring
         "help": func.__doc__,
         # set default formatter
@@ -390,7 +390,7 @@ def _extract_command_meta_from_func(func: Callable) -> tuple[str, dict]:
 
 
 def add_subcommands(
-    parser: ArgumentParser, group_name: str, functions: list[Callable], **group_kwargs
+    parser: ArgumentParser, group_name: str, functions: List[Callable], **group_kwargs
 ) -> None:
     """
     A wrapper for :func:`add_commands`.

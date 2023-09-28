@@ -15,7 +15,7 @@ import argparse
 import io
 import sys
 from types import GeneratorType
-from typing import IO, Any, Callable, Iterator, Optional
+from typing import IO, Any, Callable, Dict, Iterator, List, Optional
 
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
@@ -46,7 +46,7 @@ class ArghNamespace(argparse.Namespace):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._functions_stack: list[Callable] = []
+        self._functions_stack: List[Callable] = []
 
     def __setattr__(self, key: str, value: Any) -> None:
         if key == DEST_FUNCTION:
@@ -68,7 +68,7 @@ class ArghNamespace(argparse.Namespace):
 
 def dispatch(
     parser: argparse.ArgumentParser,
-    argv: Optional[list[str]] = None,
+    argv: Optional[List[str]] = None,
     add_help_command: bool = True,
     completion: bool = True,
     output_file: IO = sys.stdout,
@@ -349,7 +349,7 @@ def dispatch_command(function: Callable, *args, **kwargs) -> None:
     dispatch(parser, *args, **kwargs)
 
 
-def dispatch_commands(functions: list[Callable], *args, **kwargs) -> None:
+def dispatch_commands(functions: List[Callable], *args, **kwargs) -> None:
     """
     A wrapper for :func:`dispatch` that creates a parser, adds commands to
     the parser and dispatches them.
@@ -402,10 +402,10 @@ class EntryPoint:
     """
 
     def __init__(
-        self, name: Optional[str] = None, parser_kwargs: Optional[dict[str, Any]] = None
+        self, name: Optional[str] = None, parser_kwargs: Optional[Dict[str, Any]] = None
     ) -> None:
         self.name = name or "unnamed"
-        self.commands: list[Callable] = []
+        self.commands: List[Callable] = []
         self.parser_kwargs = parser_kwargs or {}
 
     def __call__(self, function: Optional[Callable] = None):
