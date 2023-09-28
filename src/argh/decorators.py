@@ -11,7 +11,7 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
-from typing import Callable
+from typing import Callable, Optional
 
 from argh.constants import (
     ATTR_ALIASES,
@@ -139,7 +139,9 @@ def arg(*args, **kwargs) -> Callable:
 
 
 def wrap_errors(
-    errors: list[Exception] | None = None, processor: Callable | None = None, *args
+    errors: Optional[list[Exception]] = None,
+    processor: Optional[Callable] = None,
+    *args,
 ) -> Callable:
     """
     Decorator. Wraps given exceptions into

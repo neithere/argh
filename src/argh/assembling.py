@@ -15,7 +15,7 @@ Functions and classes to properly assemble your commands in a parser.
 """
 from argparse import ArgumentParser
 from collections import OrderedDict
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, Optional
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
@@ -283,9 +283,9 @@ def set_default_command(parser, function: Callable) -> None:
 def add_commands(
     parser: ArgumentParser,
     functions: list[Callable],
-    group_name: str | None = None,
-    group_kwargs: dict[str, Any] | None = None,
-    func_kwargs: dict[str, Any] | None = None,
+    group_name: Optional[str] = None,
+    group_kwargs: Optional[dict[str, Any]] = None,
+    func_kwargs: Optional[dict[str, Any]] = None,
 ) -> None:
     """
     Adds given functions as commands to given parser.

@@ -15,7 +15,7 @@ import argparse
 import io
 import sys
 from types import GeneratorType
-from typing import IO, Any, Callable, Iterator
+from typing import IO, Any, Callable, Iterator, Optional
 
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
@@ -68,17 +68,17 @@ class ArghNamespace(argparse.Namespace):
 
 def dispatch(
     parser: argparse.ArgumentParser,
-    argv: list[str] | None = None,
+    argv: Optional[list[str]] = None,
     add_help_command: bool = True,
     completion: bool = True,
     output_file: IO = sys.stdout,
     errors_file: IO = sys.stderr,
     raw_output: bool = False,
-    namespace: argparse.Namespace | None = None,
+    namespace: Optional[argparse.Namespace] = None,
     skip_unknown_args: bool = False,
     # deprecated args:
-    pre_call: Callable | None = None,
-) -> str | None:
+    pre_call: Optional[Callable] = None,
+) -> Optional[str]:
     """
     Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
@@ -201,7 +201,7 @@ def dispatch(
 
 def _get_function_from_namespace_obj(
     namespace_obj: argparse.Namespace,
-) -> Callable | None:
+) -> Optional[Callable]:
     if isinstance(namespace_obj, ArghNamespace):
         # our special namespace object keeps the stack of assigned functions
         try:
@@ -225,7 +225,7 @@ def _execute_command(
     function: Callable,
     namespace_obj: argparse.Namespace,
     errors_file: IO,
-    pre_call: Callable | None = None,
+    pre_call: Optional[Callable] = None,
 ) -> Iterator[str]:
     """
     Assumes that `function` is a callable.  Tries different approaches
@@ -402,13 +402,13 @@ class EntryPoint:
     """
 
     def __init__(
-        self, name: str | None = None, parser_kwargs: dict[str, Any] | None = None
+        self, name: Optional[str] = None, parser_kwargs: Optional[dict[str, Any]] = None
     ) -> None:
         self.name = name or "unnamed"
         self.commands: list[Callable] = []
         self.parser_kwargs = parser_kwargs or {}
 
-    def __call__(self, function: Callable | None = None):
+    def __call__(self, function: Optional[Callable] = None):
         if function:
             self._register_command(function)
             return function
