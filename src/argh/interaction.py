@@ -11,6 +11,8 @@
 Interaction
 ~~~~~~~~~~~
 """
+from typing import Optional
+
 __all__ = ["confirm"]
 
 
@@ -18,8 +20,8 @@ MAX_CONFIRM_ITERATIONS = 3
 
 
 def confirm(
-    action: str, default: bool | None = None, skip: bool = False
-) -> bool | None:
+    action: str, default: Optional[bool] = None, skip: bool = False
+) -> Optional[bool]:
     """
     A shortcut for typical confirmation prompt.
 

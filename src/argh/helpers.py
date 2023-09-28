@@ -12,7 +12,7 @@ Helpers
 ~~~~~~~
 """
 import argparse
-from typing import Sequence
+from typing import Optional, Sequence
 
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
@@ -50,13 +50,13 @@ class ArghParser(argparse.ArgumentParser):
         "Wrapper for :func:`~argh.completion.autocomplete`."
         return autocomplete(self)
 
-    def dispatch(self, *args, **kwargs) -> str | None:
+    def dispatch(self, *args, **kwargs) -> Optional[str]:
         "Wrapper for :func:`~argh.dispatching.dispatch`."
         return dispatch(self, *args, **kwargs)
 
     def parse_args(
         self,
-        args: Sequence[str] | None = None,
+        args: Optional[Sequence[str]] = None,
         namespace=None,
     ):
         """
