@@ -217,6 +217,24 @@ def test_set_default_command_when_subparsers_exist():
     assert ns_default.get_function() == three
 
 
+def test_set_add_commands_twice():
+    def one():
+        return 1
+
+    def two():
+        return 2
+
+    p = argh.ArghParser()
+    p.add_commands([one])
+    p.add_commands([two])
+
+    ns_explicit_one = p.parse_args(["one"])
+    ns_explicit_two = p.parse_args(["two"])
+
+    assert ns_explicit_one.get_function() == one
+    assert ns_explicit_two.get_function() == two
+
+
 def test_add_command_with_group_kwargs_but_no_group_name():
     def one():
         return 1
@@ -275,23 +293,6 @@ def test_set_default_command_kwargs():
     ]
 
 
-# TODO: remove in v.0.30
-def test_annotation():
-    "Extracting argument help from function annotations."
-
-    def cmd(foo: "quux" = 123):  # noqa: F821
-        pass
-
-    parser = argh.ArghParser()
-
-    with pytest.warns(DeprecationWarning, match="will be removed in Argh 0.30"):
-        parser.set_default_command(cmd)
-
-    prog_help = parser.format_help()
-
-    assert "quux" in prog_help
-
-
 def test_kwonlyargs():
     "Correctly processing required and optional keyword-only arguments"
 
@@ -347,27 +348,6 @@ def test_custom_argument_completer_no_backend():
     p.set_default_command(func)
 
     assert not hasattr(p._actions[-1], "completer")
-
-
-# TODO: remove in v.0.30
-def test_set_default_command_deprecation_warnings():
-    parser = argh.ArghParser()
-
-    with pytest.warns(
-        DeprecationWarning, match="Argument `title` is deprecated in add_commands()"
-    ):
-        argh.add_commands(parser, [], group_name="a", title="bar")
-
-    with pytest.warns(
-        DeprecationWarning,
-        match="Argument `description` is deprecated in add_commands()",
-    ):
-        argh.add_commands(parser, [], group_name="b", description="bar")
-
-    with pytest.warns(
-        DeprecationWarning, match="Argument `help` is deprecated in add_commands()"
-    ):
-        argh.add_commands(parser, [], group_name="c", help="bar")
 
 
 @patch("argh.assembling.add_commands")
