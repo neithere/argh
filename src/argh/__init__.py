@@ -11,12 +11,7 @@ Argh
 #  General Public License version 3 (LGPLv3) as published by the Free
 #  Software Foundation. See the file README.rst for copying conditions.
 #
-from .assembling import (
-    SUPPORTS_ALIASES,
-    add_commands,
-    add_subcommands,
-    set_default_command,
-)
+from .assembling import add_commands, add_subcommands, set_default_command
 from .decorators import aliases, arg, expects_obj, named, wrap_errors
 from .dispatching import (
     PARSER_FORMATTER,
@@ -28,10 +23,9 @@ from .dispatching import (
 )
 from .exceptions import AssemblingError, CommandError, DispatchingError
 from .helpers import ArghParser
-from .interaction import confirm, safe_input
+from .interaction import confirm
 
 __all__ = (
-    "SUPPORTS_ALIASES",
     "add_commands",
     "add_subcommands",
     "set_default_command",
@@ -51,5 +45,4 @@ __all__ = (
     "DispatchingError",
     "ArghParser",
     "confirm",
-    "safe_input",
 )

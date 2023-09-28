@@ -453,32 +453,6 @@ def test_bare_group_name():
     assert run(p, "greet --name=world", exit=True) == message
 
 
-# TODO: remove in v.0.30
-def test_bare_group_name__deprecated_arg():
-    "A command can be resolved to a function, not a namespace."
-
-    def hello():
-        return "hello world"
-
-    p = DebugArghParser()
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Argument `namespace` is deprecated .+ it will be removed in Argh 0\.30",
-    ):
-        p.add_commands([hello], namespace="greet")
-
-    # without arguments
-
-    # returns a help message and doesn't exit
-    assert "usage:" in run(p, "greet").out
-
-    # with an argument
-
-    # exits with an informative error
-    message = "unrecognized arguments: --name=world"
-    assert run(p, "greet --name=world", exit=True) == message
-
-
 def test_function_under_group_name():
     "A subcommand is resolved to a function."
 
@@ -490,34 +464,6 @@ def test_function_under_group_name():
 
     p = DebugArghParser()
     p.add_commands([hello, howdy], group_name="greet")
-
-    assert run(p, "greet hello").out == "Hello world!\n"
-    assert run(p, "greet hello --name=John").out == "Hello John!\n"
-    assert run(p, "greet hello John", exit=True) == "unrecognized arguments: John"
-
-    # exits with an informative error
-    message = "the following arguments are required: buddy"
-
-    assert message in run(p, "greet howdy --name=John", exit=True)
-    assert run(p, "greet howdy John").out == "Howdy John?\n"
-
-
-# TODO: remove in v.0.30
-def test_namespaced_function__deprecated_arg():
-    "A subcommand is resolved to a function."
-
-    def hello(name="world"):
-        return "Hello {0}!".format(name or "world")
-
-    def howdy(buddy):
-        return "Howdy {0}?".format(buddy)
-
-    p = DebugArghParser()
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Argument `namespace` is deprecated .+ it will be removed in Argh 0\.30",
-    ):
-        p.add_commands([hello, howdy], namespace="greet")
 
     assert run(p, "greet hello").out == "Hello world!\n"
     assert run(p, "greet hello --name=John").out == "Hello John!\n"
@@ -549,10 +495,9 @@ def test_aliases():
     p = DebugArghParser()
     p.add_commands([alias1])
 
-    if argh.assembling.SUPPORTS_ALIASES:
-        assert run(p, "alias1").out == "ok\n"
-        assert run(p, "alias2").out == "ok\n"
-        assert run(p, "alias3").out == "ok\n"
+    assert run(p, "alias1").out == "ok\n"
+    assert run(p, "alias2").out == "ok\n"
+    assert run(p, "alias3").out == "ok\n"
 
 
 def test_help_alias():
@@ -1022,148 +967,6 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
         == unindent(
             f"""
         usage: myapp my-group first-func [-h] [-f FOO]
-
-        Owl stretching time
-
-        {HELP_OPTIONS_LABEL}:
-          -h, --help         show this help message and exit
-          -f FOO, --foo FOO  123
-        """
-        )[1:]
-    )
-
-
-# TODO: remove in v.0.30
-def test_add_commands_group_overrides1__deprecated(capsys: pytest.CaptureFixture[str]):
-    """
-    When `namespace_kwargs` is passed to `add_commands()`, its members override
-    whatever was specified on function level.
-    """
-
-    def first_func(foo=123):
-        """Owl stretching time"""
-        pass
-
-    def second_func():
-        pass
-
-    p = argh.ArghParser(prog="myapp")
-    with pytest.warns(DeprecationWarning) as recorded_warnings:
-        p.add_commands(
-            [first_func, second_func],
-            namespace="ns",
-            namespace_kwargs={
-                "help": "namespace help override",
-                "description": "namespace description override",
-            },
-        )
-    assert len(recorded_warnings) == 2
-    assert re.match(
-        r".*`namespace` is deprecated .+ removed in Argh 0\.30.+ use `group_name` instead",
-        str(recorded_warnings[0].message),
-    )
-    assert re.match(
-        r".*`namespace_kwargs` is deprecated .+ removed in Argh 0\.30.+ use `group_kwargs` instead",
-        str(recorded_warnings[1].message),
-    )
-
-    run(p, "--help", exit=True)
-    captured = capsys.readouterr()
-    assert (
-        captured.out
-        == unindent(
-            f"""
-        usage: myapp [-h] {{ns}} ...
-
-        positional arguments:
-          {{ns}}
-            ns
-
-        {HELP_OPTIONS_LABEL}:
-          -h, --help  show this help message and exit
-        """
-        )[1:]
-    )
-
-
-# TODO: remove in v.0.30
-def test_add_commands_group_overrides2__deprecated(capsys: pytest.CaptureFixture[str]):
-    """
-    When `namespace_kwargs` is passed to `add_commands()`, its members override
-    whatever was specified on function level.
-    """
-
-    def first_func(foo=123):
-        """Owl stretching time"""
-        pass
-
-    def second_func():
-        pass
-
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
-        [first_func, second_func],
-        namespace="ns",
-        namespace_kwargs={
-            "help": "namespace help override",
-            "description": "namespace description override",
-        },
-    )
-
-    run(p, "ns --help", exit=True)
-    captured = capsys.readouterr()
-    assert (
-        captured.out
-        == unindent(
-            f"""
-        usage: myapp ns [-h] {{first-func,second-func}} ...
-
-        {HELP_OPTIONS_LABEL}:
-          -h, --help            show this help message and exit
-
-        subcommands:
-          namespace description override
-
-          {{first-func,second-func}}
-                                namespace help override
-            first-func          Owl stretching time
-            second-func
-        """
-        )[1:]
-    )
-
-
-# TODO: remove in v.0.30
-def test_add_commands_group_overrides3__deprecated(capsys: pytest.CaptureFixture[str]):
-    """
-    When `namespace_kwargs` is passed to `add_commands()`, its members override
-    whatever was specified on function level.
-    """
-
-    def first_func(foo=123):
-        """Owl stretching time"""
-        pass
-
-    def second_func():
-        pass
-
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
-        [first_func, second_func],
-        namespace="ns",
-        namespace_kwargs={
-            "help": "namespace help override",
-            "description": "namespace description override",
-        },
-    )
-
-    run(p, "ns first-func --help", exit=True)
-    captured = capsys.readouterr()
-    assert (
-        captured.out
-        == unindent(
-            f"""
-        usage: myapp ns first-func [-h] [-f FOO]
 
         Owl stretching time
 

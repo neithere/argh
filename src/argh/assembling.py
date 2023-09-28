@@ -13,7 +13,6 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
-import warnings
 from collections import OrderedDict
 
 from argh.completion import COMPLETION_ENABLED
@@ -30,24 +29,10 @@ from argh.exceptions import AssemblingError
 from argh.utils import get_arg_spec, get_subparsers
 
 __all__ = [
-    "SUPPORTS_ALIASES",
     "set_default_command",
     "add_commands",
     "add_subcommands",
 ]
-
-
-# TODO: remove in v.0.30.
-SUPPORTS_ALIASES = True
-"""
-.. deprecated:: 0.28.0
-
-    This constant will be removed in Argh v.0.30.
-
-    It's not relevant anymore because it's always `True` for all Python
-    versions currently supported by Argh.
-
-"""
 
 
 def _get_args_from_signature(function):
@@ -60,10 +45,6 @@ def _get_args_from_signature(function):
     defaults.update(getattr(spec, "kwonlydefaults", None) or {})
 
     kwonly = getattr(spec, "kwonlyargs", [])
-
-    annotations = dict(
-        (k, v) for k, v in function.__annotations__.items() if isinstance(v, str)
-    )
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
@@ -79,19 +60,6 @@ def _get_args_from_signature(function):
     for name in spec.args + kwonly:
         flags = []  # name_or_flags
         akwargs = {}  # keyword arguments for add_argument()
-
-        # TODO: remove this in v.0.30.
-        if name in annotations:
-            # help message:  func(a : "b")  ->  add_argument("a", help="b")
-            value = annotations.get(name)
-            if isinstance(value, str):
-                warnings.warn(
-                    "Defining argument help messages via annotations is "
-                    + "deprecated and will be removed in Argh 0.30.  Please "
-                    + 'replace `f(a:"foo")` with `@arg("-a", help="foo")(a)`.',
-                    DeprecationWarning,
-                )
-                akwargs.update(help=value)
 
         if name in defaults or name in kwonly:
             if name in defaults:
@@ -315,13 +283,7 @@ def add_commands(
     group_name=None,
     group_kwargs=None,
     func_kwargs=None,
-    # deprecated args:
-    title=None,
-    description=None,
-    help=None,
-    namespace=None,
-    namespace_kwargs=None,
-):
+) -> None:
     """
     Adds given functions as commands to given parser.
 
@@ -360,45 +322,6 @@ def add_commands(
         a `dict` of keyword arguments to be passed to the nested ArgumentParser
         instance under given `group_name`.
 
-    Deprecated params that should be renamed:
-
-    :param namespace:
-
-        .. deprecated:: 0.29.0
-
-           This argument will be removed in Argh v.0.30.
-           Please use `group_name` instead.
-
-    :param namespace_kwargs:
-
-        .. deprecated:: 0.29.0
-
-           This argument will be removed in Argh v.0.30.
-           Please use `group_kwargs` instead.
-
-    Deprecated params that should be moved into `group_kwargs`:
-
-    :param title:
-
-        .. deprecated:: 0.26.0
-
-           This argument will be removed in Argh v.0.30.
-           Please use `namespace_kwargs` instead.
-
-    :param description:
-
-        .. deprecated:: 0.26.0
-
-           This argument will be removed in Argh v.0.30.
-           Please use `namespace_kwargs` instead.
-
-    :param help:
-
-        .. deprecated:: 0.26.0
-
-           This argument will be removed in Argh v.0.30.
-           Please use `namespace_kwargs` instead.
-
     .. note::
 
         This function modifies the parser object. Generally side effects are
@@ -415,52 +338,6 @@ def add_commands(
 
     """
     group_kwargs = group_kwargs or {}
-
-    # ------------------------------------------------------------------------
-    # TODO remove all of these in 0.30
-    #
-    if namespace:
-        warnings.warn(
-            "Argument `namespace` is deprecated in add_commands(), "
-            + "it will be removed in Argh 0.30. "
-            + "Please use `group_name` instead.",
-            DeprecationWarning,
-        )
-        group_name = namespace
-    if namespace_kwargs:
-        warnings.warn(
-            "Argument `namespace_kwargs` is deprecated in add_commands(), "
-            + "it will be removed in Argh 0.30. "
-            + "Please use `group_kwargs` instead.",
-            DeprecationWarning,
-        )
-        group_kwargs = namespace_kwargs
-    if title:
-        warnings.warn(
-            "Argument `title` is deprecated in add_commands(), "
-            + "it will be removed in Argh 0.30. "
-            + "Please use `parser_kwargs` instead.",
-            DeprecationWarning,
-        )
-        group_kwargs["description"] = title
-    if help:
-        warnings.warn(
-            "Argument `help` is deprecated in add_commands(), "
-            + "it will be removed in Argh 0.30. "
-            + "Please use `parser_kwargs` instead.",
-            DeprecationWarning,
-        )
-        group_kwargs["help"] = help
-    if description:
-        warnings.warn(
-            "Argument `description` is deprecated in add_commands(), "
-            + "it will be removed in Argh 0.30. "
-            + "Please use `parser_kwargs` instead.",
-            DeprecationWarning,
-        )
-        group_kwargs["description"] = description
-    #
-    # ------------------------------------------------------------------------
 
     subparsers_action = get_subparsers(parser, create=True)
 

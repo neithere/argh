@@ -11,10 +11,7 @@
 Interaction
 ~~~~~~~~~~~
 """
-# TODO: remove in v.0.30
-from argh.io import safe_input
-
-__all__ = ["confirm", "safe_input"]
+__all__ = ["confirm"]
 
 
 def confirm(action, default=None, skip=False):
