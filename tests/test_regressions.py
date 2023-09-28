@@ -17,7 +17,7 @@ def test_regression_issue12():
     """
 
     def cmd(foo=1, fox=2):
-        yield "foo {0}, fox {1}".format(foo, fox)
+        yield f"foo {foo}, fox {fox}"
 
     p = DebugArghParser()
     p.set_default_command(cmd)
@@ -36,7 +36,7 @@ def test_regression_issue12_help_flag():
     """
 
     def ddos(host="localhost"):
-        return "so be it, {0}!".format(host)
+        return f"so be it, {host}!"
 
     # no help → no conflict
     p = DebugArghParser("PROG", add_help=False)

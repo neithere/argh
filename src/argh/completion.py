@@ -52,13 +52,14 @@ the completer as an attribute of the argument parser action::
 However, this doesn't fit the normal `Argh`-assisted workflow.
 It is recommended to use the :func:`~argh.decorators.arg` decorator::
 
-    @arg('--env-var1', completer=EnvironCompleter)
+    @arg("--env-var1", completer=EnvironCompleter)
     def func(...):
         ...
 
 """
 import logging
 import os
+from argparse import ArgumentParser
 
 COMPLETION_ENABLED = False
 """
@@ -79,7 +80,7 @@ __all__ = ["autocomplete", "COMPLETION_ENABLED"]
 logger = logging.getLogger(__package__)
 
 
-def autocomplete(parser):
+def autocomplete(parser: ArgumentParser) -> None:
     """
     Adds support for shell completion via argcomplete_ by patching given
     `argparse.ArgumentParser` (sub)class.

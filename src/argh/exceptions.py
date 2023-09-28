@@ -42,7 +42,7 @@ class CommandError(Exception):
             try:
                 ...
             except KeyError as e:
-                print(u'Could not fetch item: {0}'.format(e))
+                print(u"Could not fetch item: {0}".format(e))
                 sys.exit(1)
 
     It is exactly the same as::
@@ -51,7 +51,7 @@ class CommandError(Exception):
             try:
                 ...
             except KeyError as e:
-                raise CommandError(u'Could not fetch item: {0}'.format(e))
+                raise CommandError(u"Could not fetch item: {0}".format(e))
 
     To customize the exit status, pass an integer (as per ``sys.exit()``) to
     the ``code`` keyword arg.

@@ -14,9 +14,12 @@ Utilities
 import argparse
 import inspect
 import re
+from typing import Callable
 
 
-def get_subparsers(parser, create=False):
+def get_subparsers(
+    parser: argparse.ArgumentParser, create: bool = False
+) -> argparse._SubParsersAction:
     """
     Returns the `argparse._SubParsersAction` instance for given
     :class:`argparse.ArgumentParser` instance as would have been returned by
@@ -40,8 +43,10 @@ def get_subparsers(parser, create=False):
     if create:
         return parser.add_subparsers()
 
+    raise SubparsersNotDefinedError()
 
-def get_arg_spec(function):
+
+def get_arg_spec(function: Callable) -> inspect.FullArgSpec:
     """
     Returns argument specification for given function.  Omits special
     arguments of instance methods (`self`) and static methods (usually `cls`
@@ -55,7 +60,7 @@ def get_arg_spec(function):
     return spec
 
 
-def unindent(text):
+def unindent(text: str) -> str:
     """
     Given a multi-line string, decreases indentation of all lines so that the
     first non-empty line has zero indentation and the remaining lines are
@@ -67,3 +72,7 @@ def unindent(text):
     first_line_indentation = match.group(2)
     depth = len(first_line_indentation)
     return re.sub(rf"(^|\n) {{{depth}}}", "\\1", text)
+
+
+class SubparsersNotDefinedError(Exception):
+    ...
