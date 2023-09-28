@@ -32,7 +32,7 @@ def named(new_name: str) -> Callable:
 
     Usage::
 
-        @named('load')
+        @named("load")
         def do_load_some_stuff_and_keep_the_original_function_name(args):
             ...
 
@@ -54,7 +54,7 @@ def aliases(*names: list[str]) -> Callable:
     Defines alternative command name(s) for given function (along with its
     original name). Usage::
 
-        @aliases('co', 'check')
+        @aliases("co", "check")
         def checkout(args):
             ...
 
@@ -90,16 +90,22 @@ def arg(*args, **kwargs) -> Callable:
 
         from argh import arg
 
-        @arg('path', help='path to the file to load')
-        @arg('--format', choices=['yaml','json'])
-        @arg('-v', '--verbosity', choices=range(0,3), default=2)
-        def load(path, something=None, format='json', dry_run=False, verbosity=1):
-            loaders = {'json': json.load, 'yaml': yaml.load}
+        @arg("path", help="path to the file to load")
+        @arg("--format", choices=["yaml","json"])
+        @arg("-v", "--verbosity", choices=range(0,3), default=2)
+        def load(
+            path: str,
+            something: str | None = None,
+            format: str = "json",
+            dry_run: bool = False,
+            verbosity: int = 1
+        ) -> None:
+            loaders = {"json": json.load, "yaml": yaml.load}
             loader = loaders[args.format]
             data = loader(args.path)
             if not args.dry_run:
                 if verbosity < 1:
-                    print('saving to the database')
+                    print("saving to the database")
                 put_to_database(data)
 
     In this example:
@@ -141,7 +147,7 @@ def wrap_errors(
 
         @wrap_errors([AssertionError])
         def foo(x=None, y=None):
-            assert x or y, 'x or y must be specified'
+            assert x or y, "x or y must be specified"
 
     If the assertion fails, its message will be correctly printed and the
     stack hidden. This helps to avoid boilerplate code.
@@ -155,7 +161,7 @@ def wrap_errors(
             from termcolor import colored
 
             def failure(err):
-                return colored(str(err), 'red')
+                return colored(str(err), "red")
 
             @wrap_errors(processor=failure)
             def my_command(...):
@@ -181,8 +187,8 @@ def expects_obj(func: Callable) -> Callable:
 
     Usage::
 
-        @arg('bar')
-        @arg('--quux', default=123)
+        @arg("bar")
+        @arg("--quux", default=123)
         @expects_obj
         def foo(args):
             yield args.bar, args.quux

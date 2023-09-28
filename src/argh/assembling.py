@@ -79,7 +79,7 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
             # positional argument
             flags = [name]
 
-        # cmd(foo_bar)  ->  add_argument('foo-bar')
+        # cmd(foo_bar)  ->  add_argument("foo-bar")
         flags = [x.replace("_", "-") if x.startswith("-") else x for x in flags]
 
         yield {"option_strings": flags, **akwargs}
@@ -188,8 +188,8 @@ def set_default_command(parser, function: Callable) -> None:
         #
         # * a "dest" string is a normalized form of argument name, i.e.:
         #
-        #     '-f', '--foo' → 'foo'
-        #     'foo-bar'     → 'foo_bar'
+        #     "-f", "--foo" → "foo"
+        #     "foo-bar"     → "foo_bar"
         #
         # * argument declaration is a dictionary representing an argument;
         #   it is obtained either from _get_args_from_signature() or from
@@ -210,8 +210,8 @@ def set_default_command(parser, function: Callable) -> None:
                 # now make sure that this declared arg conforms to the function
                 # signature and therefore only refines an inferred arg:
                 #
-                #      @arg('my-foo')    maps to  func(my_foo)
-                #      @arg('--my-bar')  maps to  func(my_bar=...)
+                #      @arg("my-foo")    maps to  func(my_foo)
+                #      @arg("--my-bar")  maps to  func(my_bar=...)
 
                 # either both arguments are positional or both are optional
                 decl_positional = _is_positional(declared_kw["option_strings"])

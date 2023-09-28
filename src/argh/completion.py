@@ -52,7 +52,7 @@ the completer as an attribute of the argument parser action::
 However, this doesn't fit the normal `Argh`-assisted workflow.
 It is recommended to use the :func:`~argh.decorators.arg` decorator::
 
-    @arg('--env-var1', completer=EnvironCompleter)
+    @arg("--env-var1", completer=EnvironCompleter)
     def func(...):
         ...
 

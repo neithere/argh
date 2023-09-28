@@ -340,7 +340,7 @@ def dispatch_command(function: Callable, *args, **kwargs) -> None:
     This function can be also used as a decorator::
 
         @dispatch_command
-        def main(foo=123):
+        def main(foo: int = 123) -> int:
             return foo + 1
 
     """
@@ -385,18 +385,18 @@ class EntryPoint:
 
         from argh import EntryPoint
 
-        app = EntryPoint('main', dict(description='This is a cool app'))
+        app = EntryPoint("main", dict(description="This is a cool app"))
 
         @app
-        def ls():
+        def ls() -> None:
             for i in range(10):
                 print i
 
         @app
-        def greet():
-            print 'hello'
+        def greet() -> None:
+            print "hello"
 
-        if __name__ == '__main__':
+        if __name__ == "__main__":
             app()
 
     """

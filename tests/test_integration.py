@@ -87,7 +87,7 @@ def test_simple_function_defaults():
 
 def test_simple_function_varargs():
     def func(*file_paths):
-        # `paths` is the single positional argument with nargs='*'
+        # `paths` is the single positional argument with nargs="*"
         yield ", ".join(file_paths)
 
     p = DebugArghParser()
@@ -149,7 +149,7 @@ def test_all_specs_in_one():
 
     # 1) bar=1 is treated as --bar so positionals from @arg that go **kwargs
     #    will still have higher priority than bar.
-    # 2) *args, a positional with nargs='*', sits between two required
+    # 2) *args, a positional with nargs="*", sits between two required
     #    positionals (foo and fox), so it gets nothing.
     assert run(p, "one two") == R(
         out="foo: one\n" "bar: 1\n" "*args: ()\n" "** baz: None\n" "** fox: two\n",
@@ -196,7 +196,7 @@ def test_arg_merged():
 
 
 def test_arg_mismatch_positional():
-    """An `@arg('positional')` must match function signature."""
+    """An `@arg("positional")` must match function signature."""
 
     @argh.arg("bogus-argument")
     def confuse_a_cat(vet, funny_things=123):
@@ -214,7 +214,7 @@ def test_arg_mismatch_positional():
 
 
 def test_arg_mismatch_flag():
-    """An `@arg('--flag')` must match function signature."""
+    """An `@arg("--flag")` must match function signature."""
 
     @argh.arg("--bogus-argument")
     def confuse_a_cat(vet, funny_things=123):
@@ -232,7 +232,7 @@ def test_arg_mismatch_flag():
 
 
 def test_arg_mismatch_positional_vs_flag():
-    """An `@arg('arg')` must match a positional arg in function signature."""
+    """An `@arg("arg")` must match a positional arg in function signature."""
 
     @argh.arg("foo")
     def func(foo=123):
@@ -250,7 +250,7 @@ def test_arg_mismatch_positional_vs_flag():
 
 
 def test_arg_mismatch_flag_vs_positional():
-    """An `@arg('--flag')` must match a keyword in function signature."""
+    """An `@arg("--flag")` must match a keyword in function signature."""
 
     @argh.arg("--foo")
     def func(foo):

@@ -45,11 +45,11 @@ def confirm(
 
         def delete(key, silent=False):
             item = db.get(Item, args.key)
-            if confirm('Delete '+item.title, default=True, skip=silent):
+            if confirm(f"Delete {item.title}", default=True, skip=silent):
                 item.delete()
-                print('Item deleted.')
+                print("Item deleted.")
             else:
-                print('Operation cancelled.')
+                print("Operation cancelled.")
 
     Returns `None` on `KeyboardInterrupt` event.
     """
