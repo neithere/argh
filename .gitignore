@@ -1,6 +1,8 @@
 ## Ignored stuff
 
 # temp files
+*.swo
+*.swp
 *$
 *.pyc
 *.pyo

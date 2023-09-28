@@ -59,7 +59,7 @@ class ArghNamespace(argparse.Namespace):
             # the function mapped to the innermost parser — the one we need.
             self._functions_stack.append(v)
         else:
-            super(ArghNamespace, self).__setattr__(k, v)
+            super().__setattr__(k, v)
 
     def get_function(self):
         return self._functions_stack[-1]
@@ -70,12 +70,13 @@ def dispatch(
     argv=None,
     add_help_command=True,
     completion=True,
-    pre_call=None,
     output_file=sys.stdout,
     errors_file=sys.stderr,
     raw_output=False,
     namespace=None,
     skip_unknown_args=False,
+    # deprecated args:
+    pre_call=None,
 ):
     """
     Parses given list of arguments using given parser, calls the relevant

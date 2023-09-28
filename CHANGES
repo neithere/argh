@@ -2,6 +2,22 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.30.0
+--------------
+
+Backwards incompatible changes:
+
+- Removed previously deprecated features:
+
+  - argument help string in annotations — reserved for type hints;
+  - `argh.SUPPORTS_ALIASES`;
+  - `argh.safe_input()`;
+  - previously renamed arguments for `add_commands()`: `namespace`,
+    `namespace_kwargs`, `title`, `description`, `help`;
+
+  Note: the `pre_call` hack was scheduled to be removed but due to requests it
+  will remain until a replacement is implemented.
+
 Version 0.29.4
 --------------
 
