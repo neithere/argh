@@ -158,7 +158,7 @@ def dispatch(
         argv = sys.argv[1:]
 
     # TODO: remove in v0.31+/v1.0
-    if add_help_command:
+    if add_help_command:  # pragma: nocover
         warnings.warn(
             DeprecationWarning(
                 "The argument `add_help_command` in `dispatch()` is deprecated. "
