@@ -71,9 +71,9 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
     mock_endpoint_function = Mock()
     mock_namespace = Mock(argparse.Namespace)
     mock_namespace_obj = Mock(argparse.Namespace)
-
     mock_parse_and_resolve.return_value = (mock_endpoint_function, mock_namespace_obj)
     mock_run_endpoint_function.return_value = "run_endpoint_function retval"
+
     retval = argh.dispatching.dispatch(
         parser=mock_parser,
         argv=argv,
