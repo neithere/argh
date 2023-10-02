@@ -14,6 +14,7 @@ Dispatching
 import argparse
 import io
 import sys
+import warnings
 from types import GeneratorType
 from typing import IO, Any, Callable, Dict, Iterator, List, Optional
 
@@ -69,7 +70,7 @@ class ArghNamespace(argparse.Namespace):
 def dispatch(
     parser: argparse.ArgumentParser,
     argv: Optional[List[str]] = None,
-    add_help_command: bool = True,
+    add_help_command: bool = False,
     completion: bool = True,
     output_file: IO = sys.stdout,
     errors_file: IO = sys.stderr,
@@ -99,7 +100,16 @@ def dispatch(
 
         if `True`, converts first positional argument "help" to a keyword
         argument so that ``help foo`` becomes ``foo --help`` and displays usage
-        information for "foo". Default is `True`.
+        information for "foo". Default is `False`.
+
+        .. versionchanged:: 0.30
+
+           The default value is now ``False`` instead of ``True``.
+
+        .. deprecated:: 0.30
+
+           This argument will be removed in v.0.31.  The user is expected to
+           use ``--help`` instead of ``help``.
 
     :param output_file:
 
@@ -147,7 +157,14 @@ def dispatch(
     if argv is None:
         argv = sys.argv[1:]
 
-    if add_help_command:
+    # TODO: remove in v0.31+/v1.0
+    if add_help_command:  # pragma: nocover
+        warnings.warn(
+            DeprecationWarning(
+                "The argument `add_help_command` in `dispatch()` is deprecated. "
+                "The user is expected to type `--help` instead of `help`."
+            )
+        )
         if argv and argv[0] == "help":
             argv.pop(0)
             argv.append("--help")
