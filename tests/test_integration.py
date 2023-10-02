@@ -344,7 +344,7 @@ def test_commands_not_defined():
     p = DebugArghParser()
 
     assert run(p, "", {"raw_output": True}).out == p.format_usage()
-    assert run(p, "").out == p.format_usage() + "\n"
+    assert run(p, "").out == p.format_usage()
 
     assert "unrecognized arguments" in run(p, "foo", exit=True)
     assert "unrecognized arguments" in run(p, "--foo", exit=True)
