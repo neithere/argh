@@ -18,6 +18,18 @@ Backwards incompatible changes:
   Note: the `pre_call` hack was scheduled to be removed but due to requests it
   will remain until a replacement is implemented.
 
+Deprecated:
+
+- The `@expects_obj` decorator.  Rationale: it used to support the old,
+  "un-pythonic" style of usage, which essentially lies outside the scope of
+  Argh.  If you are not using the mapping of function arguments onto CLI, then
+  you aren't reducing the amount of code compared to vanilla Argparse.
+
+- The `add_help_command` argument in `dispatch()`.
+  Rationale: it doesn't add much to user experience; it's not much harder to
+  type ``--help`` than it is to type ``help``; moreover, the option can be
+  added anywhere, unlike its positional counterpart.
+
 Enhancements:
 
 - Added type annotations to existing Argh code (#185 → #189).
