@@ -203,6 +203,12 @@ wrapping the function into the :func:`~argh.decorators.expects_obj` decorator::
 This way arguments cannot be defined in the Natural Way but the
 :class:`~argh.decorators.arg` decorator works as usual.
 
+.. deprecated:: 0.30
+    The `@expects_obj` decorator will removed in v0.31 or a later version.
+    Please consider using the main feature Argh offers — the mapping of
+    function signature to CLI.  Otherwise you are basically using vanilla
+    Argparse.
+
 .. note::
 
    In both cases — ``**kwargs``-only and `@expects_obj` — the arguments

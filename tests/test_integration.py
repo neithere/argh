@@ -568,6 +568,7 @@ def test_command_error():
     )
 
 
+# TODO: deprecated — remove in v0.31+
 def test_custom_argparse_namespace():
     @argh.expects_obj
     def cmd(args):
