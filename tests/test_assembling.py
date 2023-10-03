@@ -10,39 +10,42 @@ import argh
 
 
 def test_guess_type_from_choices():
-    old = dict(option_strings=("foo",), choices=[1, 2])
-    new = dict(option_strings=("foo",), choices=[1, 2], type=int)
-    assert new == argh.assembling._guess(old)
+    given = {"option_strings": ["foo"], "choices": [1, 2]}
+    guessed = {"type": int}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
-    # ensure no overrides
-    same = dict(option_strings=("foo",), choices=[1, 2], type="NO_MATTER_WHAT")
-    assert same == argh.assembling._guess(same)
+    # do not override a guessable param if already explicitly defined
+    given = {"option_strings": ["foo"], "choices": [1, 2], "type": "NO_MATTER_WHAT"}
+    guessed = {}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
 
 def test_guess_type_from_default():
-    old = dict(option_strings=("foo",), default=1)
-    new = dict(option_strings=("foo",), default=1, type=int)
-    assert new == argh.assembling._guess(old)
+    given = {"option_strings": ["foo"], "default": 1}
+    guessed = {"type": int}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
-    # ensure no overrides
-    same = dict(option_strings=("foo",), default=1, type="NO_MATTER_WHAT")
-    assert same == argh.assembling._guess(same)
+    # do not override a guessable param if already explicitly defined
+    given = {"option_strings": ["foo"], "default": 1, "type": "NO_MATTER_WHAT"}
+    guessed = {}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
 
 def test_guess_action_from_default():
     # True → store_false
-    old = dict(option_strings=("foo",), default=False)
-    new = dict(option_strings=("foo",), default=False, action="store_true")
-    assert new == argh.assembling._guess(old)
+    given = {"option_strings": ["foo"], "default": False}
+    guessed = {"action": "store_true"}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
     # True → store_false
-    old = dict(option_strings=("foo",), default=True)
-    new = dict(option_strings=("foo",), default=True, action="store_false")
-    assert new == argh.assembling._guess(old)
+    given = {"option_strings": ["foo"], "default": True}
+    guessed = {"action": "store_false"}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
-    # ensure no overrides
-    same = dict(option_strings=("foo",), default=False, action="NO_MATTER_WHAT")
-    assert same == argh.assembling._guess(same)
+    # do not override a guessable param if already explicitly defined
+    given = {"option_strings": ["foo"], "default": False, "action": "NO_MATTER_WHAT"}
+    guessed = {}
+    assert guessed == argh.assembling.guess_extended_argspec(given)
 
 
 def test_set_default_command():
@@ -94,7 +97,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature():
     # - positional required (i.e. without a default value)
     # - positional optional (i.e. with a default value)
     # - named-only required (i.e. kwonly without a default value)
-    # - named-only optional (i.e. kwonly with a default valu)
+    # - named-only optional (i.e. kwonly with a default value)
     def func(
         alpha_pos_req,
         beta_pos_req,
@@ -120,6 +123,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature():
             beta_pos_opt_two,
             gamma_pos_opt,
             delta_pos_opt,
+            theta_pos_opt,
             gamma_kwonly_opt,
             delta_kwonly_req,
             epsilon_kwonly_req_one,

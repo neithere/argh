@@ -49,8 +49,8 @@ def get_subparsers(
 def get_arg_spec(function: Callable) -> inspect.FullArgSpec:
     """
     Returns argument specification for given function.  Omits special
-    arguments of instance methods (`self`) and static methods (usually `cls`
-    or something like this).
+    arguments of instance methods (`self`) and class methods (usually `cls`
+    or something like this).  Works fine with static methods too.
     """
     while hasattr(function, "__wrapped__"):
         function = function.__wrapped__

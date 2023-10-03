@@ -92,12 +92,22 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
         }
 
 
-def _guess(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def guess_extended_argspec(kwargs: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Adds types, actions, etc. to given argument specification.
-    For example, ``default=3`` implies ``type=int``.
+    Given an argument specification, returns types, actions, etc. that could be
+    guessed from it:
 
-    :param arg: a :class:`argh.utils.Arg` instance
+    * ``default=3`` → ``type=int``
+
+      TODO: deprecate in favour of ``foo: int = 3`` in func signature.
+
+    * ``choices=[3]`` → ``type=int``
+
+      TODO: deprecate in favour of ``foo: int`` in func signature.
+
+    * ``type=bool`` → ``action="store_false"`` or ``action="store_true"``
+      (if action was not explicitly defined).
+
     """
     guessed: Dict[str, Any] = {}
 
@@ -105,23 +115,23 @@ def _guess(kwargs: Dict[str, Any]) -> Dict[str, Any]:
     TYPE_AWARE_ACTIONS = "store", "append"
 
     # guess type/action from default value
-    value = kwargs.get("default")
-    if value is not None:
-        if isinstance(value, bool):
+    default_value = kwargs.get("default")
+    if default_value is not None:
+        if isinstance(default_value, bool):
             if kwargs.get("action") is None:
                 # infer action from default value
-                guessed["action"] = "store_false" if value else "store_true"
+                guessed["action"] = "store_false" if default_value else "store_true"
         elif kwargs.get("type") is None:
             # infer type from default value
             # (make sure that action handler supports this keyword)
             if kwargs.get("action", "store") in TYPE_AWARE_ACTIONS:
-                guessed["type"] = type(value)
+                guessed["type"] = type(default_value)
 
     # guess type from choices (first item)
     if kwargs.get("choices") and "type" not in list(guessed) + list(kwargs):
         guessed["type"] = type(kwargs["choices"][0])
 
-    return dict(kwargs, **guessed)
+    return guessed
 
 
 def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
@@ -251,7 +261,9 @@ def set_default_command(parser, function: Callable) -> None:
     command_args = inferred_args or declared_args
 
     # add types, actions, etc. (e.g. default=3 implies type=int)
-    command_args = [_guess(x) for x in command_args]
+    command_args = [
+        dict(argspec, **guess_extended_argspec(argspec)) for argspec in command_args
+    ]
 
     for draft in command_args:
         draft = draft.copy()
