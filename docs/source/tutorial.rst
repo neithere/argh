@@ -289,6 +289,29 @@ of `argparse.ArgumentParser`.
 By the way, `argh` ships with :class:`~argh.helpers.ArghParser` which
 integrates the assembling and dispatching functions for DRYness.
 
+Class Methods
+.............
+
+All kinds of class methods are supported as commands::
+
+    class Commands:
+        def instance_method(self) -> None:
+            ...
+
+        @classmethod
+        def class_method(cls) -> None:
+            ...
+
+        @staticmethod
+        def static_method() -> None:
+            ...
+
+    argh.dispatch_commands([
+        Commands().instance_method,
+        Commands.class_method,
+        Commands.static_method
+    ])
+
 Entry Points
 ............
 
@@ -305,22 +328,22 @@ dispatching.
 
 To do so, use :class:`~argh.dispatching.EntryPoint`::
 
-   from argh import EntryPoint
+    from argh import EntryPoint
 
 
-   app = EntryPoint("my cool app")
+    app = EntryPoint("my cool app")
 
-   @app
-   def foo() -> str:
-       return "hello"
+    @app
+    def foo() -> str:
+        return "hello"
 
-   @app
-   def bar() -> str:
-       return "bye"
+    @app
+    def bar() -> str:
+        return "bye"
 
 
-   if __name__ == "__main__":
-       app()
+    if __name__ == "__main__":
+        app()
 
 Single-command application
 --------------------------
