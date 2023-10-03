@@ -82,8 +82,8 @@ exclude_dirs = ["tests"]
 
 [tool.flit.sdist]
 include = [
-  "AUTHORS",
-  "CHANGES",
+  "AUTHORS.rst",
+  "CHANGES.rst",
   "COPYING",
   "COPYING.LESSER",
   "tests/",

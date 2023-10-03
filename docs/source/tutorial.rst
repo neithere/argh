@@ -305,22 +305,22 @@ dispatching.
 
 To do so, use :class:`~argh.dispatching.EntryPoint`::
 
-   from argh import EntryPoint
+    from argh import EntryPoint
 
 
-   app = EntryPoint("my cool app")
+    app = EntryPoint("my cool app")
 
-   @app
-   def foo() -> str:
-       return "hello"
+    @app
+    def foo() -> str:
+        return "hello"
 
-   @app
-   def bar() -> str:
-       return "bye"
+    @app
+    def bar() -> str:
+        return "bye"
 
 
-   if __name__ == "__main__":
-       app()
+    if __name__ == "__main__":
+        app()
 
 Single-command application
 --------------------------
