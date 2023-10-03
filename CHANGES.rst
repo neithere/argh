@@ -51,9 +51,10 @@ Version 0.29.0
 
 Backwards incompatible changes:
 
-- Wrapped exceptions now cause ``dispatching.dispatch()`` to raise ``SystemExit(1)``
-  instead of returning without error. For most users, this means failed commands
-  will now exit with a failure status instead of a success. (#161)
+- Wrapped exceptions now cause ``dispatching.dispatch()`` to raise
+  ``SystemExit(1)`` instead of returning without error. For most users, this
+  means failed commands will now exit with a failure status instead of a
+  success. (#161)
 
 Deprecated:
 
@@ -66,8 +67,8 @@ Deprecated:
 
 Enhancements:
 
-- Can control exit status (see Backwards Incompatible Changes above) when raising
-  ``CommandError`` using the ``code`` keyword arg.
+- Can control exit status (see Backwards Incompatible Changes above) when
+  raising ``CommandError`` using the ``code`` keyword arg.
 
 Bugs fixed:
 
