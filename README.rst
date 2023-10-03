@@ -170,7 +170,7 @@ A potentially modular application with more control over the process:
 Here's the auto-generated help for this application (note how the docstrings
 are reused)::
 
-    $ ./app.py help
+    $ ./app.py --help
 
     usage: app.py {echo,greet} ...
 
@@ -181,7 +181,7 @@ are reused)::
 ...and for a specific command (an ordinary function signature is converted
 to CLI arguments)::
 
-    $ ./app.py help greet
+    $ ./app.py --help greet
 
     usage: app.py greet [-g GREETING] name
 
