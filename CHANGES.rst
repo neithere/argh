@@ -41,6 +41,7 @@ Deprecated:
 
 Enhancements:
 
+- Added support for Python 3.12.
 - Added type annotations to existing Argh code (#185 → #189).
 - The `dispatch()` function has been refactored, so in case you need finer
   control over the process, two new, more granular functions can be used:

@@ -4,9 +4,11 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - master
+      - 'release/**'
   pull_request:
     branches:
       - master
+      - 'release/**'
 
 jobs:
   tox:
@@ -19,10 +21,11 @@ jobs:
           - '3.9'
           - '3.10'
           - '3.11'
-          - 'pypy-3.8'
+          - '3.12'
           - 'pypy-3.9'
+          - 'pypy-3.10'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
