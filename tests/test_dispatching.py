@@ -2,6 +2,7 @@
 Dispatching tests
 ~~~~~~~~~~~~~~~~~
 """
+import argparse
 import io
 from unittest.mock import Mock, patch
 
@@ -51,6 +52,54 @@ def test_dispatch_command(mock_set_default_command, mock_dispatch, mock_parser_c
     mock_parser = mock_parser_class.return_value
     mock_set_default_command.assert_called_with(mock_parser, func)
     mock_dispatch.assert_called_with(mock_parser)
+
+
+@patch("argh.dispatching.parse_and_resolve")
+@patch("argh.dispatching.run_endpoint_function")
+def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_resolve):
+    def func() -> str:
+        return "function output"
+
+    mock_parser = Mock(argparse.ArgumentParser)
+    mock_parser.parse_args.return_value = argparse.Namespace(foo=123)
+    argv = ["foo", "bar", "baz"]
+    completion = False
+    mock_output_file = Mock(io.TextIOBase)
+    mock_errors_file = Mock(io.TextIOBase)
+    raw_output = False
+    skip_unknown_args = False
+    mock_endpoint_function = Mock()
+    mock_namespace = Mock(argparse.Namespace)
+    mock_namespace_obj = Mock(argparse.Namespace)
+    mock_parse_and_resolve.return_value = (mock_endpoint_function, mock_namespace_obj)
+    mock_run_endpoint_function.return_value = "run_endpoint_function retval"
+
+    retval = argh.dispatching.dispatch(
+        parser=mock_parser,
+        argv=argv,
+        completion=completion,
+        namespace=mock_namespace,
+        skip_unknown_args=skip_unknown_args,
+        output_file=mock_output_file,
+        errors_file=mock_errors_file,
+        raw_output=raw_output,
+    )
+
+    mock_parse_and_resolve.assert_called_with(
+        parser=mock_parser,
+        argv=argv,
+        completion=completion,
+        namespace=mock_namespace,
+        skip_unknown_args=skip_unknown_args,
+    )
+    mock_run_endpoint_function.assert_called_with(
+        function=mock_endpoint_function,
+        namespace_obj=mock_namespace_obj,
+        output_file=mock_output_file,
+        errors_file=mock_errors_file,
+        raw_output=raw_output,
+    )
+    assert retval == "run_endpoint_function retval"
 
 
 @patch("argh.dispatching.argparse.ArgumentParser")

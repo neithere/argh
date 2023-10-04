@@ -20,6 +20,8 @@ from .dispatching import (
     dispatch,
     dispatch_command,
     dispatch_commands,
+    parse_and_resolve,
+    run_endpoint_function,
 )
 from .exceptions import AssemblingError, CommandError, DispatchingError
 from .helpers import ArghParser
@@ -45,4 +47,6 @@ __all__ = (
     "DispatchingError",
     "ArghParser",
     "confirm",
+    "parse_and_resolve",
+    "run_endpoint_function",
 )
