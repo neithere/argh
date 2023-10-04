@@ -16,7 +16,7 @@ import io
 import sys
 import warnings
 from types import GeneratorType
-from typing import IO, Any, Callable, Dict, Iterator, List, Optional
+from typing import IO, Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
@@ -35,6 +35,8 @@ __all__ = [
     "dispatch",
     "dispatch_command",
     "dispatch_commands",
+    "parse_and_resolve",
+    "run_endpoint_function",
     "PARSER_FORMATTER",
     "EntryPoint",
 ]
@@ -77,15 +79,13 @@ def dispatch(
     raw_output: bool = False,
     namespace: Optional[argparse.Namespace] = None,
     skip_unknown_args: bool = False,
-    # deprecated args:
-    pre_call: Optional[Callable] = None,
 ) -> Optional[str]:
     """
     Parses given list of arguments using given parser, calls the relevant
     function and prints the result.
 
-    The target function should expect one positional argument: the
-    :class:`argparse.Namespace` object.
+    Internally calls :func:`~argh.dispatching.parse_and_resolve` and then
+    :func:`~argh.dispatching.run_endpoint_function`.
 
     :param parser:
 
@@ -151,11 +151,6 @@ def dispatch(
     Wrapped exceptions, or other "expected errors" like parse failures,
     will cause a SystemExit to be raised.
     """
-    if completion:
-        autocomplete(parser)
-
-    if argv is None:
-        argv = sys.argv[1:]
 
     # TODO: remove in v0.31+/v1.0
     if add_help_command:  # pragma: nocover
@@ -168,6 +163,45 @@ def dispatch(
         if argv and argv[0] == "help":
             argv.pop(0)
             argv.append("--help")
+
+    endpoint_function, namespace_obj = parse_and_resolve(
+        parser=parser,
+        completion=completion,
+        argv=argv,
+        namespace=namespace,
+        skip_unknown_args=skip_unknown_args,
+    )
+
+    if not endpoint_function:
+        parser.print_usage(output_file)
+        return None
+
+    return run_endpoint_function(
+        function=endpoint_function,
+        namespace_obj=namespace_obj,
+        output_file=output_file,
+        errors_file=errors_file,
+        raw_output=raw_output,
+    )
+
+
+def parse_and_resolve(
+    parser: argparse.ArgumentParser,
+    argv: Optional[List[str]] = None,
+    completion: bool = True,
+    namespace: Optional[argparse.Namespace] = None,
+    skip_unknown_args: bool = False,
+) -> Tuple[Optional[Callable], argparse.Namespace]:
+    """
+    .. versionadded: 0.30
+
+    Parses CLI arguments and resolves the endpoint function.
+    """
+    if completion:
+        autocomplete(parser)
+
+    if argv is None:
+        argv = sys.argv[1:]
 
     if not namespace:
         namespace = ArghNamespace()
@@ -182,13 +216,31 @@ def dispatch(
 
     function = _get_function_from_namespace_obj(namespace_obj)
 
-    if function:
-        lines = _execute_command(
-            function, namespace_obj, errors_file, pre_call=pre_call
-        )
-    else:
-        # no commands declared, can't dispatch; display help message
-        lines = iter([parser.format_usage()])
+    return function, namespace_obj
+
+
+def run_endpoint_function(
+    function: Callable,
+    namespace_obj: argparse.Namespace,
+    output_file: IO = sys.stdout,
+    errors_file: IO = sys.stderr,
+    raw_output: bool = False,
+) -> Optional[str]:
+    """
+    .. versionadded: 0.30
+
+    Extracts arguments from the namespace object, calls the endpoint function
+    and processes its output.
+    """
+    lines = _execute_command(function, namespace_obj, errors_file)
+
+    return _process_command_output(lines, output_file, raw_output)
+
+
+def _process_command_output(
+    lines: Iterator[str], output_file: Optional[IO], raw_output: bool
+) -> Optional[str]:
+    out_io: IO
 
     if output_file is None:
         # user wants a string; we create an internal temporary file-like object
@@ -239,10 +291,7 @@ def _get_function_from_namespace_obj(
 
 
 def _execute_command(
-    function: Callable,
-    namespace_obj: argparse.Namespace,
-    errors_file: IO,
-    pre_call: Optional[Callable] = None,
+    function: Callable, namespace_obj: argparse.Namespace, errors_file: IO
 ) -> Iterator[str]:
     """
     Assumes that `function` is a callable.  Tries different approaches
@@ -254,20 +303,6 @@ def _execute_command(
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
-    # TODO: remove in v.0.30
-    if pre_call:  # pragma: no cover
-        # This is NOT a documented and recommended API.
-        # The common use case for this hack is to inject shared arguments.
-        # Such approach would promote an approach which is not in line with the
-        # purpose of the library, i.e. to keep things natural and "pythonic".
-        # Argh is about keeping CLI in line with function signatures.
-        # The `pre_call` hack effectively destroys this mapping.
-        # There should be a better solution, e.g. decorators and/or some shared
-        # objects.
-        #
-        # See discussion here: https://github.com/neithere/argh/issues/63
-        pre_call(namespace_obj)
-
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
