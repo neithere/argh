@@ -303,6 +303,7 @@ def _execute_command(
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
+
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
@@ -360,7 +361,6 @@ def _execute_command(
         for line in result:
             yield line
     except tuple(wrappable_exceptions) as exc:
-
         processor = getattr(
             function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, default_exception_processor
         )

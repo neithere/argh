@@ -105,7 +105,7 @@ A very simple application with one command:
     import argh
 
     def main() -> str:
-        return 'Hello world'
+        return "Hello world"
 
     argh.dispatch_command(main)
 
