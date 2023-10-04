@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "argh"
-version = "0.30.0a1"
+version = "0.30.0-alpha"
 description = "An unobtrusive argparse wrapper with natural syntax"
 readme = "README.rst"
 requires-python = ">=3.8"
@@ -82,8 +82,8 @@ exclude_dirs = ["tests"]
 
 [tool.flit.sdist]
 include = [
-  "AUTHORS",
-  "CHANGES",
+  "AUTHORS.rst",
+  "CHANGES.rst",
   "COPYING",
   "COPYING.LESSER",
   "tests/",

@@ -500,18 +500,13 @@ def test_aliases():
     assert run(p, "alias3").out == "ok\n"
 
 
-def test_help_alias():
+def test_help():
     p = DebugArghParser()
 
     # assert the commands don't fail
-
     assert run(p, "--help", exit=True) == 0
     assert run(p, "greet --help", exit=True) == 0
     assert run(p, "greet hello --help", exit=True) == 0
-
-    assert run(p, "help", exit=True) == 0
-    assert run(p, "help greet", exit=True) == 0
-    assert run(p, "help greet hello", exit=True) == 0
 
 
 def test_arg_order():
@@ -573,6 +568,7 @@ def test_command_error():
     )
 
 
+# TODO: deprecated — remove in v0.31+
 def test_custom_argparse_namespace():
     @argh.expects_obj
     def cmd(args):
