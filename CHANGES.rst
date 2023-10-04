@@ -14,9 +14,18 @@ Backwards incompatible changes:
   - `argh.safe_input()`;
   - previously renamed arguments for `add_commands()`: `namespace`,
     `namespace_kwargs`, `title`, `description`, `help`;
+  - `pre_call` argument in `dispatch()`.  The basic usage remains simple but
+    more granular functions are now available for more control.
 
-  Note: the `pre_call` hack was scheduled to be removed but due to requests it
-  will remain until a replacement is implemented.
+    Instead of this::
+
+      argh.dispatch(..., pre_call=pre_call_hook)
+
+    please use this::
+
+      func, ns = argh.parse_and_resolve(...)
+      pre_call_hook(ns)
+      argh.run_endpoint_function(func, ns, ...)
 
 Deprecated:
 
@@ -33,6 +42,13 @@ Deprecated:
 Enhancements:
 
 - Added type annotations to existing Argh code (#185 → #189).
+- The `dispatch()` function has been refactored, so in case you need finer
+  control over the process, two new, more granular functions can be used:
+
+  - `endpoint_function, namespace = argh.parse_and_resolve(...)`
+  - `argh.run_endpoint_function(endpoint_function, namespace, ...)`
+
+  Please note that the names may change in the upcoming versions.
 
 Version 0.29.4
 --------------

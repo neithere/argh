@@ -4,6 +4,7 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - master
+      - 'release/**'
   pull_request:
     branches:
       - master
