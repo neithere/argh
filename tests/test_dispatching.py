@@ -72,7 +72,6 @@ def test_dispatch_commands(mock_add_commands, mock_dispatch, mock_parser_class):
 @patch("argh.dispatching.add_commands")
 @patch("argparse.ArgumentParser")
 def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
-
     entrypoint = argh.EntryPoint("my cool app")
 
     # no commands

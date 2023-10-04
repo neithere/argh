@@ -325,7 +325,6 @@ def _execute_command(
         for line in result:
             yield line
     except tuple(wrappable_exceptions) as exc:
-
         processor = getattr(
             function, ATTR_WRAPPED_EXCEPTIONS_PROCESSOR, default_exception_processor
         )
