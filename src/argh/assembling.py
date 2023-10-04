@@ -13,6 +13,7 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
+import inspect
 from argparse import ArgumentParser
 from collections import OrderedDict
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
@@ -37,18 +38,18 @@ __all__ = [
 ]
 
 
-def _get_args_from_signature(function: Callable) -> Iterator[dict]:
+def extract_parser_add_argument_kw_from_signature(function: Callable) -> Iterator[dict]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
 
-    spec = get_arg_spec(function)
+    func_spec = get_arg_spec(function)
 
     defaults: Dict[str, Any] = dict(
-        zip(reversed(spec.args), reversed(spec.defaults or tuple()))
+        zip(reversed(func_spec.args), reversed(func_spec.defaults or tuple()))
     )
-    defaults.update(getattr(spec, "kwonlydefaults", None) or {})
+    defaults.update(getattr(func_spec, "kwonlydefaults", None) or {})
 
-    kwonly = getattr(spec, "kwonlyargs", [])
+    kwonly = getattr(func_spec, "kwonlyargs", [])
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
@@ -61,7 +62,7 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
         char for char in named_arg_char_counts if 1 < named_arg_char_counts[char]
     )
 
-    for name in spec.args + kwonly:
+    for name in func_spec.args + kwonly:
         flags: List[str] = []  # name_or_flags
         akwargs: Dict[str, Any] = {}  # keyword arguments for add_argument()
 
@@ -84,10 +85,10 @@ def _get_args_from_signature(function: Callable) -> Iterator[dict]:
 
         yield {"option_strings": flags, **akwargs}
 
-    if spec.varargs:
+    if func_spec.varargs:
         # *args
         yield {
-            "option_strings": [spec.varargs],
+            "option_strings": [func_spec.varargs],
             "nargs": "*",
         }
 
@@ -186,10 +187,12 @@ def set_default_command(parser, function: Callable) -> None:
        option name ``-h`` is silently removed from any argument.
 
     """
-    spec = get_arg_spec(function)
+    func_spec = get_arg_spec(function)
 
     declared_args: List[dict] = getattr(function, ATTR_ARGS, [])
-    inferred_args: List[dict] = list(_get_args_from_signature(function))
+    inferred_args: List[dict] = list(
+        extract_parser_add_argument_kw_from_signature(function)
+    )
 
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
@@ -202,8 +205,8 @@ def set_default_command(parser, function: Callable) -> None:
         #     "foo-bar"     → "foo_bar"
         #
         # * argument declaration is a dictionary representing an argument;
-        #   it is obtained either from _get_args_from_signature() or from
-        #   an @arg decorator (as is).
+        #   it is obtained either from extract_parser_add_argument_kw_from_signature()
+        #   or from an @arg decorator (as is).
         #
         dests = OrderedDict()
 
@@ -240,7 +243,7 @@ def set_default_command(parser, function: Callable) -> None:
                 dests[dest].update(**declared_kw)
             else:
                 # the argument is not in function signature
-                varkw = getattr(spec, "varkw", getattr(spec, "keywords", []))
+                varkw = getattr(func_spec, "varkw", getattr(func_spec, "keywords", []))
                 if varkw:
                     # function accepts **kwargs; the argument goes into it
                     dests[dest] = declared_kw
@@ -283,8 +286,10 @@ def set_default_command(parser, function: Callable) -> None:
                 f"{function.__name__}: cannot add {err_args}: {exc}"
             ) from exc
 
-    if function.__doc__ and not parser.description:
-        parser.description = function.__doc__
+    docstring = inspect.getdoc(function)
+    if docstring and not parser.description:
+        parser.description = docstring
+
     parser.set_defaults(
         **{
             DEST_FUNCTION: function,

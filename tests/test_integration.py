@@ -117,21 +117,6 @@ def test_simple_function_kwargs():
     assert run(p, "hello --bar 123") == R(out="bar: 123\nfoo: hello\n", err="")
 
 
-@pytest.mark.xfail
-def test_simple_function_multiple():
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_simple_function_nested():
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_class_method_as_command():
-    raise NotImplementedError
-
-
 def test_all_specs_in_one():
     @argh.arg("foo")
     @argh.arg("--bar")
@@ -746,7 +731,7 @@ def test_help_formatting_is_preserved():
     p = DebugArghParser()
     p.set_default_command(func)
 
-    assert func.__doc__ in p.format_help()
+    assert unindent(func.__doc__) in p.format_help()
 
 
 def test_prog(capsys: pytest.CaptureFixture[str]):
