@@ -303,6 +303,7 @@ def _execute_command(
     All other exceptions propagate unless marked as wrappable
     by :func:`wrap_errors`.
     """
+
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
