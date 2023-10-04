@@ -62,21 +62,18 @@ In a nutshell
     Nested commands are a piece of cake, no messing with subparsers (though
     they are of course used under the hood);
 
-:Term-Friendly:
-    Command output is processed with respect to stream encoding;
-
 :Unobtrusive:
     `Argh` can dispatch a subset of pure-`argparse` code, and pure-`argparse`
     code can update and dispatch a parser assembled with `Argh`;
 
 :DRY:
-    The amount of boilerplate code is minimal; among other things, `Argh` will:
+    Don't Repeat Yourself.  The amount of boilerplate code is minimal.
+    Among other things, `Argh` will:
 
     * infer command name from function name;
     * infer arguments from function signature;
     * infer argument type from the default value;
     * infer argument action from the default value (for booleans);
-    * add an alias root command ``help`` for the ``--help`` argument.
 
 :NIH free:
     `Argh` supports *completion*, *progress bars* and everything else by being
@@ -173,7 +170,7 @@ A potentially modular application with more control over the process:
 Here's the auto-generated help for this application (note how the docstrings
 are reused)::
 
-    $ ./app.py help
+    $ ./app.py --help
 
     usage: app.py {echo,greet} ...
 
@@ -184,7 +181,7 @@ are reused)::
 ...and for a specific command (an ordinary function signature is converted
 to CLI arguments)::
 
-    $ ./app.py help greet
+    $ ./app.py --help greet
 
     usage: app.py greet [-g GREETING] name
 
@@ -245,7 +242,7 @@ Author
 
 Developed by Andrey Mikhaylenko since 2010.
 
-See file `AUTHORS` for a list of contributors to this library.
+See file `AUTHORS.rst` for a list of contributors to this library.
 
 Support
 -------

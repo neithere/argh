@@ -11,6 +11,7 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
+import warnings
 from typing import Callable, List, Optional
 
 from argh.constants import (
@@ -80,11 +81,8 @@ def arg(*args, **kwargs) -> Callable:
     required if they can be easily guessed (e.g. you don't have to specify type
     or action when an `int` or `bool` default value is supplied).
 
-    Typical use cases:
-
-    - In combination with :func:`expects_obj` (which is not recommended);
-    - in combination with ordinary function signatures to add details that
-      cannot be expressed with that syntax (e.g. help message).
+    Typical use case: in combination with ordinary function signatures to add
+    details that cannot be expressed with that syntax (e.g. help message).
 
     Usage::
 
@@ -183,9 +181,17 @@ def wrap_errors(
     return wrapper
 
 
+# TODO: deprecated — remove in v0.31+
 def expects_obj(func: Callable) -> Callable:
     """
     Marks given function as expecting a namespace object.
+
+    .. deprecated:: 0.30
+        Will removed in v0.31 or a later version.
+
+        Please consider using the main feature Argh offers — the mapping of
+        function signature to CLI.  Otherwise you are basically using vanilla
+        Argparse.
 
     Usage::
 
@@ -202,5 +208,11 @@ def expects_obj(func: Callable) -> Callable:
 
     In most cases you don't need this decorator.
     """
+    warnings.warn(
+        DeprecationWarning(
+            "The @expects_obj decorator is deprecated. Please update "
+            'your code to use the standard approach AKA "Natural Way".'
+        )
+    )
     setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
     return func

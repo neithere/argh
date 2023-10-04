@@ -27,6 +27,18 @@ Backwards incompatible changes:
       pre_call_hook(ns)
       argh.run_endpoint_function(func, ns, ...)
 
+Deprecated:
+
+- The `@expects_obj` decorator.  Rationale: it used to support the old,
+  "un-pythonic" style of usage, which essentially lies outside the scope of
+  Argh.  If you are not using the mapping of function arguments onto CLI, then
+  you aren't reducing the amount of code compared to vanilla Argparse.
+
+- The `add_help_command` argument in `dispatch()`.
+  Rationale: it doesn't add much to user experience; it's not much harder to
+  type ``--help`` than it is to type ``help``; moreover, the option can be
+  added anywhere, unlike its positional counterpart.
+
 Enhancements:
 
 - Added type annotations to existing Argh code (#185 → #189).
@@ -55,9 +67,10 @@ Version 0.29.0
 
 Backwards incompatible changes:
 
-- Wrapped exceptions now cause ``dispatching.dispatch()`` to raise ``SystemExit(1)``
-  instead of returning without error. For most users, this means failed commands
-  will now exit with a failure status instead of a success. (#161)
+- Wrapped exceptions now cause ``dispatching.dispatch()`` to raise
+  ``SystemExit(1)`` instead of returning without error. For most users, this
+  means failed commands will now exit with a failure status instead of a
+  success. (#161)
 
 Deprecated:
 
@@ -70,8 +83,8 @@ Deprecated:
 
 Enhancements:
 
-- Can control exit status (see Backwards Incompatible Changes above) when raising
-  ``CommandError`` using the ``code`` keyword arg.
+- Can control exit status (see Backwards Incompatible Changes above) when
+  raising ``CommandError`` using the ``code`` keyword arg.
 
 Bugs fixed:
 

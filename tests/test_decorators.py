@@ -54,6 +54,7 @@ def test_wrap_errors_processor():
     assert attr == "STUB"
 
 
+# TODO: deprecated — remove in v0.31+
 def test_expects_obj():
     @argh.expects_obj
     def func(args):
