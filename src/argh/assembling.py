@@ -16,6 +16,7 @@ Functions and classes to properly assemble your commands in a parser.
 import inspect
 from argparse import ArgumentParser
 from collections import OrderedDict
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from argh.completion import COMPLETION_ENABLED
@@ -36,6 +37,15 @@ __all__ = [
     "add_commands",
     "add_subcommands",
 ]
+
+
+@dataclass
+class ParserAddArgumentSpec:
+    dest_names: tuple[str]
+    kwargs: dict[str, Any]
+
+    # https://kislyuk.github.io/argcomplete/#specifying-completers
+    completer: Optional[Callable]
 
 
 def extract_parser_add_argument_kw_from_signature(function: Callable) -> Iterator[dict]:
@@ -135,37 +145,6 @@ def guess_extended_argspec(kwargs: Dict[str, Any]) -> Dict[str, Any]:
     return guessed
 
 
-def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
-    if not args or not args[0]:
-        raise ValueError("Expected at least one argument")
-    if args[0][0].startswith(tuple(prefix_chars)):
-        return False
-    return True
-
-
-def _get_parser_param_kwargs(
-    parser: ArgumentParser, argspec: Dict[str, Any]
-) -> Dict[str, Any]:
-    argspec = argspec.copy()  # parser methods modify source data
-    args = argspec["option_strings"]
-
-    if _is_positional(args, prefix_chars=parser.prefix_chars):
-        get_kwargs = parser._get_positional_kwargs
-    else:
-        get_kwargs = parser._get_optional_kwargs
-
-    kwargs = get_kwargs(*args, **argspec)
-
-    kwargs["dest"] = kwargs["dest"].replace("-", "_")
-
-    return kwargs
-
-
-def _get_dest(parser: ArgumentParser, argspec) -> str:
-    kwargs = _get_parser_param_kwargs(parser, argspec)
-    return kwargs["dest"]
-
-
 def set_default_command(parser, function: Callable) -> None:
     """
     Sets default command (i.e. a function) for given parser.
@@ -188,6 +167,7 @@ def set_default_command(parser, function: Callable) -> None:
 
     """
     func_spec = get_arg_spec(function)
+    has_varkw = bool(func_spec.varkw)  # the **kwargs thing
 
     declared_args: List[dict] = getattr(function, ATTR_ARGS, [])
     inferred_args: List[dict] = list(
@@ -196,70 +176,15 @@ def set_default_command(parser, function: Callable) -> None:
 
     if inferred_args and declared_args:
         # We've got a mixture of declared and inferred arguments
-
-        # a mapping of "dest" strings to argument declarations.
-        #
-        # * a "dest" string is a normalized form of argument name, i.e.:
-        #
-        #     "-f", "--foo" → "foo"
-        #     "foo-bar"     → "foo_bar"
-        #
-        # * argument declaration is a dictionary representing an argument;
-        #   it is obtained either from extract_parser_add_argument_kw_from_signature()
-        #   or from an @arg decorator (as is).
-        #
-        dests = OrderedDict()
-
-        for argspec in inferred_args:
-            dest = _get_parser_param_kwargs(parser, argspec)["dest"]
-            dests[dest] = argspec
-
-        for declared_kw in declared_args:
-            # an argument is declared via decorator
-            dest = _get_dest(parser, declared_kw)
-            if dest in dests:
-                # the argument is already known from function signature
-                #
-                # now make sure that this declared arg conforms to the function
-                # signature and therefore only refines an inferred arg:
-                #
-                #      @arg("my-foo")    maps to  func(my_foo)
-                #      @arg("--my-bar")  maps to  func(my_bar=...)
-
-                # either both arguments are positional or both are optional
-                decl_positional = _is_positional(declared_kw["option_strings"])
-                infr_positional = _is_positional(dests[dest]["option_strings"])
-                if decl_positional != infr_positional:
-                    kinds = {True: "positional", False: "optional"}
-                    kind_inferred = kinds[infr_positional]
-                    kind_declared = kinds[decl_positional]
-                    raise AssemblingError(
-                        f'{function.__name__}: argument "{dest}" declared as {kind_inferred} '
-                        f"(in function signature) and {kind_declared} (via decorator)"
-                    )
-
-                # merge explicit argument declaration into the inferred one
-                # (e.g. `help=...`)
-                dests[dest].update(**declared_kw)
-            else:
-                # the argument is not in function signature
-                varkw = getattr(func_spec, "varkw", getattr(func_spec, "keywords", []))
-                if varkw:
-                    # function accepts **kwargs; the argument goes into it
-                    dests[dest] = declared_kw
-                else:
-                    # there's no way we can map the argument declaration
-                    # to function signature
-                    dest_option_strings = (dests[x]["option_strings"] for x in dests)
-                    msg_flags = ", ".join(declared_kw["option_strings"])
-                    msg_signature = ", ".join("/".join(x) for x in dest_option_strings)
-                    raise AssemblingError(
-                        f"{function.__name__}: argument {msg_flags} does not fit "
-                        f"function signature: {msg_signature}"
-                    )
-
-        # pack the modified data back into a list
-        inferred_args = list(dests.values())
+        try:
+            inferred_args = _merge_inferred_and_declared_args(
+                inferred_args=inferred_args,
+                declared_args=declared_args,
+                has_varkw=has_varkw,
+                parser=parser,
+            )
+        except AssemblingError as exc:
+            raise AssemblingError(f"{function.__name__}: {exc}") from exc
 
     command_args = inferred_args or declared_args
 
@@ -268,33 +193,194 @@ def set_default_command(parser, function: Callable) -> None:
         dict(argspec, **guess_extended_argspec(argspec)) for argspec in command_args
     ]
 
-    for draft in command_args:
-        draft = draft.copy()
-        if "help" not in draft:
-            draft.update(help=DEFAULT_ARGUMENT_TEMPLATE)
-        dest_or_opt_strings = draft.pop("option_strings")
-        if parser.add_help and "-h" in dest_or_opt_strings:
-            dest_or_opt_strings = [x for x in dest_or_opt_strings if x != "-h"]
-        completer = draft.pop("completer", None)
+    parser_add_argument_specs = _make_parser_add_argument_specs(
+        args=command_args, should_add_help=parser.add_help
+    )
+
+    # add the fully formed argument specs to the parser
+    for parser_add_argument_spec in parser_add_argument_specs:
         try:
-            action = parser.add_argument(*dest_or_opt_strings, **draft)
-            if COMPLETION_ENABLED and completer:
-                action.completer = completer
+            action = parser.add_argument(
+                *parser_add_argument_spec.dest_names, **parser_add_argument_spec.kwargs
+            )
         except Exception as exc:
-            err_args = "/".join(dest_or_opt_strings)
+            err_args = "/".join(parser_add_argument_spec.dest_names)
             raise AssemblingError(
                 f"{function.__name__}: cannot add {err_args}: {exc}"
             ) from exc
 
+        if COMPLETION_ENABLED and parser_add_argument_spec.completer:
+            action.completer = parser_add_argument_spec.completer
+
+    # display endpoint function docstring in command help
     docstring = inspect.getdoc(function)
     if docstring and not parser.description:
         parser.description = docstring
 
+    # add the endpoint function to the parsing result (namespace)
     parser.set_defaults(
         **{
             DEST_FUNCTION: function,
         }
     )
+
+
+def _make_parser_add_argument_specs(
+    args: List[dict], should_add_help: bool
+) -> Iterator[ParserAddArgumentSpec]:
+    for draft in args:
+        draft = draft.copy()
+
+        # display default value for this argument in command help
+        if "help" not in draft:
+            draft.update(help=DEFAULT_ARGUMENT_TEMPLATE)
+
+        dest_or_opt_strings = draft.pop("option_strings")
+
+        if should_add_help and "-h" in dest_or_opt_strings:
+            dest_or_opt_strings = [x for x in dest_or_opt_strings if x != "-h"]
+
+        yield ParserAddArgumentSpec(
+            dest_names=dest_or_opt_strings,
+            kwargs=draft,
+            completer=draft.pop("completer", None),
+        )
+
+
+def _merge_inferred_and_declared_args(
+    inferred_args: list[dict],
+    declared_args: list[dict],
+    parser: ArgumentParser,
+    has_varkw: bool,
+) -> list[dict]:
+    # a mapping of "dest" strings to argument declarations.
+    #
+    # * a "dest" string is a normalized form of argument name, i.e.:
+    #
+    #     "-f", "--foo" → "foo"
+    #     "foo-bar"     → "foo_bar"
+    #
+    # * argument declaration is a dictionary representing an argument;
+    #   it is obtained either from extract_parser_add_argument_kw_from_signature()
+    #   or from an @arg decorator (as is).
+    #
+    dests = OrderedDict()
+
+    # arguments inferred from function signature
+    for argspec in inferred_args:
+        dest = _get_parser_param_kwargs(parser, argspec)["dest"]
+        dests[dest] = argspec
+
+    # arguments declared via @arg decorator
+    for declared_kw in declared_args:
+        dest = _get_dest(parser, declared_kw)
+        if dest in dests:
+            # the argument is already known from function signature
+            #
+            # now make sure that this declared arg conforms to the function
+            # signature and therefore only refines an inferred arg:
+            #
+            #      @arg("my-foo")    maps to  func(my_foo)
+            #      @arg("--my-bar")  maps to  func(my_bar=...)
+
+            # either both arguments are positional or both are optional
+            decl_positional = _is_positional(declared_kw["option_strings"])
+            infr_positional = _is_positional(dests[dest]["option_strings"])
+            if decl_positional != infr_positional:
+                kinds = {True: "positional", False: "optional"}
+                kind_inferred = kinds[infr_positional]
+                kind_declared = kinds[decl_positional]
+                raise AssemblingError(
+                    f'argument "{dest}" declared as {kind_inferred} '
+                    f"(in function signature) and {kind_declared} (via decorator)"
+                )
+
+            # merge explicit argument declaration into the inferred one
+            # (e.g. `help=...`)
+            dests[dest].update(**declared_kw)
+        else:
+            # the argument is not in function signature
+            if has_varkw:
+                # function accepts **kwargs; the argument goes into it
+                dests[dest] = declared_kw
+            else:
+                # there's no way we can map the argument declaration
+                # to function signature
+                dest_option_strings = (dests[x]["option_strings"] for x in dests)
+                msg_flags = ", ".join(declared_kw["option_strings"])
+                msg_signature = ", ".join("/".join(x) for x in dest_option_strings)
+                raise AssemblingError(
+                    f"argument {msg_flags} does not fit "
+                    f"function signature: {msg_signature}"
+                )
+
+    # pack the modified data back into a list
+    return list(dests.values())
+
+
+def _get_dest(parser: ArgumentParser, argspec: Dict[str, Any]) -> str:
+    """
+    Given a dict representing the keywords to `parser.add_argument()`, extract
+    and normalise the option name::
+
+        >>> _get_dest(parser, {"option_strings": ("-f", "--foo-bar", "--whatever")})
+        "foo_bar"
+
+    """
+    kwargs = _get_parser_param_kwargs(parser, argspec)
+    return kwargs["dest"]
+
+
+def _get_parser_param_kwargs(
+    parser: ArgumentParser, argspec: Dict[str, Any]
+) -> Dict[str, Any]:
+    "TODO: explain"
+    argspec = argspec.copy()  # parser methods modify source data
+    args = argspec["option_strings"]
+
+    # These two protected methods return something that is, frankly, not very useful:
+    #
+    # >>> p._get_positional_kwargs('foo-bar')
+    # {'required': True, 'dest': 'foo-bar', 'option_strings': []}
+    #
+    # >>> p._get_optional_kwargs('foo-bar')
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 1, in <module>
+    #   File "/usr/lib64/python3.11/argparse.py", line 1571, in _get_optional_kwargs
+    #     raise ValueError(msg % args)
+    # ValueError: invalid option string 'foo-bar': must start with a character '-'
+    #
+    # >>> p._get_positional_kwargs('--foo-bar')
+    # {'required': True, 'dest': '--foo-bar', 'option_strings': []}
+    #
+    # >>> p._get_optional_kwargs('--foo-bar')
+    # {'dest': 'foo_bar', 'option_strings': ['--foo-bar']}
+    #
+    # >>> p._get_optional_kwargs('-a', '-b', '--c', '--d')
+    # {'dest': 'c', 'option_strings': ['-a', '-b', '-c', '-d']}
+    #
+    # Get rid of this.  Use function signature as the source of truth.
+    # If all are options (`-*`), pick the first elem with `--` (if any) or with `-`,
+    # strip the prefix and normalise `-` to `_`.
+    # That's all this thing does,
+    if _is_positional(args, prefix_chars=parser.prefix_chars):
+        get_kwargs = parser._get_positional_kwargs
+    else:
+        get_kwargs = parser._get_optional_kwargs
+
+    kwargs = get_kwargs(*args, **argspec)
+
+    kwargs["dest"] = kwargs["dest"].replace("-", "_")
+
+    return kwargs
+
+
+def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
+    if not args or not args[0]:
+        raise ValueError("Expected at least one argument")
+    if args[0][0].startswith(tuple(prefix_chars)):
+        return False
+    return True
 
 
 def add_commands(
