@@ -41,8 +41,8 @@ __all__ = [
 
 @dataclass
 class ParserAddArgumentSpec:
-    dest_names: tuple[str]
-    kwargs: dict[str, Any]
+    dest_names: Tuple[str]
+    kwargs: Dict[str, Any]
 
     # https://kislyuk.github.io/argcomplete/#specifying-completers
     completer: Optional[Callable]
