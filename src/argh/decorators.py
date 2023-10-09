@@ -12,7 +12,7 @@ Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
 import warnings
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 from argh.constants import (
     ATTR_ALIASES,
@@ -22,6 +22,7 @@ from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
 )
+from argh.dto import ParserAddArgumentSpec
 
 __all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
 
@@ -71,7 +72,7 @@ def aliases(*names: List[str]) -> Callable:
     return wrapper
 
 
-def arg(*args, **kwargs) -> Callable:
+def arg(*args: str, **kwargs) -> Callable:
     """
     Declares an argument for given function. Does not register the function
     anywhere, nor does it modify the function in any way.
@@ -80,6 +81,14 @@ def arg(*args, **kwargs) -> Callable:
     :meth:`argparse.ArgumentParser.add_argument`, only some keywords are not
     required if they can be easily guessed (e.g. you don't have to specify type
     or action when an `int` or `bool` default value is supplied).
+
+    .. note::
+
+        `completer` is an exception; it's not accepted by
+        `add_argument()` but instead meant to be assigned to the
+        action returned by that method, see
+        https://kislyuk.github.io/argcomplete/#specifying-completers
+        for details.
 
     Typical use case: in combination with ordinary function signatures to add
     details that cannot be expressed with that syntax (e.g. help message).
@@ -124,12 +133,24 @@ def arg(*args, **kwargs) -> Callable:
     """
 
     def wrapper(func: Callable) -> Callable:
+        if not args:
+            raise CliArgToFuncArgGuessingError("at least one CLI arg must be defined")
+
+        func_arg_name = _naive_guess_func_arg_name(args)
+        completer = kwargs.pop("completer", None)
+        spec = ParserAddArgumentSpec.make_from_kwargs(
+            func_arg_name=func_arg_name,
+            cli_arg_names=args,
+            parser_add_argument_kwargs=kwargs,
+        )
+        if completer:
+            spec.completer = completer
+
         declared_args = getattr(func, ATTR_ARGS, [])
         # The innermost decorator is called first but appears last in the code.
         # We need to preserve the expected order of positional arguments, so
         # the outermost decorator inserts its value before the innermost's:
-        # TODO: validate the args?
-        declared_args.insert(0, {"option_strings": args, **kwargs})
+        declared_args.insert(0, spec)
         setattr(func, ATTR_ARGS, declared_args)
         return func
 
@@ -216,3 +237,49 @@ def expects_obj(func: Callable) -> Callable:
     )
     setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
     return func
+
+
+def _naive_guess_func_arg_name(option_strings: Tuple[str, ...]) -> str:
+    def _opt_to_func_arg_name(opt: str) -> str:
+        return opt.strip("-").replace("-", "_")
+
+    if len(option_strings) == 1:
+        # the only CLI arg name; adapt and use
+        return _opt_to_func_arg_name(option_strings[0])
+
+    are_args_positional = [not arg.startswith("-") for arg in option_strings]
+
+    if any(are_args_positional) and not all(are_args_positional):
+        raise MixedPositionalAndOptionalArgsError
+
+    if all(are_args_positional):
+        raise TooManyPositionalArgumentNames
+
+    for option_string in option_strings:
+        if not option_string.startswith("-"):
+            # not prefixed; use as is
+            return option_strings[0]
+
+        if option_string.startswith("--"):
+            # prefixed long; adapt and use
+            return _opt_to_func_arg_name(option_string[2:])
+
+    raise CliArgToFuncArgGuessingError(
+        f"Unable to convert opt strings {option_strings} to func arg name"
+    )
+
+
+class ArghError(Exception):
+    ...
+
+
+class CliArgToFuncArgGuessingError(ArghError):
+    ...
+
+
+class TooManyPositionalArgumentNames(CliArgToFuncArgGuessingError):
+    ...
+
+
+class MixedPositionalAndOptionalArgsError(CliArgToFuncArgGuessingError):
+    ...

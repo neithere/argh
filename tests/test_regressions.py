@@ -19,13 +19,13 @@ def test_regression_issue12():
     def cmd(foo=1, fox=2):
         yield f"foo {foo}, fox {fox}"
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "").out == "foo 1, fox 2\n"
-    assert run(p, "--foo 3").out == "foo 3, fox 2\n"
-    assert run(p, "--fox 3").out == "foo 1, fox 3\n"
-    assert "unrecognized" in run(p, "-f 3", exit=True)
+    assert run(parser, "").out == "foo 1, fox 2\n"
+    assert run(parser, "--foo 3").out == "foo 3, fox 2\n"
+    assert run(parser, "--fox 3").out == "foo 1, fox 3\n"
+    assert "unrecognized" in run(parser, "-f 3", exit=True)
 
 
 def test_regression_issue12_help_flag():
@@ -39,14 +39,14 @@ def test_regression_issue12_help_flag():
         return f"so be it, {host}!"
 
     # no help → no conflict
-    p = DebugArghParser("PROG", add_help=False)
-    p.set_default_command(ddos)
-    assert run(p, "-h 127.0.0.1").out == "so be it, 127.0.0.1!\n"
+    parser = DebugArghParser("PROG", add_help=False)
+    parser.set_default_command(ddos)
+    assert run(parser, "-h 127.0.0.1").out == "so be it, 127.0.0.1!\n"
 
     # help added → conflict → short name ignored
-    p = DebugArghParser("PROG", add_help=True)
-    p.set_default_command(ddos)
-    assert run(p, "-h 127.0.0.1", exit=True) == 0
+    parser = DebugArghParser("PROG", add_help=True)
+    parser.set_default_command(ddos)
+    assert run(parser, "-h 127.0.0.1", exit=True) == 0
 
 
 def test_regression_issue27():
@@ -67,16 +67,18 @@ def test_regression_issue27():
         else:
             return "{0!r} is right out".format(count)
 
-    p = DebugArghParser()
-    p.add_commands([parrot, grenade])
+    parser = DebugArghParser()
+    parser.add_commands([parrot, grenade])
 
     # default → type (int)
-    assert run(p, "grenade").out == ("Three shall be the number " "thou shalt count\n")
-    assert run(p, "grenade --count 5").out == "5 is right out\n"
+    assert run(parser, "grenade").out == (
+        "Three shall be the number " "thou shalt count\n"
+    )
+    assert run(parser, "grenade --count 5").out == "5 is right out\n"
 
     # default → action (store_true)
-    assert run(p, "parrot").out == "beautiful plumage\n"
-    assert run(p, "parrot --dead").out == "this parrot is no more\n"
+    assert run(parser, "parrot").out == "beautiful plumage\n"
+    assert run(parser, "parrot --dead").out == "this parrot is no more\n"
 
 
 def test_regression_issue31():
@@ -94,11 +96,11 @@ def test_regression_issue31():
     def cmd(**kwargs):
         yield kwargs.get("verbose", -1)
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
-    assert "0\n" == run(p, "").out
-    assert "1\n" == run(p, "-v").out
-    assert "2\n" == run(p, "-vv").out
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
+    assert "0\n" == run(parser, "").out
+    assert "1\n" == run(parser, "-v").out
+    assert "2\n" == run(parser, "-vv").out
 
 
 def test_regression_issue47():
@@ -106,9 +108,9 @@ def test_regression_issue47():
     def func(foo_bar):
         return "hello"
 
-    p = DebugArghParser()
+    parser = DebugArghParser()
     with pytest.raises(argh.assembling.AssemblingError) as excinfo:
-        p.set_default_command(func)
+        parser.set_default_command(func)
     msg = (
         'func: argument "foo_bar" declared as positional (in function '
         "signature) and optional (via decorator)"
@@ -126,9 +128,9 @@ def test_regression_issue76():
     def cmd(foo=""):
         pass
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
-    run(p, "--help", exit=True)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
+    run(parser, "--help", exit=True)
 
 
 def test_regression_issue104():
@@ -144,7 +146,7 @@ def test_regression_issue104():
             [str(foo_foo), str(bar_bar), str(baz_baz), str(bip_bip), str(kwargs)]
         )
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
     expected = "abc\ndef\n8\n9\n{}\n"
-    assert run(p, "abc def --baz-baz 8").out == expected
+    assert run(parser, "abc def --baz-baz 8").out == expected

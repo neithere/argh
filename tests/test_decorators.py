@@ -2,7 +2,16 @@
 Unit Tests For Decorators
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+import pytest
+
 import argh
+from argh.decorators import (
+    CliArgToFuncArgGuessingError,
+    MixedPositionalAndOptionalArgsError,
+    TooManyPositionalArgumentNames,
+    _naive_guess_func_arg_name,
+)
+from argh.dto import ParserAddArgumentSpec
 
 
 def test_aliases():
@@ -15,15 +24,26 @@ def test_aliases():
 
 
 def test_arg():
-    @argh.arg("foo", help="help", nargs="+")
+    @argh.arg("foo", help="my help", nargs="+")
     @argh.arg("--bar", default=1)
     def func():
         pass
 
     attrs = getattr(func, argh.constants.ATTR_ARGS)
     assert attrs == [
-        dict(option_strings=("foo",), help="help", nargs="+"),
-        dict(option_strings=("--bar",), default=1),
+        ParserAddArgumentSpec(
+            func_arg_name="foo",
+            cli_arg_names=("foo",),
+            nargs="+",
+            other_add_parser_kwargs={
+                "help": "my help",
+            },
+        ),
+        ParserAddArgumentSpec(
+            func_arg_name="bar",
+            cli_arg_names=("--bar",),
+            default_value=1,
+        ),
     ]
 
 
@@ -62,3 +82,35 @@ def test_expects_obj():
 
     attr = getattr(func, argh.constants.ATTR_EXPECTS_NAMESPACE_OBJECT)
     assert attr is True
+
+
+def test_naive_guess_func_arg_name() -> None:
+    # none (error)
+    with pytest.raises(CliArgToFuncArgGuessingError):
+        argh.arg()(lambda foo: foo)
+
+    # positional
+    assert _naive_guess_func_arg_name(("foo",)) == "foo"
+
+    # positional — more than one (error)
+    with pytest.raises(TooManyPositionalArgumentNames):
+        argh.arg("foo", "bar")(lambda foo: foo)
+
+    # option
+    assert _naive_guess_func_arg_name(("--foo",)) == "foo"
+    assert _naive_guess_func_arg_name(("--foo", "-f")) == "foo"
+    assert _naive_guess_func_arg_name(("-f", "--foo")) == "foo"
+    assert _naive_guess_func_arg_name(("-x", "--foo", "--bar")) == "foo"
+
+    # mixed (errors)
+    with pytest.raises(MixedPositionalAndOptionalArgsError):
+        argh.arg("foo", "--foo")(lambda foo: foo)
+
+    with pytest.raises(MixedPositionalAndOptionalArgsError):
+        argh.arg("--foo", "foo")(lambda foo: foo)
+
+    with pytest.raises(MixedPositionalAndOptionalArgsError):
+        argh.arg("-f", "foo")(lambda foo: foo)
+
+    with pytest.raises(MixedPositionalAndOptionalArgsError):
+        argh.arg("foo", "-f")(lambda foo: foo)
