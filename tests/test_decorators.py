@@ -5,13 +5,13 @@ Unit Tests For Decorators
 import pytest
 
 import argh
-from argh.decorators import (
+from argh.dto import ParserAddArgumentSpec
+from argh.utils import (
     CliArgToFuncArgGuessingError,
     MixedPositionalAndOptionalArgsError,
     TooManyPositionalArgumentNames,
-    _naive_guess_func_arg_name,
+    naive_guess_func_arg_name,
 )
-from argh.dto import ParserAddArgumentSpec
 
 
 def test_aliases():
@@ -90,17 +90,17 @@ def test_naive_guess_func_arg_name() -> None:
         argh.arg()(lambda foo: foo)
 
     # positional
-    assert _naive_guess_func_arg_name(("foo",)) == "foo"
+    assert naive_guess_func_arg_name(("foo",)) == "foo"
 
     # positional — more than one (error)
     with pytest.raises(TooManyPositionalArgumentNames):
         argh.arg("foo", "bar")(lambda foo: foo)
 
     # option
-    assert _naive_guess_func_arg_name(("--foo",)) == "foo"
-    assert _naive_guess_func_arg_name(("--foo", "-f")) == "foo"
-    assert _naive_guess_func_arg_name(("-f", "--foo")) == "foo"
-    assert _naive_guess_func_arg_name(("-x", "--foo", "--bar")) == "foo"
+    assert naive_guess_func_arg_name(("--foo",)) == "foo"
+    assert naive_guess_func_arg_name(("--foo", "-f")) == "foo"
+    assert naive_guess_func_arg_name(("-f", "--foo")) == "foo"
+    assert naive_guess_func_arg_name(("-x", "--foo", "--bar")) == "foo"
 
     # mixed (errors)
     with pytest.raises(MixedPositionalAndOptionalArgsError):

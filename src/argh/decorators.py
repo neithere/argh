@@ -12,7 +12,7 @@ Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
 import warnings
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional
 
 from argh.constants import (
     ATTR_ALIASES,
@@ -23,6 +23,7 @@ from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
 )
 from argh.dto import ParserAddArgumentSpec
+from argh.utils import naive_guess_func_arg_name, CliArgToFuncArgGuessingError
 
 __all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
 
@@ -136,7 +137,7 @@ def arg(*args: str, **kwargs) -> Callable:
         if not args:
             raise CliArgToFuncArgGuessingError("at least one CLI arg must be defined")
 
-        func_arg_name = _naive_guess_func_arg_name(args)
+        func_arg_name = naive_guess_func_arg_name(args)
         completer = kwargs.pop("completer", None)
         spec = ParserAddArgumentSpec.make_from_kwargs(
             func_arg_name=func_arg_name,
@@ -237,49 +238,3 @@ def expects_obj(func: Callable) -> Callable:
     )
     setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
     return func
-
-
-def _naive_guess_func_arg_name(option_strings: Tuple[str, ...]) -> str:
-    def _opt_to_func_arg_name(opt: str) -> str:
-        return opt.strip("-").replace("-", "_")
-
-    if len(option_strings) == 1:
-        # the only CLI arg name; adapt and use
-        return _opt_to_func_arg_name(option_strings[0])
-
-    are_args_positional = [not arg.startswith("-") for arg in option_strings]
-
-    if any(are_args_positional) and not all(are_args_positional):
-        raise MixedPositionalAndOptionalArgsError
-
-    if all(are_args_positional):
-        raise TooManyPositionalArgumentNames
-
-    for option_string in option_strings:
-        if not option_string.startswith("-"):
-            # not prefixed; use as is
-            return option_strings[0]
-
-        if option_string.startswith("--"):
-            # prefixed long; adapt and use
-            return _opt_to_func_arg_name(option_string[2:])
-
-    raise CliArgToFuncArgGuessingError(
-        f"Unable to convert opt strings {option_strings} to func arg name"
-    )
-
-
-class ArghError(Exception):
-    ...
-
-
-class CliArgToFuncArgGuessingError(ArghError):
-    ...
-
-
-class TooManyPositionalArgumentNames(CliArgToFuncArgGuessingError):
-    ...
-
-
-class MixedPositionalAndOptionalArgsError(CliArgToFuncArgGuessingError):
-    ...

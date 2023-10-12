@@ -287,7 +287,6 @@ def _merge_inferred_and_declared_args(
 
     # arguments inferred from function signature
     for parser_add_argument_spec in inferred_args:
-        # dest = _get_parser_param_kwargs(parser, argspec)["dest"]
         specs_by_func_arg_name[
             parser_add_argument_spec.func_arg_name
         ] = parser_add_argument_spec
@@ -344,64 +343,6 @@ def _merge_inferred_and_declared_args(
 
     # pack the modified data back into a list
     return list(specs_by_func_arg_name.values())
-
-
-def _get_dest(parser: ArgumentParser, argspec: Dict[str, Any]) -> str:
-    """
-    Given a dict representing the keywords to `parser.add_argument()`, extract
-    and normalise the option name::
-
-        >>> _get_dest(parser, {"option_strings": ("-f", "--foo-bar", "--whatever")})
-        "foo_bar"
-
-    """
-    kwargs = _get_parser_param_kwargs(parser, argspec)
-    return kwargs["dest"]
-
-
-def _get_parser_param_kwargs(
-    parser: ArgumentParser, argspec: Dict[str, Any]
-) -> Dict[str, Any]:
-    "TODO: explain"
-    argspec = argspec.copy()  # parser methods modify source data
-    args = argspec.pop("option_strings")
-
-    # These two protected methods return something that is, frankly, not very useful:
-    #
-    # >>> p._get_positional_kwargs('foo-bar')
-    # {'required': True, 'dest': 'foo-bar', 'option_strings': []}
-    #
-    # >>> p._get_optional_kwargs('foo-bar')
-    # Traceback (most recent call last):
-    #   File "<stdin>", line 1, in <module>
-    #   File "/usr/lib64/python3.11/argparse.py", line 1571, in _get_optional_kwargs
-    #     raise ValueError(msg % args)
-    # ValueError: invalid option string 'foo-bar': must start with a character '-'
-    #
-    # >>> p._get_positional_kwargs('--foo-bar')
-    # {'required': True, 'dest': '--foo-bar', 'option_strings': []}
-    #
-    # >>> p._get_optional_kwargs('--foo-bar')
-    # {'dest': 'foo_bar', 'option_strings': ['--foo-bar']}
-    #
-    # >>> p._get_optional_kwargs('-a', '-b', '--c', '--d')
-    # {'dest': 'c', 'option_strings': ['-a', '-b', '-c', '-d']}
-    #
-    # Get rid of this.  Use function signature as the source of truth.
-    # (**kwargs allows arbitrary args too.)
-    # If all are options (`-*`), pick the first elem with `--` (if any) or with `-`,
-    # strip the prefix and normalise `-` to `_`.
-    # That's all this thing does,
-    if _is_positional(args, prefix_chars=parser.prefix_chars):
-        get_kwargs = parser._get_positional_kwargs
-    else:
-        get_kwargs = parser._get_optional_kwargs
-
-    kwargs = get_kwargs(*args, **argspec)
-
-    kwargs["dest"] = kwargs["dest"].replace("-", "_")
-
-    return kwargs
 
 
 def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
