@@ -98,10 +98,6 @@ def naive_guess_func_arg_name(option_strings: Tuple[str, ...]) -> str:
         raise TooManyPositionalArgumentNames
 
     for option_string in option_strings:
-        if not option_string.startswith("-"):
-            # not prefixed; use as is
-            return option_strings[0]
-
         if option_string.startswith("--"):
             # prefixed long; adapt and use
             return _opt_to_func_arg_name(option_string[2:])

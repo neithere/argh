@@ -97,10 +97,14 @@ def test_naive_guess_func_arg_name() -> None:
         argh.arg("foo", "bar")(lambda foo: foo)
 
     # option
+    assert naive_guess_func_arg_name(("-x",)) == "x"
     assert naive_guess_func_arg_name(("--foo",)) == "foo"
     assert naive_guess_func_arg_name(("--foo", "-f")) == "foo"
     assert naive_guess_func_arg_name(("-f", "--foo")) == "foo"
     assert naive_guess_func_arg_name(("-x", "--foo", "--bar")) == "foo"
+
+    with pytest.raises(CliArgToFuncArgGuessingError):
+        naive_guess_func_arg_name(("-x", '-y'))
 
     # mixed (errors)
     with pytest.raises(MixedPositionalAndOptionalArgsError):

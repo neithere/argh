@@ -2,6 +2,7 @@
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+import argparse
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -112,6 +113,18 @@ def test_set_default_command():
         ),
     ]
     assert parser.set_defaults.mock_calls == [call(function=func)]
+
+
+def test_set_default_command__parser_error():
+    def func(foo: str) -> str:
+        return foo
+
+    parser_mock = MagicMock(spec=argparse.ArgumentParser)
+    parser_mock.add_help = False
+    parser_mock.add_argument.side_effect = argparse.ArgumentError(None, "my hat's on fire!")
+
+    with pytest.raises(argh.AssemblingError):
+        argh.set_default_command(parser_mock, func)
 
 
 def test_set_default_command__no_func_args():
