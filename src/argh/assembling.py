@@ -294,6 +294,7 @@ def _merge_inferred_and_declared_args(
 
     # arguments declared via @arg decorator
     for declared_spec in declared_args:
+        parser_add_argument_spec = declared_spec
         func_arg_name = parser_add_argument_spec.func_arg_name
 
         if func_arg_name in specs_by_func_arg_name:

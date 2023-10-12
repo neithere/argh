@@ -2,7 +2,7 @@
 Data transfer objects for internal usage.
 """
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Union, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 
 class NotDefined:
@@ -63,7 +63,9 @@ class ParserAddArgumentSpec:
         return dict(kwargs, **self.other_add_parser_kwargs)
 
     @classmethod
-    def make_from_kwargs(cls, func_arg_name, cli_arg_names, parser_add_argument_kwargs: Dict[str, Any]) -> "ParserAddArgumentSpec":
+    def make_from_kwargs(
+        cls, func_arg_name, cli_arg_names, parser_add_argument_kwargs: Dict[str, Any]
+    ) -> "ParserAddArgumentSpec":
         """
         Constructs and returns a `ParserAddArgumentSpec` instance
         according to keyword arguments according to the
