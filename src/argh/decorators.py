@@ -22,6 +22,8 @@ from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
 )
+from argh.dto import ParserAddArgumentSpec
+from argh.utils import CliArgToFuncArgGuessingError, naive_guess_func_arg_name
 
 __all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
 
@@ -71,7 +73,7 @@ def aliases(*names: List[str]) -> Callable:
     return wrapper
 
 
-def arg(*args, **kwargs) -> Callable:
+def arg(*args: str, **kwargs) -> Callable:
     """
     Declares an argument for given function. Does not register the function
     anywhere, nor does it modify the function in any way.
@@ -80,6 +82,14 @@ def arg(*args, **kwargs) -> Callable:
     :meth:`argparse.ArgumentParser.add_argument`, only some keywords are not
     required if they can be easily guessed (e.g. you don't have to specify type
     or action when an `int` or `bool` default value is supplied).
+
+    .. note::
+
+        `completer` is an exception; it's not accepted by
+        `add_argument()` but instead meant to be assigned to the
+        action returned by that method, see
+        https://kislyuk.github.io/argcomplete/#specifying-completers
+        for details.
 
     Typical use case: in combination with ordinary function signatures to add
     details that cannot be expressed with that syntax (e.g. help message).
@@ -124,12 +134,24 @@ def arg(*args, **kwargs) -> Callable:
     """
 
     def wrapper(func: Callable) -> Callable:
+        if not args:
+            raise CliArgToFuncArgGuessingError("at least one CLI arg must be defined")
+
+        func_arg_name = naive_guess_func_arg_name(args)
+        completer = kwargs.pop("completer", None)
+        spec = ParserAddArgumentSpec.make_from_kwargs(
+            func_arg_name=func_arg_name,
+            cli_arg_names=args,
+            parser_add_argument_kwargs=kwargs,
+        )
+        if completer:
+            spec.completer = completer
+
         declared_args = getattr(func, ATTR_ARGS, [])
         # The innermost decorator is called first but appears last in the code.
         # We need to preserve the expected order of positional arguments, so
         # the outermost decorator inserts its value before the innermost's:
-        # TODO: validate the args?
-        declared_args.insert(0, {"option_strings": args, **kwargs})
+        declared_args.insert(0, spec)
         setattr(func, ATTR_ARGS, declared_args)
         return func
 
