@@ -121,7 +121,9 @@ def test_set_default_command__parser_error():
 
     parser_mock = MagicMock(spec=argparse.ArgumentParser)
     parser_mock.add_help = False
-    parser_mock.add_argument.side_effect = argparse.ArgumentError(None, "my hat's on fire!")
+    parser_mock.add_argument.side_effect = argparse.ArgumentError(
+        None, "my hat's on fire!"
+    )
 
     with pytest.raises(argh.AssemblingError):
         argh.set_default_command(parser_mock, func)

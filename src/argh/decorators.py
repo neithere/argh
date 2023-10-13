@@ -23,7 +23,7 @@ from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
 )
 from argh.dto import ParserAddArgumentSpec
-from argh.utils import naive_guess_func_arg_name, CliArgToFuncArgGuessingError
+from argh.utils import CliArgToFuncArgGuessingError, naive_guess_func_arg_name
 
 __all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
 

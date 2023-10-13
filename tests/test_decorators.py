@@ -104,7 +104,7 @@ def test_naive_guess_func_arg_name() -> None:
     assert naive_guess_func_arg_name(("-x", "--foo", "--bar")) == "foo"
 
     with pytest.raises(CliArgToFuncArgGuessingError):
-        naive_guess_func_arg_name(("-x", '-y'))
+        naive_guess_func_arg_name(("-x", "-y"))
 
     # mixed (errors)
     with pytest.raises(MixedPositionalAndOptionalArgsError):
