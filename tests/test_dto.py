@@ -6,7 +6,6 @@ from argh.dto import ParserAddArgumentSpec
 
 
 def test_update_empty_dto() -> None:
-
     def stub_completer():
         ...
 
@@ -38,7 +37,6 @@ def test_update_empty_dto() -> None:
 
 
 def test_update_full_dto() -> None:
-
     def stub_completer_one():
         ...
 
