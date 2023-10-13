@@ -14,7 +14,7 @@ Utilities
 import argparse
 import inspect
 import re
-from typing import Callable
+from typing import Callable, Tuple
 
 
 def get_subparsers(
@@ -48,9 +48,12 @@ def get_subparsers(
 
 def get_arg_spec(function: Callable) -> inspect.FullArgSpec:
     """
-    Returns argument specification for given function.  Omits special
-    arguments of instance methods (`self`) and static methods (usually `cls`
-    or something like this).
+    Returns argument specification for given function.
+
+    Gets to the innermost function through decorators.
+
+    Omits special arguments of instance methods (`self`) and class methods
+    (usually `cls` or something like this).  Supports static methods.
     """
     while hasattr(function, "__wrapped__"):
         function = function.__wrapped__
@@ -75,4 +78,46 @@ def unindent(text: str) -> str:
 
 
 class SubparsersNotDefinedError(Exception):
+    ...
+
+
+def naive_guess_func_arg_name(option_strings: Tuple[str, ...]) -> str:
+    def _opt_to_func_arg_name(opt: str) -> str:
+        return opt.strip("-").replace("-", "_")
+
+    if len(option_strings) == 1:
+        # the only CLI arg name; adapt and use
+        return _opt_to_func_arg_name(option_strings[0])
+
+    are_args_positional = [not arg.startswith("-") for arg in option_strings]
+
+    if any(are_args_positional) and not all(are_args_positional):
+        raise MixedPositionalAndOptionalArgsError
+
+    if all(are_args_positional):
+        raise TooManyPositionalArgumentNames
+
+    for option_string in option_strings:
+        if option_string.startswith("--"):
+            # prefixed long; adapt and use
+            return _opt_to_func_arg_name(option_string[2:])
+
+    raise CliArgToFuncArgGuessingError(
+        f"Unable to convert opt strings {option_strings} to func arg name"
+    )
+
+
+class ArghError(Exception):
+    ...
+
+
+class CliArgToFuncArgGuessingError(ArghError):
+    ...
+
+
+class TooManyPositionalArgumentNames(CliArgToFuncArgGuessingError):
+    ...
+
+
+class MixedPositionalAndOptionalArgsError(CliArgToFuncArgGuessingError):
     ...

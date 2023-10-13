@@ -2,66 +2,97 @@
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+import argparse
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 
 import argh
+from argh.assembling import AssemblingError
+from argh.dto import ParserAddArgumentSpec
 
 
 def test_guess_type_from_choices():
-    old = dict(option_strings=("foo",), choices=[1, 2])
-    new = dict(option_strings=("foo",), choices=[1, 2], type=int)
-    assert new == argh.assembling._guess(old)
+    given = ParserAddArgumentSpec(
+        "foo", ["foo"], other_add_parser_kwargs={"choices": [1, 2]}
+    )
+    guessed = {"type": int}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
-    # ensure no overrides
-    same = dict(option_strings=("foo",), choices=[1, 2], type="NO_MATTER_WHAT")
-    assert same == argh.assembling._guess(same)
+    # do not override a guessable param if already explicitly defined
+    given = ParserAddArgumentSpec(
+        "foo",
+        ["foo"],
+        other_add_parser_kwargs={
+            "option_strings": ["foo"],
+            "choices": [1, 2],
+            "type": "NO_MATTER_WHAT",
+        },
+    )
+    guessed = {}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
 
 def test_guess_type_from_default():
-    old = dict(option_strings=("foo",), default=1)
-    new = dict(option_strings=("foo",), default=1, type=int)
-    assert new == argh.assembling._guess(old)
+    given = ParserAddArgumentSpec("foo", ["foo"], default_value=1)
+    guessed = {"type": int}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
-    # ensure no overrides
-    same = dict(option_strings=("foo",), default=1, type="NO_MATTER_WHAT")
-    assert same == argh.assembling._guess(same)
+    # do not override a guessable param if already explicitly defined
+    given = ParserAddArgumentSpec(
+        "foo",
+        ["foo"],
+        default_value=1,
+        other_add_parser_kwargs={
+            "type": "NO_MATTER_WHAT",
+        },
+    )
+    guessed = {}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
 
 def test_guess_action_from_default():
     # True → store_false
-    old = dict(option_strings=("foo",), default=False)
-    new = dict(option_strings=("foo",), default=False, action="store_true")
-    assert new == argh.assembling._guess(old)
+    given = ParserAddArgumentSpec("foo", ["foo"], default_value=False)
+    guessed = {"action": "store_true"}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
     # True → store_false
-    old = dict(option_strings=("foo",), default=True)
-    new = dict(option_strings=("foo",), default=True, action="store_false")
-    assert new == argh.assembling._guess(old)
+    given = ParserAddArgumentSpec("foo", ["foo"], default_value=True)
+    guessed = {"action": "store_false"}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
-    # ensure no overrides
-    same = dict(option_strings=("foo",), default=False, action="NO_MATTER_WHAT")
-    assert same == argh.assembling._guess(same)
+    # do not override a guessable param if already explicitly defined
+    given = ParserAddArgumentSpec(
+        "foo",
+        ["foo"],
+        default_value=False,
+        other_add_parser_kwargs={
+            "action": "NO_MATTER_WHAT",
+        },
+    )
+    guessed = {}
+    assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
 
 def test_set_default_command():
-    def func():
+    def func(**kwargs):
         pass
 
     setattr(
         func,
         argh.constants.ATTR_ARGS,
-        (
-            dict(option_strings=("foo",), nargs="+", choices=[1, 2], help="me"),
-            dict(
-                option_strings=(
-                    "-b",
-                    "--bar",
-                ),
-                default=False,
+        [
+            ParserAddArgumentSpec(
+                func_arg_name="foo",
+                cli_arg_names=("foo",),
+                nargs="+",
+                other_add_parser_kwargs={"choices": [1, 2], "help": "me"},
             ),
-        ),
+            ParserAddArgumentSpec(
+                func_arg_name="bar", cli_arg_names=("-b", "--bar"), default_value=False
+            ),
+        ],
     )
 
     parser = argh.ArghParser()
@@ -84,6 +115,183 @@ def test_set_default_command():
     assert parser.set_defaults.mock_calls == [call(function=func)]
 
 
+def test_set_default_command__parser_error():
+    def func(foo: str) -> str:
+        return foo
+
+    parser_mock = MagicMock(spec=argparse.ArgumentParser)
+    parser_mock.add_help = False
+    parser_mock.add_argument.side_effect = argparse.ArgumentError(
+        None, "my hat's on fire!"
+    )
+
+    with pytest.raises(argh.AssemblingError):
+        argh.set_default_command(parser_mock, func)
+
+
+def test_set_default_command__no_func_args():
+    # TODO: document in changelog
+    # XXX breaking change in v0.30!
+    #     Old behaviour: @arg declarations would be passed to add_argument().
+    #                    (how the hell would it look like though?)
+    #     New behaviour: @arg declarations are ignored because there's no func
+    #                    arg to map them onto.
+    def func():
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        [ParserAddArgumentSpec(func_arg_name="x", cli_arg_names=("-x",))],
+    )
+
+    p = argh.ArghParser()
+
+    with pytest.raises(argh.AssemblingError) as excinfo:
+        p.set_default_command(func)
+    msg = (
+        "func: cannot extend argument declarations for an endpoint "
+        "function that takes no arguments."
+    )
+    assert msg in str(excinfo.value)
+
+
+def test_set_default_command__varargs_vs_positional():
+    def func(*args):
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        [ParserAddArgumentSpec(func_arg_name="x", cli_arg_names=("x",))],
+    )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    with pytest.raises(
+        AssemblingError, match="func: argument x does not fit function signature: args"
+    ):
+        parser.set_default_command(func)
+
+
+def test_set_default_command__varargs_vs_optional():
+    def func(*args):
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        [ParserAddArgumentSpec(func_arg_name="x", cli_arg_names=("-x",))],
+    )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    with pytest.raises(
+        AssemblingError, match="func: argument -x does not fit function signature: args"
+    ):
+        parser.set_default_command(func)
+
+
+def test_set_default_command__varkwargs_vs_positional():
+    def func(**kwargs):
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        [ParserAddArgumentSpec(func_arg_name="x", cli_arg_names=("x",))],
+    )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    parser.set_default_command(func)
+    assert parser.add_argument.mock_calls == [call("x", help="%(default)s")]
+    assert parser.set_defaults.mock_calls == [call(function=func)]
+
+
+def test_set_default_command__varkwargs_vs_optional():
+    def func(**kwargs):
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        [ParserAddArgumentSpec(func_arg_name="x", cli_arg_names=("-x",))],
+    )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    parser.set_default_command(func)
+    assert parser.add_argument.mock_calls == [call("-x", help="%(default)s")]
+    assert parser.set_defaults.mock_calls == [call(function=func)]
+
+
+def test_set_default_command__declared_vs_signature__names_mismatch():
+    def func(bar):
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        (
+            ParserAddArgumentSpec(
+                func_arg_name="x",
+                cli_arg_names=("foo",),
+                nargs="+",
+                other_add_parser_kwargs={"choices": [1, 2], "help": "me"},
+            ),
+        ),
+    )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    with pytest.raises(
+        AssemblingError, match="func: argument foo does not fit function signature: bar"
+    ):
+        argh.set_default_command(parser, func)
+
+
+def test_set_default_command__declared_vs_signature__same_name_pos_vs_opt():
+    def func(foo):
+        pass
+
+    setattr(
+        func,
+        argh.constants.ATTR_ARGS,
+        (ParserAddArgumentSpec(func_arg_name="foo", cli_arg_names=("--foo",)),),
+    )
+
+    parser = argh.ArghParser()
+
+    parser.add_argument = MagicMock()
+    parser.set_defaults = MagicMock()
+
+    import re
+
+    with pytest.raises(
+        AssemblingError,
+        match=re.escape(
+            'func: argument "foo" declared as positional (in function signature) and optional (via decorator)'
+        ),
+    ):
+        argh.set_default_command(parser, func)
+
+
 def test_set_default_command_infer_cli_arg_names_from_func_signature():
     # TODO: split into small tests where we'd check each combo and make sure
     # they interact as expected (e.g. pos opt arg gets the short form even if
@@ -94,7 +302,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature():
     # - positional required (i.e. without a default value)
     # - positional optional (i.e. with a default value)
     # - named-only required (i.e. kwonly without a default value)
-    # - named-only optional (i.e. kwonly with a default valu)
+    # - named-only optional (i.e. kwonly with a default value)
     def func(
         alpha_pos_req,
         beta_pos_req,
@@ -120,6 +328,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature():
             beta_pos_opt_two,
             gamma_pos_opt,
             delta_pos_opt,
+            theta_pos_opt,
             gamma_kwonly_opt,
             delta_kwonly_req,
             epsilon_kwonly_req_one,
@@ -245,20 +454,6 @@ def test_add_command_with_group_kwargs_but_no_group_name():
         p.add_commands([one], group_kwargs={"help": "foo"})
 
 
-def test_set_default_command_mixed_arg_types():
-    def func():
-        pass
-
-    setattr(func, argh.constants.ATTR_ARGS, [dict(option_strings=("x", "--y"))])
-
-    p = argh.ArghParser()
-
-    with pytest.raises(argh.AssemblingError) as excinfo:
-        p.set_default_command(func)
-    msg = "func: cannot add x/--y: invalid option string"
-    assert msg in str(excinfo.value)
-
-
 def test_set_default_command_varargs():
     def func(*file_paths):
         yield ", ".join(file_paths)
@@ -322,7 +517,11 @@ def test_custom_argument_completer():
     setattr(
         func,
         argh.constants.ATTR_ARGS,
-        [dict(option_strings=("foo",), completer="STUB")],
+        [
+            ParserAddArgumentSpec(
+                func_arg_name="foo", cli_arg_names=("foo",), completer="STUB"
+            )
+        ],
     )
 
     p = argh.ArghParser()
@@ -341,7 +540,11 @@ def test_custom_argument_completer_no_backend():
     setattr(
         func,
         argh.constants.ATTR_ARGS,
-        [dict(option_strings=("foo",), completer="STUB")],
+        [
+            ParserAddArgumentSpec(
+                func_arg_name="foo", cli_arg_names=("foo",), completer="STUB"
+            )
+        ],
     )
 
     p = argh.ArghParser()

@@ -26,12 +26,12 @@ def test_set_default_command_integration():
     def cmd(foo=1):
         return foo
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "") == R(out="1\n", err="")
-    assert run(p, "--foo 2") == R(out="2\n", err="")
-    assert run(p, "--help", exit=True) == 0
+    assert run(parser, "") == R(out="1\n", err="")
+    assert run(parser, "--foo 2") == R(out="2\n", err="")
+    assert run(parser, "--help", exit=True) == 0
 
 
 def test_set_default_command_integration_merging():
@@ -39,12 +39,12 @@ def test_set_default_command_integration_merging():
     def cmd(foo=1):
         return foo
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "") == R(out="1\n", err="")
-    assert run(p, "--foo 2") == R(out="2\n", err="")
-    assert "bar" in p.format_help()
+    assert run(parser, "") == R(out="1\n", err="")
+    assert run(parser, "--foo 2") == R(out="2\n", err="")
+    assert "bar" in parser.format_help()
 
 
 #
@@ -56,33 +56,33 @@ def test_simple_function_no_args():
     def cmd():
         yield 1
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "") == R(out="1\n", err="")
+    assert run(parser, "") == R(out="1\n", err="")
 
 
 def test_simple_function_positional():
     def cmd(x):
         yield x
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "", exit=True) == "the following arguments are required: x"
-    assert run(p, "foo") == R(out="foo\n", err="")
+    assert run(parser, "", exit=True) == "the following arguments are required: x"
+    assert run(parser, "foo") == R(out="foo\n", err="")
 
 
 def test_simple_function_defaults():
     def cmd(x="foo"):
         yield x
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "") == R(out="foo\n", err="")
-    assert run(p, "bar", exit=True) == "unrecognized arguments: bar"
-    assert run(p, "--x bar") == R(out="bar\n", err="")
+    assert run(parser, "") == R(out="foo\n", err="")
+    assert run(parser, "bar", exit=True) == "unrecognized arguments: bar"
+    assert run(parser, "--x bar") == R(out="bar\n", err="")
 
 
 def test_simple_function_varargs():
@@ -90,12 +90,12 @@ def test_simple_function_varargs():
         # `paths` is the single positional argument with nargs="*"
         yield ", ".join(file_paths)
 
-    p = DebugArghParser()
-    p.set_default_command(func)
+    parser = DebugArghParser()
+    parser.set_default_command(func)
 
-    assert run(p, "") == R(out="\n", err="")
-    assert run(p, "foo") == R(out="foo\n", err="")
-    assert run(p, "foo bar") == R(out="foo, bar\n", err="")
+    assert run(parser, "") == R(out="\n", err="")
+    assert run(parser, "foo") == R(out="foo\n", err="")
+    assert run(parser, "foo bar") == R(out="foo, bar\n", err="")
 
 
 def test_simple_function_kwargs():
@@ -107,29 +107,14 @@ def test_simple_function_kwargs():
         for k in sorted(kwargs):
             yield f"{k}: {kwargs[k]}"
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
     message = "the following arguments are required: foo"
-    assert run(p, "", exit=True) == message
-    assert run(p, "hello") == R(out="bar: None\nfoo: hello\n", err="")
-    assert run(p, "--bar 123", exit=True) == message
-    assert run(p, "hello --bar 123") == R(out="bar: 123\nfoo: hello\n", err="")
-
-
-@pytest.mark.xfail
-def test_simple_function_multiple():
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_simple_function_nested():
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_class_method_as_command():
-    raise NotImplementedError
+    assert run(parser, "", exit=True) == message
+    assert run(parser, "hello") == R(out="bar: None\nfoo: hello\n", err="")
+    assert run(parser, "--bar 123", exit=True) == message
+    assert run(parser, "hello --bar 123") == R(out="bar: 123\nfoo: hello\n", err="")
 
 
 def test_all_specs_in_one():
@@ -144,21 +129,21 @@ def test_all_specs_in_one():
         for k in sorted(kwargs):
             yield f"** {k}: {kwargs[k]}"
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
     # 1) bar=1 is treated as --bar so positionals from @arg that go **kwargs
     #    will still have higher priority than bar.
     # 2) *args, a positional with nargs="*", sits between two required
     #    positionals (foo and fox), so it gets nothing.
-    assert run(p, "one two") == R(
+    assert run(parser, "one two") == R(
         out="foo: one\n" "bar: 1\n" "*args: ()\n" "** baz: None\n" "** fox: two\n",
         err="",
     )
 
     # two required positionals (foo and fox) get an argument each and one extra
     # is left; therefore the middle one is given to *args.
-    assert run(p, "one two three") == R(
+    assert run(parser, "one two three") == R(
         out="foo: one\n"
         "bar: 1\n"
         "*args: ('two',)\n"
@@ -169,7 +154,7 @@ def test_all_specs_in_one():
 
     # two required positionals (foo and fox) get an argument each and two extra
     # are left; both are given to *args (it's greedy).
-    assert run(p, "one two three four") == R(
+    assert run(parser, "one two three four") == R(
         out="foo: one\n"
         "bar: 1\n"
         "*args: ('two', 'three')\n"
@@ -187,9 +172,9 @@ def test_arg_merged():
     def gumby(my, brain=None):
         return my, brain, "hurts"
 
-    p = DebugArghParser("PROG")
-    p.set_default_command(gumby)
-    help_msg = p.format_help()
+    parser = DebugArghParser("PROG")
+    parser.set_default_command(gumby)
+    help_msg = parser.format_help()
 
     assert "a moose once bit my sister" in help_msg
     assert "i am made entirely of wood" in help_msg
@@ -202,9 +187,9 @@ def test_arg_mismatch_positional():
     def confuse_a_cat(vet, funny_things=123):
         return vet, funny_things
 
-    p = DebugArghParser("PROG")
+    parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        p.set_default_command(confuse_a_cat)
+        parser.set_default_command(confuse_a_cat)
 
     msg = (
         "confuse_a_cat: argument bogus-argument does not fit "
@@ -220,9 +205,9 @@ def test_arg_mismatch_flag():
     def confuse_a_cat(vet, funny_things=123):
         return vet, funny_things
 
-    p = DebugArghParser("PROG")
+    parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        p.set_default_command(confuse_a_cat)
+        parser.set_default_command(confuse_a_cat)
 
     msg = (
         "confuse_a_cat: argument --bogus-argument does not fit "
@@ -238,9 +223,9 @@ def test_arg_mismatch_positional_vs_flag():
     def func(foo=123):
         return foo
 
-    p = DebugArghParser("PROG")
+    parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        p.set_default_command(func)
+        parser.set_default_command(func)
 
     msg = (
         'func: argument "foo" declared as optional (in function signature)'
@@ -256,9 +241,9 @@ def test_arg_mismatch_flag_vs_positional():
     def func(foo):
         return foo
 
-    p = DebugArghParser("PROG")
+    parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        p.set_default_command(func)
+        parser.set_default_command(func)
 
     msg = (
         'func: argument "foo" declared as positional (in function signature)'
@@ -280,23 +265,25 @@ class TestErrorWrapping:
     def test_error_raised(self):
         parrot = self._get_parrot()
 
-        p = DebugArghParser()
-        p.set_default_command(parrot)
+        parser = DebugArghParser()
+        parser.set_default_command(parrot)
 
-        assert run(p, "") == R("beautiful plumage\n", "")
+        assert run(parser, "") == R("beautiful plumage\n", "")
         with pytest.raises(ValueError) as excinfo:
-            run(p, "--dead")
+            run(parser, "--dead")
         assert re.match("this parrot is no more", str(excinfo.value))
 
     def test_error_wrapped(self):
         parrot = self._get_parrot()
         wrapped_parrot = argh.wrap_errors([ValueError])(parrot)
 
-        p = DebugArghParser()
-        p.set_default_command(wrapped_parrot)
+        parser = DebugArghParser()
+        parser.set_default_command(wrapped_parrot)
 
-        assert run(p, "") == R("beautiful plumage\n", "")
-        assert run(p, "--dead") == R("", "ValueError: this parrot is no more\n", exit=1)
+        assert run(parser, "") == R("beautiful plumage\n", "")
+        assert run(parser, "--dead") == R(
+            "", "ValueError: this parrot is no more\n", exit=1
+        )
 
     def test_processor(self):
         parrot = self._get_parrot()
@@ -307,10 +294,10 @@ class TestErrorWrapping:
 
         processed_parrot = argh.wrap_errors(processor=failure)(wrapped_parrot)
 
-        p = argh.ArghParser()
-        p.set_default_command(processed_parrot)
+        parser = argh.ArghParser()
+        parser.set_default_command(processed_parrot)
 
-        assert run(p, "--dead") == R("", "ERR: this parrot is no more!\n", exit=1)
+        assert run(parser, "--dead") == R("", "ERR: this parrot is no more!\n", exit=1)
 
     def test_stderr_vs_stdout(self):
         @argh.wrap_errors([KeyError])
@@ -318,47 +305,47 @@ class TestErrorWrapping:
             db = {"a": 1}
             return db[key]
 
-        p = argh.ArghParser()
-        p.set_default_command(func)
+        parser = argh.ArghParser()
+        parser.set_default_command(func)
 
-        assert run(p, "a") == R(out="1\n", err="")
-        assert run(p, "b") == R(out="", err="KeyError: 'b'\n", exit=1)
+        assert run(parser, "a") == R(out="1\n", err="")
+        assert run(parser, "b") == R(out="", err="KeyError: 'b'\n", exit=1)
 
 
 def test_argv():
     def echo(text):
         return f"you said {text}"
 
-    p = DebugArghParser()
-    p.add_commands([echo])
+    parser = DebugArghParser()
+    parser.add_commands([echo])
 
     _argv = sys.argv
 
     sys.argv = sys.argv[:1] + ["echo", "hi there"]
-    assert run(p, None) == R("you said hi there\n", "")
+    assert run(parser, None) == R("you said hi there\n", "")
 
     sys.argv = _argv
 
 
 def test_commands_not_defined():
-    p = DebugArghParser()
+    parser = DebugArghParser()
 
-    assert run(p, "", {"raw_output": True}).out == p.format_usage()
-    assert run(p, "").out == p.format_usage()
+    assert run(parser, "", {"raw_output": True}).out == parser.format_usage()
+    assert run(parser, "").out == parser.format_usage()
 
-    assert "unrecognized arguments" in run(p, "foo", exit=True)
-    assert "unrecognized arguments" in run(p, "--foo", exit=True)
+    assert "unrecognized arguments" in run(parser, "foo", exit=True)
+    assert "unrecognized arguments" in run(parser, "--foo", exit=True)
 
 
 def test_command_not_chosen():
     def cmd(args):
         return 1
 
-    p = DebugArghParser()
-    p.add_commands([cmd])
+    parser = DebugArghParser()
+    parser.add_commands([cmd])
 
     # returns a help message and doesn't exit
-    assert "usage:" in run(p, "").out
+    assert "usage:" in run(parser, "").out
 
 
 def test_invalid_choice():
@@ -367,23 +354,23 @@ def test_invalid_choice():
 
     # root level command
 
-    p = DebugArghParser()
-    p.add_commands([cmd])
+    parser = DebugArghParser()
+    parser.add_commands([cmd])
 
-    assert "invalid choice" in run(p, "bar", exit=True)
+    assert "invalid choice" in run(parser, "bar", exit=True)
 
     # exits with an informative error
-    assert run(p, "--bar", exit=True) == "unrecognized arguments: --bar"
+    assert run(parser, "--bar", exit=True) == "unrecognized arguments: --bar"
 
     # nested command
 
-    p = DebugArghParser()
-    p.add_commands([cmd], group_name="nest")
+    parser = DebugArghParser()
+    parser.add_commands([cmd], group_name="nest")
 
-    assert "invalid choice" in run(p, "nest bar", exit=True)
+    assert "invalid choice" in run(parser, "nest bar", exit=True)
 
     # exits with an informative error
-    assert run(p, "nest --bar", exit=True) == "unrecognized arguments: --bar"
+    assert run(parser, "nest --bar", exit=True) == "unrecognized arguments: --bar"
 
 
 def test_unrecognized_arguments():
@@ -392,19 +379,19 @@ def test_unrecognized_arguments():
 
     # single-command parser
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "--bar", exit=True) == "unrecognized arguments: --bar"
-    assert run(p, "bar", exit=True) == "unrecognized arguments: bar"
+    assert run(parser, "--bar", exit=True) == "unrecognized arguments: --bar"
+    assert run(parser, "bar", exit=True) == "unrecognized arguments: bar"
 
     # multi-command parser
 
-    p = DebugArghParser()
-    p.add_commands([cmd])
+    parser = DebugArghParser()
+    parser.add_commands([cmd])
 
-    assert run(p, "cmd --bar", exit=True) == "unrecognized arguments: --bar"
-    assert run(p, "cmd bar", exit=True) == "unrecognized arguments: bar"
+    assert run(parser, "cmd --bar", exit=True) == "unrecognized arguments: --bar"
+    assert run(parser, "cmd bar", exit=True) == "unrecognized arguments: bar"
 
 
 def test_echo():
@@ -413,10 +400,10 @@ def test_echo():
     def echo(text):
         return f"you said {text}"
 
-    p = DebugArghParser()
-    p.add_commands([echo])
+    parser = DebugArghParser()
+    parser.add_commands([echo])
 
-    assert run(p, "echo foo") == R(out="you said foo\n", err="")
+    assert run(parser, "echo foo") == R(out="you said foo\n", err="")
 
 
 def test_bool_action():
@@ -425,11 +412,11 @@ def test_bool_action():
     def parrot(dead=False):
         return "this parrot is no more" if dead else "beautiful plumage"
 
-    p = DebugArghParser()
-    p.add_commands([parrot])
+    parser = DebugArghParser()
+    parser.add_commands([parrot])
 
-    assert run(p, "parrot").out == "beautiful plumage\n"
-    assert run(p, "parrot --dead").out == "this parrot is no more\n"
+    assert run(parser, "parrot").out == "beautiful plumage\n"
+    assert run(parser, "parrot --dead").out == "this parrot is no more\n"
 
 
 def test_bare_group_name():
@@ -438,19 +425,19 @@ def test_bare_group_name():
     def hello():
         return "hello world"
 
-    p = DebugArghParser()
-    p.add_commands([hello], group_name="greet")
+    parser = DebugArghParser()
+    parser.add_commands([hello], group_name="greet")
 
     # without arguments
 
     # returns a help message and doesn't exit
-    assert "usage:" in run(p, "greet").out
+    assert "usage:" in run(parser, "greet").out
 
     # with an argument
 
     # exits with an informative error
     message = "unrecognized arguments: --name=world"
-    assert run(p, "greet --name=world", exit=True) == message
+    assert run(parser, "greet --name=world", exit=True) == message
 
 
 def test_function_under_group_name():
@@ -462,18 +449,18 @@ def test_function_under_group_name():
     def howdy(buddy):
         return f"Howdy {buddy}?"
 
-    p = DebugArghParser()
-    p.add_commands([hello, howdy], group_name="greet")
+    parser = DebugArghParser()
+    parser.add_commands([hello, howdy], group_name="greet")
 
-    assert run(p, "greet hello").out == "Hello world!\n"
-    assert run(p, "greet hello --name=John").out == "Hello John!\n"
-    assert run(p, "greet hello John", exit=True) == "unrecognized arguments: John"
+    assert run(parser, "greet hello").out == "Hello world!\n"
+    assert run(parser, "greet hello --name=John").out == "Hello John!\n"
+    assert run(parser, "greet hello John", exit=True) == "unrecognized arguments: John"
 
     # exits with an informative error
     message = "the following arguments are required: buddy"
 
-    assert message in run(p, "greet howdy --name=John", exit=True)
-    assert run(p, "greet howdy John").out == "Howdy John?\n"
+    assert message in run(parser, "greet howdy --name=John", exit=True)
+    assert run(parser, "greet howdy John").out == "Howdy John?\n"
 
 
 def test_explicit_cmd_name():
@@ -481,10 +468,10 @@ def test_explicit_cmd_name():
     def orig_name():
         return "ok"
 
-    p = DebugArghParser()
-    p.add_commands([orig_name])
-    assert "invalid choice" in run(p, "orig-name", exit=True)
-    assert run(p, "new-name").out == "ok\n"
+    parser = DebugArghParser()
+    parser.add_commands([orig_name])
+    assert "invalid choice" in run(parser, "orig-name", exit=True)
+    assert run(parser, "new-name").out == "ok\n"
 
 
 def test_aliases():
@@ -492,21 +479,21 @@ def test_aliases():
     def alias1():
         return "ok"
 
-    p = DebugArghParser()
-    p.add_commands([alias1])
+    parser = DebugArghParser()
+    parser.add_commands([alias1])
 
-    assert run(p, "alias1").out == "ok\n"
-    assert run(p, "alias2").out == "ok\n"
-    assert run(p, "alias3").out == "ok\n"
+    assert run(parser, "alias1").out == "ok\n"
+    assert run(parser, "alias2").out == "ok\n"
+    assert run(parser, "alias3").out == "ok\n"
 
 
 def test_help():
-    p = DebugArghParser()
+    parser = DebugArghParser()
 
     # assert the commands don't fail
-    assert run(p, "--help", exit=True) == 0
-    assert run(p, "greet --help", exit=True) == 0
-    assert run(p, "greet hello --help", exit=True) == 0
+    assert run(parser, "--help", exit=True) == 0
+    assert run(parser, "greet --help", exit=True) == 0
+    assert run(parser, "greet hello --help", exit=True) == 0
 
 
 def test_arg_order():
@@ -517,9 +504,9 @@ def test_arg_order():
     def cmd(foo, bar):
         return foo, bar
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
-    assert run(p, "foo bar").out == "foo\nbar\n"
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
+    assert run(parser, "foo bar").out == "foo\nbar\n"
 
 
 def test_raw_output():
@@ -528,22 +515,22 @@ def test_raw_output():
     def cmd(foo, bar):
         return foo, bar
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "foo bar").out == "foo\nbar\n"
-    assert run(p, "foo bar", {"raw_output": True}).out == "foobar"
+    assert run(parser, "foo bar").out == "foo\nbar\n"
+    assert run(parser, "foo bar", {"raw_output": True}).out == "foobar"
 
 
 def test_output_file():
     def cmd():
         return "Hello world!"
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "").out == "Hello world!\n"
-    assert run(p, "", {"output_file": None}).out == "Hello world!\n"
+    assert run(parser, "").out == "Hello world!\n"
+    assert run(parser, "", {"output_file": None}).out == "Hello world!\n"
 
 
 def test_command_error():
@@ -554,16 +541,16 @@ def test_command_error():
         yield "Hello..."
         raise argh.CommandError("I feel depressed.")
 
-    p = DebugArghParser()
-    p.add_commands([whiner_plain, whiner_iterable])
+    parser = DebugArghParser()
+    parser.add_commands([whiner_plain, whiner_iterable])
 
-    assert run(p, "whiner-plain") == R(
+    assert run(parser, "whiner-plain") == R(
         out="", err="CommandError: I feel depressed.\n", exit=1
     )
-    assert run(p, "whiner-plain --code=127") == R(
+    assert run(parser, "whiner-plain --code=127") == R(
         out="", err="CommandError: I feel depressed.\n", exit=127
     )
-    assert run(p, "whiner-iterable") == R(
+    assert run(parser, "whiner-iterable") == R(
         out="Hello...\n", err="CommandError: I feel depressed.\n", exit=1
     )
 
@@ -574,12 +561,12 @@ def test_custom_argparse_namespace():
     def cmd(args):
         return args.custom_value
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
     namespace = argparse.Namespace()
     namespace.custom_value = "foo"
 
-    assert run(p, "", {"namespace": namespace}).out == "foo\n"
+    assert run(parser, "", {"namespace": namespace}).out == "foo\n"
 
 
 @pytest.mark.parametrize(
@@ -611,10 +598,10 @@ def test_normalized_keys():
     def cmd(a_b):
         return a_b
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "hello").out == "hello\n"
+    assert run(parser, "hello").out == "hello\n"
 
 
 @mock.patch("argh.assembling.COMPLETION_ENABLED", True)
@@ -625,10 +612,10 @@ def test_custom_argument_completer():
     def func(foo):
         pass
 
-    p = argh.ArghParser()
-    p.set_default_command(func)
+    parser = argh.ArghParser()
+    parser.set_default_command(func)
 
-    assert p._actions[-1].completer == "STUB"
+    assert parser._actions[-1].completer == "STUB"
 
 
 def test_class_members():
@@ -654,8 +641,8 @@ def test_class_members():
 
     controller = Controller()
 
-    p = DebugArghParser()
-    p.add_commands(
+    parser = DebugArghParser()
+    parser.add_commands(
         [
             controller.instance_meth,
             controller.class_meth,
@@ -664,10 +651,10 @@ def test_class_members():
         ]
     )
 
-    assert run(p, "instance-meth foo").out == "foo\n123\n"
-    assert run(p, "class-meth foo").out == "foo\n123\n"
-    assert run(p, "static-meth foo").out == "foo\nw00t?\n"
-    assert run(p, "static-meth2 foo").out == "foo\nhuh!\n"
+    assert run(parser, "instance-meth foo").out == "foo\n123\n"
+    assert run(parser, "class-meth foo").out == "foo\n123\n"
+    assert run(parser, "static-meth foo").out == "foo\nw00t?\n"
+    assert run(parser, "static-meth2 foo").out == "foo\nhuh!\n"
 
 
 def test_kwonlyargs():
@@ -676,12 +663,15 @@ def test_kwonlyargs():
     def cmd(*args, foo="1", bar, baz="3", **kwargs):
         return " ".join(args), foo, bar, baz, len(kwargs)
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
-    assert run(p, "--baz=done test  this --bar=do").out == "test this\n1\ndo\ndone\n0\n"
+    assert (
+        run(parser, "--baz=done test  this --bar=do").out
+        == "test this\n1\ndo\ndone\n0\n"
+    )
     message = "the following arguments are required: --bar"
-    assert run(p, "test --foo=do", exit=True) == message
+    assert run(parser, "test --foo=do", exit=True) == message
 
 
 def test_default_arg_values_in_help():
@@ -698,17 +688,17 @@ def test_default_arg_values_in_help():
     ):
         return "Oh what is it now, can't you leave me in peace..."
 
-    p = DebugArghParser()
-    p.set_default_command(remind)
+    parser = DebugArghParser()
+    parser.set_default_command(remind)
 
-    assert "Basil" in p.format_help()
-    assert "Moose" in p.format_help()
-    assert "creatures" in p.format_help()
+    assert "Basil" in parser.format_help()
+    assert "Moose" in parser.format_help()
+    assert "creatures" in parser.format_help()
 
     # explicit help message is not obscured by the implicit one...
-    assert "remarkable animal" in p.format_help()
+    assert "remarkable animal" in parser.format_help()
     # ...but is still present
-    assert "it can speak" in p.format_help()
+    assert "it can speak" in parser.format_help()
 
 
 def test_default_arg_values_in_help__regression():
@@ -717,14 +707,14 @@ def test_default_arg_values_in_help__regression():
     def foo(bar=""):
         return bar
 
-    p = DebugArghParser()
-    p.set_default_command(foo)
+    parser = DebugArghParser()
+    parser.set_default_command(foo)
 
     # doesn't break
-    p.format_help()
+    parser.format_help()
 
     # now check details
-    assert "-b BAR, --bar BAR  ''" in p.format_help()
+    assert "-b BAR, --bar BAR  ''" in parser.format_help()
     # note the empty str repr ^^^
 
 
@@ -743,10 +733,10 @@ def test_help_formatting_is_preserved():
         """
         return "hello"
 
-    p = DebugArghParser()
-    p.set_default_command(func)
+    parser = DebugArghParser()
+    parser.set_default_command(func)
 
-    assert func.__doc__ in p.format_help()
+    assert unindent(func.__doc__) in parser.format_help()
 
 
 def test_prog(capsys: pytest.CaptureFixture[str]):
@@ -755,12 +745,12 @@ def test_prog(capsys: pytest.CaptureFixture[str]):
     def cmd(foo=1):
         return foo
 
-    p = DebugArghParser()
-    p.add_commands([cmd])
+    parser = DebugArghParser()
+    parser.add_commands([cmd])
 
     usage = get_usage_string()
 
-    assert run(p, "-h", exit=True) == 0
+    assert run(parser, "-h", exit=True) == 0
     captured = capsys.readouterr()
     assert captured.out.startswith(usage)
 
@@ -769,14 +759,14 @@ def test_unknown_args():
     def cmd(foo=1):
         return foo
 
-    p = DebugArghParser()
-    p.set_default_command(cmd)
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
 
     get_usage_string("[-f FOO]")
 
-    assert run(p, "--foo 1") == R(out="1\n", err="")
-    assert run(p, "--bar 1", exit=True) == "unrecognized arguments: --bar 1"
-    assert run(p, "--bar 1", exit=False, kwargs={"skip_unknown_args": True}) == R(
+    assert run(parser, "--foo 1") == R(out="1\n", err="")
+    assert run(parser, "--bar 1", exit=True) == "unrecognized arguments: --bar 1"
+    assert run(parser, "--bar 1", exit=False, kwargs={"skip_unknown_args": True}) == R(
         out="1\n", err=""
     )
 
@@ -789,12 +779,12 @@ def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
     )
 
-    run(p, "--help", exit=True)
+    run(parser, "--help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -822,12 +812,12 @@ def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
     )
 
-    run(p, "first-func --help", exit=True)
+    run(parser, "first-func --help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -858,8 +848,8 @@ def test_add_commands_group_overrides1(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
         group_name="my-group",
         group_kwargs={
@@ -868,7 +858,7 @@ def test_add_commands_group_overrides1(capsys: pytest.CaptureFixture[str]):
         },
     )
 
-    run(p, "--help", exit=True)
+    run(parser, "--help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -900,8 +890,8 @@ def test_add_commands_group_overrides2(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
         group_name="my-group",
         group_kwargs={
@@ -910,7 +900,7 @@ def test_add_commands_group_overrides2(capsys: pytest.CaptureFixture[str]):
         },
     )
 
-    run(p, "my-group --help", exit=True)
+    run(parser, "my-group --help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -946,8 +936,8 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
         group_name="my-group",
         group_kwargs={
@@ -956,7 +946,7 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
         },
     )
 
-    run(p, "my-group first-func --help", exit=True)
+    run(parser, "my-group first-func --help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -987,8 +977,8 @@ def test_add_commands_func_overrides1(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
         func_kwargs={
             "help": "func help override",
@@ -996,7 +986,7 @@ def test_add_commands_func_overrides1(capsys: pytest.CaptureFixture[str]):
         },
     )
 
-    run(p, "--help", exit=True)
+    run(parser, "--help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -1029,8 +1019,8 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
     def second_func():
         pass
 
-    p = argh.ArghParser(prog="myapp")
-    p.add_commands(
+    parser = argh.ArghParser(prog="myapp")
+    parser.add_commands(
         [first_func, second_func],
         func_kwargs={
             "help": "func help override",
@@ -1038,7 +1028,7 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
         },
     )
 
-    run(p, "first-func --help", exit=True)
+    run(parser, "first-func --help", exit=True)
     captured = capsys.readouterr()
     assert (
         captured.out
@@ -1062,12 +1052,12 @@ def test_action_count__only_arg_decorator():
         verbosity = kwargs.get("verbose")
         return f"verbosity: {verbosity}"
 
-    p = DebugArghParser()
-    p.set_default_command(func)
+    parser = DebugArghParser()
+    parser.set_default_command(func)
 
-    assert run(p, "").out == "verbosity: 0\n"
-    assert run(p, "-v").out == "verbosity: 1\n"
-    assert run(p, "-vvvv").out == "verbosity: 4\n"
+    assert run(parser, "").out == "verbosity: 0\n"
+    assert run(parser, "-v").out == "verbosity: 1\n"
+    assert run(parser, "-vvvv").out == "verbosity: 4\n"
 
 
 def test_action_count__mixed():
@@ -1075,9 +1065,9 @@ def test_action_count__mixed():
     def func(verbose=0):
         return f"verbosity: {verbose}"
 
-    p = DebugArghParser()
-    p.set_default_command(func)
+    parser = DebugArghParser()
+    parser.set_default_command(func)
 
-    assert run(p, "").out == "verbosity: 0\n"
-    assert run(p, "-v").out == "verbosity: 1\n"
-    assert run(p, "-vvvv").out == "verbosity: 4\n"
+    assert run(parser, "").out == "verbosity: 0\n"
+    assert run(parser, "-v").out == "verbosity: 1\n"
+    assert run(parser, "-vvvv").out == "verbosity: 4\n"
