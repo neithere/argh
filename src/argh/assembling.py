@@ -202,7 +202,6 @@ def set_default_command(parser, function: Callable) -> None:
                 inferred_args=inferred_args,
                 declared_args=declared_args,
                 has_varkw=has_varkw,
-                parser=parser,
             )
         except AssemblingError as exc:
             print(exc)
@@ -269,7 +268,6 @@ def _prepare_parser_add_argument_spec(
 def _merge_inferred_and_declared_args(
     inferred_args: List[ParserAddArgumentSpec],
     declared_args: List[ParserAddArgumentSpec],
-    parser: ArgumentParser,
     has_varkw: bool,
 ) -> List[ParserAddArgumentSpec]:
     # a mapping of "dest" strings to argument declarations.
