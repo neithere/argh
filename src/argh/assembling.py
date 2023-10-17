@@ -17,6 +17,7 @@ import inspect
 from argparse import ZERO_OR_MORE, ArgumentParser
 from collections import OrderedDict
 from dataclasses import asdict
+from enum import Enum
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 from argh.completion import COMPLETION_ENABLED
@@ -40,11 +41,28 @@ __all__ = [
 ]
 
 
-def extract_parser_add_argument_kw_from_signature(
+class DefaultsPolicies(Enum):
+    """
+    Represents possible options to treat default values when inferring argument
+    specification from function signature.
+    """
+    BASIC = "basic"
+    KWONLY = "kwonly"
+
+
+def infer_argspecs_from_function(
     function: Callable,
+    defaults_policy: Optional[DefaultsPolicies] = DefaultsPolicies.BASIC
 ) -> Iterator[ParserAddArgumentSpec]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
+
+    if defaults_policy not in DefaultsPolicies:
+        raise NotImplementedError(f"Unknown defaults policy {defaults_policy}")
+
+    # TODO: remove this
+    if defaults_policy != DefaultsPolicies.BASIC:
+        raise NotImplementedError(f"Defaults policy {defaults_policy} is not supported")
 
     func_spec = get_arg_spec(function)
 
@@ -183,7 +201,7 @@ def set_default_command(parser, function: Callable) -> None:
 
     declared_args: List[ParserAddArgumentSpec] = getattr(function, ATTR_ARGS, [])
     inferred_args: List[ParserAddArgumentSpec] = list(
-        extract_parser_add_argument_kw_from_signature(function)
+        infer_argspecs_from_function(function)
     )
 
     if declared_args and not inferred_args and not has_varkw:
@@ -278,7 +296,7 @@ def _merge_inferred_and_declared_args(
     #     "foo-bar"     → "foo_bar"
     #
     # * argument declaration is a dictionary representing an argument;
-    #   it is obtained either from extract_parser_add_argument_kw_from_signature()
+    #   it is obtained either from infer_argspecs_from_function()
     #   or from an @arg decorator (as is).
     #
     specs_by_func_arg_name = OrderedDict()
