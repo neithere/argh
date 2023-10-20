@@ -321,12 +321,30 @@ def big_command_with_everything():
         zeta_kwonly_opt="zeta kwonly",
         **kwargs,
     ):
-        return (alpha_pos_req, beta_pos_req, alpha_pos_opt, beta_pos_opt_one, beta_pos_opt_two, gamma_pos_opt, delta_pos_opt, theta_pos_opt, gamma_kwonly_opt, delta_kwonly_req, epsilon_kwonly_req_one, epsilon_kwonly_req_two, zeta_kwonly_opt, args, kwargs)
+        return (
+            alpha_pos_req,
+            beta_pos_req,
+            alpha_pos_opt,
+            beta_pos_opt_one,
+            beta_pos_opt_two,
+            gamma_pos_opt,
+            delta_pos_opt,
+            theta_pos_opt,
+            gamma_kwonly_opt,
+            delta_kwonly_req,
+            epsilon_kwonly_req_one,
+            epsilon_kwonly_req_two,
+            zeta_kwonly_opt,
+            args,
+            kwargs,
+        )
 
     yield func
 
 
-def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_legacy(big_command_with_everything):
+def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_legacy(
+    big_command_with_everything,
+):
     name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
 
     parser = argh.ArghParser()
@@ -352,13 +370,19 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_leg
         call("delta-kwonly-req", help=help_tmpl),
         call("epsilon-kwonly-req-one", help=help_tmpl),
         call("epsilon-kwonly-req-two", help=help_tmpl),
-        call("-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl),
+        call(
+            "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
+        ),
         call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
-    assert parser.set_defaults.mock_calls == [call(function=big_command_with_everything)]
+    assert parser.set_defaults.mock_calls == [
+        call(function=big_command_with_everything)
+    ]
 
 
-def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_modern(big_command_with_everything):
+def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_modern(
+    big_command_with_everything,
+):
     name_mapping_policy = NameMappingPolicy.BY_NAME_IF_KWONLY
 
     parser = argh.ArghParser()
@@ -374,20 +398,60 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_mod
     assert parser.add_argument.mock_calls == [
         call("alpha-pos-req", help="%(default)s"),
         call("beta-pos-req", help="%(default)s"),
-        call("alpha-pos-opt", default="alpha", nargs=argparse.OPTIONAL, type=str, help=help_tmpl),
-        call("beta-pos-opt-one", default="beta one", nargs=argparse.OPTIONAL, type=str, help=help_tmpl),
-        call("beta-pos-opt-two", default="beta two", nargs=argparse.OPTIONAL, type=str, help=help_tmpl),
-        call("gamma-pos-opt", default="gamma named", nargs=argparse.OPTIONAL, type=str, help=help_tmpl),
-        call("delta-pos-opt", default="delta named", nargs=argparse.OPTIONAL, type=str, help=help_tmpl),
-        call("theta-pos-opt", default="theta named", nargs=argparse.OPTIONAL, type=str, help=help_tmpl),
+        call(
+            "alpha-pos-opt",
+            default="alpha",
+            nargs=argparse.OPTIONAL,
+            type=str,
+            help=help_tmpl,
+        ),
+        call(
+            "beta-pos-opt-one",
+            default="beta one",
+            nargs=argparse.OPTIONAL,
+            type=str,
+            help=help_tmpl,
+        ),
+        call(
+            "beta-pos-opt-two",
+            default="beta two",
+            nargs=argparse.OPTIONAL,
+            type=str,
+            help=help_tmpl,
+        ),
+        call(
+            "gamma-pos-opt",
+            default="gamma named",
+            nargs=argparse.OPTIONAL,
+            type=str,
+            help=help_tmpl,
+        ),
+        call(
+            "delta-pos-opt",
+            default="delta named",
+            nargs=argparse.OPTIONAL,
+            type=str,
+            help=help_tmpl,
+        ),
+        call(
+            "theta-pos-opt",
+            default="theta named",
+            nargs=argparse.OPTIONAL,
+            type=str,
+            help=help_tmpl,
+        ),
         call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
         call("--delta-kwonly-req", required=True, help=help_tmpl),
         call("--epsilon-kwonly-req-one", required=True, help=help_tmpl),
         call("--epsilon-kwonly-req-two", required=True, help=help_tmpl),
-        call("-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl),
+        call(
+            "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
+        ),
         call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
-    assert parser.set_defaults.mock_calls == [call(function=big_command_with_everything)]
+    assert parser.set_defaults.mock_calls == [
+        call(function=big_command_with_everything)
+    ]
 
 
 def test_set_default_command_docstring():
@@ -413,7 +477,7 @@ def test_set_default_command__varkwargs_sharing_prefix():
 
     assert parser.add_argument.mock_calls == [
         call("--alpha", default="Alpha", type=str, help="%(default)s"),
-        call("--aleph", default="Aleph", type=str, help="%(default)s")
+        call("--aleph", default="Aleph", type=str, help="%(default)s"),
     ]
 
 
@@ -503,7 +567,11 @@ def test_set_default_command_varargs():
     argh.set_default_command(parser, func)
 
     assert parser.add_argument.mock_calls == [
-        call("file-paths", nargs=argparse.ZERO_OR_MORE, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call(
+            "file-paths",
+            nargs=argparse.ZERO_OR_MORE,
+            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
+        ),
     ]
 
 
@@ -526,7 +594,6 @@ def test_set_default_command_kwargs():
     ]
 
 
-
 def test_kwonlyargs__policy_legacy():
     "Correctly processing required and optional keyword-only arguments"
 
@@ -535,7 +602,9 @@ def test_kwonlyargs__policy_legacy():
 
     parser = argh.ArghParser()
     parser.add_argument = MagicMock()
-    parser.set_default_command(cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
     help_tmpl = argh.constants.DEFAULT_ARGUMENT_TEMPLATE
     assert parser.add_argument.mock_calls == [
         call("foo-pos", help=help_tmpl),
@@ -554,7 +623,9 @@ def test_kwonlyargs__policy_modern():
 
     parser = argh.ArghParser()
     parser.add_argument = MagicMock()
-    parser.set_default_command(cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
     help_tmpl = argh.constants.DEFAULT_ARGUMENT_TEMPLATE
     assert parser.add_argument.mock_calls == [
         call("foo-pos", help=help_tmpl),

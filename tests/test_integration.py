@@ -298,8 +298,9 @@ class TestErrorWrapping:
         parser = argh.ArghParser()
         parser.set_default_command(processed_parrot)
 
-        assert run(parser, "--dead") == R("", "ERR: this parrot is no more!\n",
-                                          exit_code=1)
+        assert run(parser, "--dead") == R(
+            "", "ERR: this parrot is no more!\n", exit_code=1
+        )
 
     def test_stderr_vs_stdout(self):
         @argh.wrap_errors([KeyError])
@@ -665,16 +666,24 @@ def test_kwonlyargs__policy_legacy():
     def cmd(*args, foo="1", bar, baz="3", **kwargs):
         return f"foo='{foo}' bar='{bar}' baz='{baz}' args={args} kwargs={kwargs}"
 
-    parser = DebugArghParser()
-    parser.set_default_command(cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT)
+    parser = DebugArghParser(prog="pytest")
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
-    assert parser.format_usage() == "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
+    assert (
+        parser.format_usage()
+        == "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
+    )
 
     assert (
         run(parser, "--baz=done test  this --baz=do").out
         == "foo='1' bar='test' baz='do' args=('this',) kwargs={}\n"
     )
-    assert run(parser, "test --foo=do").out == "foo='do' bar='test' baz='3' args=() kwargs={}\n"
+    assert (
+        run(parser, "test --foo=do").out
+        == "foo='do' bar='test' baz='3' args=() kwargs={}\n"
+    )
 
 
 def test_kwonlyargs__policy_modern():
@@ -683,10 +692,15 @@ def test_kwonlyargs__policy_modern():
     def cmd(*args, foo="1", bar, baz="3", **kwargs):
         return f"foo='{foo}' bar='{bar}' baz='{baz}' args={args} kwargs={kwargs}"
 
-    parser = DebugArghParser()
-    parser.set_default_command(cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY)
+    parser = DebugArghParser(prog="pytest")
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
 
-    assert parser.format_usage() == "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args ...]\n"
+    assert (
+        parser.format_usage()
+        == "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args ...]\n"
+    )
 
     assert (
         run(parser, "--baz=done test  this --bar=do").out

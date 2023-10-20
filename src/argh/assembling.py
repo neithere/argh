@@ -15,10 +15,10 @@ Functions and classes to properly assemble your commands in a parser.
 """
 import inspect
 from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from dataclasses import asdict
 from enum import Enum
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
@@ -84,13 +84,16 @@ class NameMappingPolicy(Enum):
 
     .. versionadded:: 0.30
     """
+
     BY_NAME_IF_HAS_DEFAULT = "specify CLI argument by name if it has a default value"
     BY_NAME_IF_KWONLY = "specify CLI argument by name if it comes from kwonly"
 
 
 def infer_argspecs_from_function(
     function: Callable,
-    name_mapping_policy: Optional[NameMappingPolicy] = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    name_mapping_policy: Optional[
+        NameMappingPolicy
+    ] = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
 ) -> Iterator[ParserAddArgumentSpec]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
@@ -127,16 +130,17 @@ def infer_argspecs_from_function(
 
         return positionals, options
 
+    default_value: Any
     for arg_name in func_spec.args:
-        arg_call_kwargs: dict[str, Any] = {}
-        cli_arg_names_positional, cli_arg_names_options = _make_cli_arg_names_options(arg_name)
-        default_value: Any = default_by_arg_name.get(arg_name, NotDefined)
+        cli_arg_names_positional, cli_arg_names_options = _make_cli_arg_names_options(
+            arg_name
+        )
+        default_value = default_by_arg_name.get(arg_name, NotDefined)
 
         arg_spec = ParserAddArgumentSpec(
             func_arg_name=arg_name,
             cli_arg_names=cli_arg_names_positional,
             default_value=default_value,
-            other_add_parser_kwargs=arg_call_kwargs
         )
 
         if default_value != NotDefined:
@@ -148,10 +152,10 @@ def infer_argspecs_from_function(
         yield arg_spec
 
     for arg_name in func_spec.kwonlyargs:
-        arg_call_kwargs: dict[str, Any] = {}
-        cli_arg_names_positional, cli_arg_names_options = _make_cli_arg_names_options(arg_name)
+        cli_arg_names_positional, cli_arg_names_options = _make_cli_arg_names_options(
+            arg_name
+        )
 
-        default_value: Any
         if func_spec.kwonlydefaults and arg_name in func_spec.kwonlydefaults:
             default_value = func_spec.kwonlydefaults[arg_name]
         else:
@@ -161,7 +165,6 @@ def infer_argspecs_from_function(
             func_arg_name=arg_name,
             cli_arg_names=cli_arg_names_positional,
             default_value=default_value,
-            other_add_parser_kwargs=arg_call_kwargs
         )
 
         if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_KWONLY:
@@ -178,7 +181,7 @@ def infer_argspecs_from_function(
         yield ParserAddArgumentSpec(
             func_arg_name=func_spec.varargs,
             cli_arg_names=[func_spec.varargs.replace("_", "-")],
-            nargs=ZERO_OR_MORE
+            nargs=ZERO_OR_MORE,
         )
 
 
@@ -231,8 +234,11 @@ def guess_extra_parser_add_argument_spec_kwargs(
     return guessed
 
 
-def set_default_command(parser, function: Callable,
-                        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT) -> None:
+def set_default_command(
+    parser,
+    function: Callable,
+    name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+) -> None:
     """
     Sets default command (i.e. a function) for given parser.
 
@@ -524,7 +530,9 @@ def add_commands(
 
         # create and set up the parser for this command
         command_parser = subparsers_action.add_parser(cmd_name, **func_parser_kwargs)
-        set_default_command(command_parser, func, name_mapping_policy=name_mapping_policy)
+        set_default_command(
+            command_parser, func, name_mapping_policy=name_mapping_policy
+        )
 
 
 def _extract_command_meta_from_func(func: Callable) -> Tuple[str, dict]:
