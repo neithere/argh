@@ -10,6 +10,7 @@ import unittest.mock as mock
 import pytest
 
 import argh
+from argh.assembling import NameMappingPolicy
 from argh.exceptions import AssemblingError
 from argh.utils import unindent
 
@@ -282,7 +283,7 @@ class TestErrorWrapping:
 
         assert run(parser, "") == R("beautiful plumage\n", "")
         assert run(parser, "--dead") == R(
-            "", "ValueError: this parrot is no more\n", exit=1
+            "", "ValueError: this parrot is no more\n", exit_code=1
         )
 
     def test_processor(self):
@@ -297,7 +298,8 @@ class TestErrorWrapping:
         parser = argh.ArghParser()
         parser.set_default_command(processed_parrot)
 
-        assert run(parser, "--dead") == R("", "ERR: this parrot is no more!\n", exit=1)
+        assert run(parser, "--dead") == R("", "ERR: this parrot is no more!\n",
+                                          exit_code=1)
 
     def test_stderr_vs_stdout(self):
         @argh.wrap_errors([KeyError])
@@ -309,7 +311,7 @@ class TestErrorWrapping:
         parser.set_default_command(func)
 
         assert run(parser, "a") == R(out="1\n", err="")
-        assert run(parser, "b") == R(out="", err="KeyError: 'b'\n", exit=1)
+        assert run(parser, "b") == R(out="", err="KeyError: 'b'\n", exit_code=1)
 
 
 def test_argv():
@@ -545,13 +547,13 @@ def test_command_error():
     parser.add_commands([whiner_plain, whiner_iterable])
 
     assert run(parser, "whiner-plain") == R(
-        out="", err="CommandError: I feel depressed.\n", exit=1
+        out="", err="CommandError: I feel depressed.\n", exit_code=1
     )
     assert run(parser, "whiner-plain --code=127") == R(
-        out="", err="CommandError: I feel depressed.\n", exit=127
+        out="", err="CommandError: I feel depressed.\n", exit_code=127
     )
     assert run(parser, "whiner-iterable") == R(
-        out="Hello...\n", err="CommandError: I feel depressed.\n", exit=1
+        out="Hello...\n", err="CommandError: I feel depressed.\n", exit_code=1
     )
 
 
@@ -657,18 +659,38 @@ def test_class_members():
     assert run(parser, "static-meth2 foo").out == "foo\nhuh!\n"
 
 
-def test_kwonlyargs():
+def test_kwonlyargs__policy_legacy():
     "Correct dispatch in presence of keyword-only arguments"
 
     def cmd(*args, foo="1", bar, baz="3", **kwargs):
-        return " ".join(args), foo, bar, baz, len(kwargs)
+        return f"foo='{foo}' bar='{bar}' baz='{baz}' args={args} kwargs={kwargs}"
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT)
+
+    assert parser.format_usage() == "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
+
+    assert (
+        run(parser, "--baz=done test  this --baz=do").out
+        == "foo='1' bar='test' baz='do' args=('this',) kwargs={}\n"
+    )
+    assert run(parser, "test --foo=do").out == "foo='do' bar='test' baz='3' args=() kwargs={}\n"
+
+
+def test_kwonlyargs__policy_modern():
+    "Correct dispatch in presence of keyword-only arguments"
+
+    def cmd(*args, foo="1", bar, baz="3", **kwargs):
+        return f"foo='{foo}' bar='{bar}' baz='{baz}' args={args} kwargs={kwargs}"
+
+    parser = DebugArghParser()
+    parser.set_default_command(cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY)
+
+    assert parser.format_usage() == "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args ...]\n"
 
     assert (
         run(parser, "--baz=done test  this --bar=do").out
-        == "test this\n1\ndo\ndone\n0\n"
+        == "foo='1' bar='do' baz='done' args=('test', 'this') kwargs={}\n"
     )
     message = "the following arguments are required: --bar"
     assert run(parser, "test --foo=do", exit=True) == message

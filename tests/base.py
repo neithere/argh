@@ -11,9 +11,9 @@ from argh import ArghParser
 
 
 # hacky constructor for default exit value
-def CmdResult(out, err, exit=None):
-    _CmdResult = namedtuple("CmdResult", ("out", "err", "exit"))
-    return _CmdResult(out, err, exit)
+def CmdResult(out, err, exit_code=None):
+    _CmdResult = namedtuple("CmdResult", ("out", "err", "exit_code"))
+    return _CmdResult(out, err, exit_code)
 
 
 class DebugArghParser(ArghParser):
@@ -43,16 +43,16 @@ def call_cmd(parser, command_string, **kwargs):
         result = parser.dispatch(args, **kwargs)
     except SystemExit as e:
         result = None
-        exit = e.code or 0  # e.code may be None
+        exit_code = e.code or 0  # e.code may be None
     else:
-        exit = None
+        exit_code = None
 
     if kwargs.get("output_file") is None:
-        return CmdResult(out=result, err=io_err.read(), exit=exit)
-    else:
-        io_out.seek(0)
-        io_err.seek(0)
-        return CmdResult(out=io_out.read(), err=io_err.read(), exit=exit)
+        return CmdResult(out=result, err=io_err.read(), exit_code=exit_code)
+
+    io_out.seek(0)
+    io_err.seek(0)
+    return CmdResult(out=io_out.read(), err=io_err.read(), exit_code=exit_code)
 
 
 def run(parser, command_string, kwargs=None, exit=False):
@@ -67,10 +67,9 @@ def run(parser, command_string, kwargs=None, exit=False):
     kwargs = kwargs or {}
     result = call_cmd(parser, command_string, **kwargs)
     if exit:
-        if result.exit is None:
+        if result.exit_code is None:
             raise AssertionError("Did not exit")
-        else:
-            return result.exit
+        return result.exit_code
     return result
 
 

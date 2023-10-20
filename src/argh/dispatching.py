@@ -193,7 +193,7 @@ def parse_and_resolve(
     skip_unknown_args: bool = False,
 ) -> Tuple[Optional[Callable], argparse.Namespace]:
     """
-    .. versionadded: 0.30
+    .. versionadded:: 0.30
 
     Parses CLI arguments and resolves the endpoint function.
     """
@@ -227,7 +227,7 @@ def run_endpoint_function(
     raw_output: bool = False,
 ) -> Optional[str]:
     """
-    .. versionadded: 0.30
+    .. versionadded:: 0.30
 
     Extracts arguments from the namespace object, calls the endpoint function
     and processes its output.
@@ -327,16 +327,17 @@ def _execute_command(
 
             # *args
             if spec.varargs:
-                positional += getattr(namespace_obj, spec.varargs)
+                positional += all_input[spec.varargs]
 
             # **kwargs
             varkw = getattr(spec, "varkw", getattr(spec, "keywords", []))
             if varkw:
                 not_kwargs = [DEST_FUNCTION] + spec.args + [spec.varargs] + kwonly
                 for k in vars(namespace_obj):
-                    if k.startswith("_") or k in not_kwargs:
+                    normalized_k = _flat_key(k)
+                    if k.startswith("_") or normalized_k in not_kwargs:
                         continue
-                    keywords[k] = getattr(namespace_obj, k)
+                    keywords[normalized_k] = getattr(namespace_obj, k)
 
             result = function(*positional, **keywords)
 
