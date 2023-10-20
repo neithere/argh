@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from typing import Callable
+from typing import Callable, List
 
 import pytest
 
@@ -159,7 +159,7 @@ def assert_usage(parser: ArgumentParser, expected_usage: str) -> None:
 
 
 def assert_parsed(
-    parser: ArgumentParser, argv: list[str], expected_result: Namespace
+    parser: ArgumentParser, argv: List[str], expected_result: Namespace
 ) -> None:
     parsed = parser.parse_args(argv)
     assert parsed == expected_result

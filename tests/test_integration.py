@@ -6,6 +6,7 @@ import argparse
 import re
 import sys
 import unittest.mock as mock
+from enum import Enum
 
 import pytest
 
