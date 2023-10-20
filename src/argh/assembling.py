@@ -49,7 +49,7 @@ class NameMappingPolicy(Enum):
 
     * `BY_NAME_IF_HAS_DEFAULT` is very close to the the legacy approach
       (pre-v.0.30).  If a function argument has a default value, it becomes an
-      "option" (called by name, like `--foo`); otherwise it's treated as a
+      "option" (called by name, like ``--foo``); otherwise it's treated as a
       positional argument.
 
       Example::
@@ -62,15 +62,16 @@ class NameMappingPolicy(Enum):
 
       The difference between this policy and the behaviour of Argh before
       v.0.30 is in the treatment of kwonly arguments without default values:
-      they use to become `--foo FOO` (required) but for the sake of simplicity
-      they are treated as positionals.  If you are already using kwonly args,
-      please consider the better suited policy `BY_NAME_IF_KWONLY` instead.
+      they used to become ``--foo FOO`` (required) but for the sake of
+      simplicity they are treated as positionals.  If you are already using
+      kwonly args, please consider the better suited policy `BY_NAME_IF_KWONLY`
+      instead.
 
     * `BY_NAME_IF_KWONLY` is the newer approach.  It enables finer control over
       positional vs named and required vs optional.  "Normal" arguments become
       positionals, "kwonly" become "options", regardless of the presence of
       default values.  A positional with a default value becomes optional but
-      still positional (`nargs=OPTIONAL`).  A kwonly argument without a default
+      still positional (``nargs=OPTIONAL``).  A kwonly argument without a default
       value becomes a required "option".
 
       Example::

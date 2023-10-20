@@ -27,6 +27,11 @@ Backwards incompatible changes:
       pre_call_hook(ns)
       argh.run_endpoint_function(func, ns, ...)
 
+  - Kwonly arguments without default values used to be marked as required
+    options (``--foo FOO``), now they are treated as positionals (``foo``) when
+    the default (legacy) name mapping policy is used.  Please consider the new
+    policy for better treatment of kwonly.
+
 Deprecated:
 
 - The `@expects_obj` decorator.  Rationale: it used to support the old,
@@ -50,6 +55,14 @@ Enhancements:
   - `argh.run_endpoint_function(endpoint_function, namespace, ...)`
 
   Please note that the names may change in the upcoming versions.
+
+- Selectable name mapping policies have been introduced for function argument
+  to CLI argument translation (#191 → #199):
+
+  - `BY_NAME_IF_HAS_DEFAULT` (close to pre-v.0.30 behaviour);
+  - `BY_NAME_IF_KWONLY` (recommended).
+
+  Please check API docs on `NameMappingPolicy` for details.
 
 Version 0.29.4
 --------------
