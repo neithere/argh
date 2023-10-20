@@ -807,6 +807,22 @@ def test_unknown_args():
     )
 
 
+def test_add_commands_unknown_name_mapping_policy():
+    def func(foo):
+        ...
+
+    parser = argh.ArghParser(prog="myapp")
+
+    class UnsuitablePolicyContainer(Enum):
+        FOO = "Ni!!!"
+
+    with pytest.raises(
+        NotImplementedError,
+        match="Unknown name mapping policy UnsuitablePolicyContainer.FOO",
+    ):
+        parser.add_commands([func], name_mapping_policy=UnsuitablePolicyContainer.FOO)
+
+
 def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
     def first_func(foo=123):
         """Owl stretching time"""
