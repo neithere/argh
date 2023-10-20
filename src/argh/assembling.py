@@ -38,6 +38,7 @@ __all__ = [
     "set_default_command",
     "add_commands",
     "add_subcommands",
+    "NameMappingPolicy",
 ]
 
 
