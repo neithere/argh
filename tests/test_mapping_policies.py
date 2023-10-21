@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser, Namespace
 from typing import Callable, List
 
@@ -67,7 +68,11 @@ def test_varargs(name_mapping_policy) -> None:
         return f"{file_paths}"
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
-    assert_usage(parser, "usage: test [-h] [file-paths ...]\n")
+    expected_usage = "usage: test [-h] [file-paths ...]\n"
+    if sys.version_info < (3, 9):
+        # https://github.com/python/cpython/issues/82619
+        expected_usage = "usage: test [-h] [file-paths [file-paths ...]]\n"
+    assert_usage(parser, expected_usage)
 
 
 @pytest.mark.parametrize(

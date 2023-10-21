@@ -672,10 +672,13 @@ def test_kwonlyargs__policy_legacy():
         cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
     )
 
-    assert (
-        parser.format_usage()
-        == "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
-    )
+    expected_usage = "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
+    if sys.version_info < (3, 9):
+        # https://github.com/python/cpython/issues/82619
+        expected_usage = (
+            "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args [args ...]]\n"
+        )
+    assert parser.format_usage() == expected_usage
 
     assert (
         run(parser, "--baz=done test  this --baz=do").out
@@ -698,10 +701,13 @@ def test_kwonlyargs__policy_modern():
         cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
     )
 
-    assert (
-        parser.format_usage()
-        == "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args ...]\n"
-    )
+    expected_usage = "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args ...]\n"
+    if sys.version_info < (3, 9):
+        # https://github.com/python/cpython/issues/82619
+        expected_usage = (
+            "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args [args ...]]\n"
+        )
+    assert parser.format_usage() == expected_usage
 
     assert (
         run(parser, "--baz=done test  this --bar=do").out

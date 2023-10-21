@@ -187,7 +187,6 @@ def infer_argspecs_from_function(
         )
 
 
-
 def guess_extra_parser_add_argument_spec_kwargs(
     parser_add_argument_spec: ParserAddArgumentSpec,
 ) -> Dict[str, Any]:
