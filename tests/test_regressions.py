@@ -5,7 +5,6 @@ Regression tests
 import pytest
 
 import argh
-from argh.assembling import NameMappingPolicy
 
 from .base import DebugArghParser, run
 
@@ -17,13 +16,11 @@ def test_regression_issue12():
     incorrectly).
     """
 
-    def cmd(foo=1, fox=2):
+    def cmd(*, foo=1, fox=2):
         yield f"foo {foo}, fox {fox}"
 
     parser = DebugArghParser()
-    parser.set_default_command(
-        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-    )
+    parser.set_default_command(cmd)
 
     assert run(parser, "").out == "foo 1, fox 2\n"
     assert run(parser, "--foo 3").out == "foo 3, fox 2\n"
@@ -38,21 +35,17 @@ def test_regression_issue12_help_flag():
     without decorators.
     """
 
-    def ddos(host="localhost"):
+    def ddos(*, host="localhost"):
         return f"so be it, {host}!"
 
     # no help → no conflict
     parser = DebugArghParser("PROG", add_help=False)
-    parser.set_default_command(
-        ddos, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-    )
+    parser.set_default_command(ddos)
     assert run(parser, "-h 127.0.0.1").out == "so be it, 127.0.0.1!\n"
 
     # help added → conflict → short name ignored
     parser = DebugArghParser("PROG", add_help=True)
-    parser.set_default_command(
-        ddos, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-    )
+    parser.set_default_command(ddos)
     assert run(parser, "-h 127.0.0.1", exit=True) == 0
 
 
@@ -65,19 +58,17 @@ def test_regression_issue27():
     default→action) were made.
     """
 
-    def parrot(dead=False):
+    def parrot(*, dead=False):
         return "this parrot is no more" if dead else "beautiful plumage"
 
-    def grenade(count=3):
+    def grenade(*, count=3):
         if count == 3:
             return "Three shall be the number thou shalt count"
         else:
             return "{0!r} is right out".format(count)
 
     parser = DebugArghParser()
-    parser.add_commands(
-        [parrot, grenade], name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-    )
+    parser.add_commands([parrot, grenade])
 
     # default → type (int)
     assert run(parser, "grenade").out == (
@@ -150,14 +141,12 @@ def test_regression_issue104():
     value) positional argument names contained underscores.
     """
 
-    def cmd(foo_foo, bar_bar, baz_baz=5, bip_bip=9, **kwargs):
+    def cmd(foo_foo, bar_bar, *, baz_baz=5, bip_bip=9, **kwargs):
         return "\n".join(
             [str(foo_foo), str(bar_bar), str(baz_baz), str(bip_bip), str(kwargs)]
         )
 
     parser = DebugArghParser()
-    parser.set_default_command(
-        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-    )
+    parser.set_default_command(cmd)
     expected = "abc\ndef\n8\n9\n{}\n"
     assert run(parser, "abc def --baz-baz 8").out == expected
