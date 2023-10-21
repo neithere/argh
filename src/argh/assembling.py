@@ -221,6 +221,7 @@ def guess_extra_parser_add_argument_spec_kwargs(
     # TODO: use typing to extract
     other_add_parser_kwargs = parser_add_argument_spec.other_add_parser_kwargs
     guessed: Dict[str, Any] = {}
+    is_positional = not parser_add_argument_spec.cli_arg_names[0].startswith("-")
 
     # Parser actions that accept argument 'type'
     TYPE_AWARE_ACTIONS = "store", "append"
@@ -229,8 +230,9 @@ def guess_extra_parser_add_argument_spec_kwargs(
     default_value = parser_add_argument_spec.default_value
     if default_value not in (None, NotDefined):
         if isinstance(default_value, bool):
-            if other_add_parser_kwargs.get("action") is None:
+            if not is_positional and other_add_parser_kwargs.get("action") is None:
                 # infer action from default value
+                # (not applicable to positionals: _StoreAction doesn't accept `nargs`)
                 guessed["action"] = "store_false" if default_value else "store_true"
         elif other_add_parser_kwargs.get("type") is None:
             # infer type from default value

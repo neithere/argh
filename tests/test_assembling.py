@@ -52,13 +52,21 @@ def test_guess_type_from_default():
 
 
 def test_guess_action_from_default():
-    # True → store_false
+    # positional, default True → ignore
     given = ParserAddArgumentSpec("foo", ["foo"], default_value=False)
+    assert {} == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
+
+    # named, default True → store_false
+    given = ParserAddArgumentSpec("foo", ["--foo"], default_value=False)
     guessed = {"action": "store_true"}
     assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
-    # True → store_false
+    # positional, default False → ignore
     given = ParserAddArgumentSpec("foo", ["foo"], default_value=True)
+    assert {} == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
+
+    # named, True → store_false
+    given = ParserAddArgumentSpec("foo", ["--foo"], default_value=True)
     guessed = {"action": "store_false"}
     assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
 
@@ -73,6 +81,26 @@ def test_guess_action_from_default():
     )
     guessed = {}
     assert guessed == argh.assembling.guess_extra_parser_add_argument_spec_kwargs(given)
+
+
+def test_positional_with_default_int():
+    def func(pos_int_default=123):
+        ...
+
+    parser = argh.ArghParser()
+    parser.set_default_command(func)
+    assert parser.format_usage() == "usage: pytest [-h] [pos-int-default]\n"
+    assert "pos-int-default  123" in parser.format_help()
+
+
+def test_positional_with_default_bool():
+    def func(pos_bool_default=False):
+        ...
+
+    parser = argh.ArghParser()
+    parser.set_default_command(func)
+    assert parser.format_usage() == "usage: pytest [-h] [pos-bool-default]\n"
+    assert "pos-bool-default  False" in parser.format_help()
 
 
 def test_set_default_command():
