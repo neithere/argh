@@ -47,8 +47,31 @@ class NameMappingPolicy(Enum):
     Represents possible approaches to treat default values when inferring argument
     specification from function signature.
 
+    * `BY_NAME_IF_KWONLY` is the default and recommended approach introduced
+      in v0.30.  It enables fine control over two aspects:
+
+      * positional vs named;
+      * required vs optional.
+
+      "Normal" arguments are identified by position, "kwonly" are identified by
+      name, regardless of the presence of default values.  A positional with a
+      default value becomes optional but still positional (``nargs=OPTIONAL``).
+      A kwonly argument without a default value becomes a required named
+      argument.
+
+      Example::
+
+          def func(alpha, beta=1, *, gamma, delta=2): ...
+
+      is equivalent to::
+
+          prog alpha [beta] --gamma [--delta DELTA]
+
+      That is, `alpha` and `--gamma` are mandatory while `beta` and `--delta`
+      are optional (they have default values).
+
     * `BY_NAME_IF_HAS_DEFAULT` is very close to the the legacy approach
-      (pre-v.0.30).  If a function argument has a default value, it becomes an
+      (pre-v0.30).  If a function argument has a default value, it becomes an
       "option" (called by name, like ``--foo``); otherwise it's treated as a
       positional argument.
 
@@ -60,27 +83,16 @@ class NameMappingPolicy(Enum):
 
           prog [--beta BETA] [--delta DELTA] alpha gamma
 
+      That is, `alpha` and `gamma` are mandatory and positional, while `--beta`
+      and `--delta` are optional (they have default values).  Note that it's
+      impossible to have an optional positional or a mandatory named argument.
+
       The difference between this policy and the behaviour of Argh before
-      v.0.30 is in the treatment of kwonly arguments without default values:
+      v0.30 is in the treatment of kwonly arguments without default values:
       they used to become ``--foo FOO`` (required) but for the sake of
       simplicity they are treated as positionals.  If you are already using
       kwonly args, please consider the better suited policy `BY_NAME_IF_KWONLY`
       instead.
-
-    * `BY_NAME_IF_KWONLY` is the newer approach.  It enables finer control over
-      positional vs named and required vs optional.  "Normal" arguments become
-      positionals, "kwonly" become "options", regardless of the presence of
-      default values.  A positional with a default value becomes optional but
-      still positional (``nargs=OPTIONAL``).  A kwonly argument without a default
-      value becomes a required "option".
-
-      Example::
-
-          def func(alpha, beta=1, *, gamma, delta=2): ...
-
-      is equivalent to::
-
-          prog alpha [beta] --gamma [--delta DELTA]
 
     It is recommended to migrate any older code to `BY_NAME_IF_KWONLY`.
 
@@ -95,7 +107,7 @@ def infer_argspecs_from_function(
     function: Callable,
     name_mapping_policy: Optional[
         NameMappingPolicy
-    ] = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    ] = NameMappingPolicy.BY_NAME_IF_KWONLY,
 ) -> Iterator[ParserAddArgumentSpec]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
@@ -238,7 +250,7 @@ def guess_extra_parser_add_argument_spec_kwargs(
 def set_default_command(
     parser,
     function: Callable,
-    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_KWONLY,
 ) -> None:
     """
     Sets default command (i.e. a function) for given parser.
@@ -446,7 +458,7 @@ def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
 def add_commands(
     parser: ArgumentParser,
     functions: List[Callable],
-    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_KWONLY,
     group_name: Optional[str] = None,
     group_kwargs: Optional[Dict[str, Any]] = None,
     func_kwargs: Optional[Dict[str, Any]] = None,

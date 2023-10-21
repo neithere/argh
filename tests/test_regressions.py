@@ -5,6 +5,7 @@ Regression tests
 import pytest
 
 import argh
+from argh.assembling import NameMappingPolicy
 
 from .base import DebugArghParser, run
 
@@ -20,7 +21,9 @@ def test_regression_issue12():
         yield f"foo {foo}, fox {fox}"
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert run(parser, "").out == "foo 1, fox 2\n"
     assert run(parser, "--foo 3").out == "foo 3, fox 2\n"
@@ -40,12 +43,16 @@ def test_regression_issue12_help_flag():
 
     # no help → no conflict
     parser = DebugArghParser("PROG", add_help=False)
-    parser.set_default_command(ddos)
+    parser.set_default_command(
+        ddos, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
     assert run(parser, "-h 127.0.0.1").out == "so be it, 127.0.0.1!\n"
 
     # help added → conflict → short name ignored
     parser = DebugArghParser("PROG", add_help=True)
-    parser.set_default_command(ddos)
+    parser.set_default_command(
+        ddos, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
     assert run(parser, "-h 127.0.0.1", exit=True) == 0
 
 
@@ -68,7 +75,9 @@ def test_regression_issue27():
             return "{0!r} is right out".format(count)
 
     parser = DebugArghParser()
-    parser.add_commands([parrot, grenade])
+    parser.add_commands(
+        [parrot, grenade], name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     # default → type (int)
     assert run(parser, "grenade").out == (
@@ -147,6 +156,8 @@ def test_regression_issue104():
         )
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
     expected = "abc\ndef\n8\n9\n{}\n"
     assert run(parser, "abc def --baz-baz 8").out == expected

@@ -29,7 +29,9 @@ def test_set_default_command_integration():
         return foo
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert run(parser, "") == R(out="1\n", err="")
     assert run(parser, "--foo 2") == R(out="2\n", err="")
@@ -42,7 +44,9 @@ def test_set_default_command_integration_merging():
         return foo
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert run(parser, "") == R(out="1\n", err="")
     assert run(parser, "--foo 2") == R(out="2\n", err="")
@@ -80,7 +84,9 @@ def test_simple_function_defaults():
         yield x
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert run(parser, "") == R(out="foo\n", err="")
     assert run(parser, "bar", exit=True) == "unrecognized arguments: bar"
@@ -132,7 +138,9 @@ def test_all_specs_in_one():
             yield f"** {k}: {kwargs[k]}"
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     # 1) bar=1 is treated as --bar so positionals from @arg that go **kwargs
     #    will still have higher priority than bar.
@@ -175,7 +183,9 @@ def test_arg_merged():
         return my, brain, "hurts"
 
     parser = DebugArghParser("PROG")
-    parser.set_default_command(gumby)
+    parser.set_default_command(
+        gumby, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
     help_msg = parser.format_help()
 
     assert "a moose once bit my sister" in help_msg
@@ -191,7 +201,9 @@ def test_arg_mismatch_positional():
 
     parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        parser.set_default_command(confuse_a_cat)
+        parser.set_default_command(
+            confuse_a_cat, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
 
     msg = (
         "confuse_a_cat: argument bogus-argument does not fit "
@@ -209,7 +221,9 @@ def test_arg_mismatch_flag():
 
     parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        parser.set_default_command(confuse_a_cat)
+        parser.set_default_command(
+            confuse_a_cat, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
 
     msg = (
         "confuse_a_cat: argument --bogus-argument does not fit "
@@ -227,7 +241,9 @@ def test_arg_mismatch_positional_vs_flag():
 
     parser = DebugArghParser("PROG")
     with pytest.raises(AssemblingError) as excinfo:
-        parser.set_default_command(func)
+        parser.set_default_command(
+            func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
 
     msg = (
         'func: argument "foo" declared as optional (in function signature)'
@@ -268,7 +284,9 @@ class TestErrorWrapping:
         parrot = self._get_parrot()
 
         parser = DebugArghParser()
-        parser.set_default_command(parrot)
+        parser.set_default_command(
+            parrot, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
 
         assert run(parser, "") == R("beautiful plumage\n", "")
         with pytest.raises(ValueError) as excinfo:
@@ -280,7 +298,9 @@ class TestErrorWrapping:
         wrapped_parrot = argh.wrap_errors([ValueError])(parrot)
 
         parser = DebugArghParser()
-        parser.set_default_command(wrapped_parrot)
+        parser.set_default_command(
+            wrapped_parrot, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
 
         assert run(parser, "") == R("beautiful plumage\n", "")
         assert run(parser, "--dead") == R(
@@ -297,7 +317,10 @@ class TestErrorWrapping:
         processed_parrot = argh.wrap_errors(processor=failure)(wrapped_parrot)
 
         parser = argh.ArghParser()
-        parser.set_default_command(processed_parrot)
+        parser.set_default_command(
+            processed_parrot,
+            name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+        )
 
         assert run(parser, "--dead") == R(
             "", "ERR: this parrot is no more!\n", exit_code=1
@@ -310,7 +333,9 @@ class TestErrorWrapping:
             return db[key]
 
         parser = argh.ArghParser()
-        parser.set_default_command(func)
+        parser.set_default_command(
+            func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
 
         assert run(parser, "a") == R(out="1\n", err="")
         assert run(parser, "b") == R(out="", err="KeyError: 'b'\n", exit_code=1)
@@ -417,7 +442,9 @@ def test_bool_action():
         return "this parrot is no more" if dead else "beautiful plumage"
 
     parser = DebugArghParser()
-    parser.add_commands([parrot])
+    parser.add_commands(
+        [parrot], name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert run(parser, "parrot").out == "beautiful plumage\n"
     assert run(parser, "parrot --dead").out == "this parrot is no more\n"
@@ -454,7 +481,11 @@ def test_function_under_group_name():
         return f"Howdy {buddy}?"
 
     parser = DebugArghParser()
-    parser.add_commands([hello, howdy], group_name="greet")
+    parser.add_commands(
+        [hello, howdy],
+        group_name="greet",
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
 
     assert run(parser, "greet hello").out == "Hello world!\n"
     assert run(parser, "greet hello --name=John").out == "Hello John!\n"
@@ -546,7 +577,10 @@ def test_command_error():
         raise argh.CommandError("I feel depressed.")
 
     parser = DebugArghParser()
-    parser.add_commands([whiner_plain, whiner_iterable])
+    parser.add_commands(
+        [whiner_plain, whiner_iterable],
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
 
     assert run(parser, "whiner-plain") == R(
         out="", err="CommandError: I feel depressed.\n", exit_code=1
@@ -732,7 +766,9 @@ def test_default_arg_values_in_help():
         return "Oh what is it now, can't you leave me in peace..."
 
     parser = DebugArghParser()
-    parser.set_default_command(remind)
+    parser.set_default_command(
+        remind, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert "Basil" in parser.format_help()
     assert "Moose" in parser.format_help()
@@ -751,7 +787,9 @@ def test_default_arg_values_in_help__regression():
         return bar
 
     parser = DebugArghParser()
-    parser.set_default_command(foo)
+    parser.set_default_command(
+        foo, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     # doesn't break
     parser.format_help()
@@ -803,7 +841,9 @@ def test_unknown_args():
         return foo
 
     parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     get_usage_string("[-f FOO]")
 
@@ -874,6 +914,7 @@ def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
     parser = argh.ArghParser(prog="myapp")
     parser.add_commands(
         [first_func, second_func],
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
     )
 
     run(parser, "first-func --help", exit=True)
@@ -957,6 +998,7 @@ def test_add_commands_group_overrides2(capsys: pytest.CaptureFixture[str]):
             "help": "group help override",
             "description": "group description override",
         },
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
     )
 
     run(parser, "my-group --help", exit=True)
@@ -1003,6 +1045,7 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
             "help": "group help override",
             "description": "group description override",
         },
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
     )
 
     run(parser, "my-group first-func --help", exit=True)
@@ -1043,6 +1086,7 @@ def test_add_commands_func_overrides1(capsys: pytest.CaptureFixture[str]):
             "help": "func help override",
             "description": "func description override",
         },
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
     )
 
     run(parser, "--help", exit=True)
@@ -1085,6 +1129,7 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
             "help": "func help override",
             "description": "func description override",
         },
+        name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
     )
 
     run(parser, "first-func --help", exit=True)
@@ -1125,7 +1170,9 @@ def test_action_count__mixed():
         return f"verbosity: {verbose}"
 
     parser = DebugArghParser()
-    parser.set_default_command(func)
+    parser.set_default_command(
+        func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
 
     assert run(parser, "").out == "verbosity: 0\n"
     assert run(parser, "-v").out == "verbosity: 1\n"

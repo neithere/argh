@@ -27,10 +27,20 @@ Backwards incompatible changes:
       pre_call_hook(ns)
       argh.run_endpoint_function(func, ns, ...)
 
-  - Kwonly arguments without default values used to be marked as required
-    options (``--foo FOO``), now they are treated as positionals (``foo``) when
-    the default (legacy) name mapping policy is used.  Please consider the new
-    policy for better treatment of kwonly.
+  - A new policy for mapping function arguments to CLI arguments is used by
+    default (see :class:`argh.assembling.NameMappingPolicy`).
+    In case you need to retain the CLI mapping but cannot modify the function
+    signature to use kwonly args for options, consider using this::
+
+        set_default_command(
+            func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+        )
+
+  - The name mapping policy `BY_NAME_IF_HAS_DEFAULT` slightly deviates from the
+    old behaviour. Kwonly arguments without default values used to be marked as
+    required options (``--foo FOO``), now they are treated as positionals
+    (``foo``). Please consider the new default policy (`BY_NAME_IF_KWONLY`) for
+    a better treatment of kwonly.
 
 Deprecated:
 
@@ -56,13 +66,14 @@ Enhancements:
 
   Please note that the names may change in the upcoming versions.
 
-- Selectable name mapping policies have been introduced for function argument
+- Configurable name mapping policy has been introduced for function argument
   to CLI argument translation (#191 → #199):
 
+  - `BY_NAME_IF_KWONLY` (default and recommended).
   - `BY_NAME_IF_HAS_DEFAULT` (close to pre-v.0.30 behaviour);
-  - `BY_NAME_IF_KWONLY` (recommended).
 
-  Please check API docs on `NameMappingPolicy` for details.
+  Please check API docs on :class:`argh.assembling.NameMappingPolicy` for
+  details.
 
 Version 0.29.4
 --------------
