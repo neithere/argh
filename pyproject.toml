@@ -90,3 +90,6 @@ include = [
   "tests/",
   "tox.ini",
 ]
+
+[tool.doc8]
+max-line-length = 95
