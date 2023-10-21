@@ -87,9 +87,9 @@ def test_positional_with_default_int():
     def func(pos_int_default=123):
         ...
 
-    parser = argh.ArghParser()
+    parser = argh.ArghParser(prog="test")
     parser.set_default_command(func)
-    assert parser.format_usage() == "usage: pytest [-h] [pos-int-default]\n"
+    assert parser.format_usage() == "usage: test [-h] [pos-int-default]\n"
     assert "pos-int-default  123" in parser.format_help()
 
 
@@ -97,9 +97,9 @@ def test_positional_with_default_bool():
     def func(pos_bool_default=False):
         ...
 
-    parser = argh.ArghParser()
+    parser = argh.ArghParser(prog="test")
     parser.set_default_command(func)
-    assert parser.format_usage() == "usage: pytest [-h] [pos-bool-default]\n"
+    assert parser.format_usage() == "usage: test [-h] [pos-bool-default]\n"
     assert "pos-bool-default  False" in parser.format_help()
 
 
