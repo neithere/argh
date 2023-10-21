@@ -131,6 +131,9 @@ def arg(*args: str, **kwargs) -> Callable:
         to tune the argument's behaviour or presentation using ordinary
         function signatures.  Readability counts, don't repeat yourself.
 
+        The decorator is likely to be deprecated in the upcoming versions
+        of Argh in favour of typing hints; see :doc:`the_story`.
+
     """
 
     def wrapper(func: Callable) -> Callable:

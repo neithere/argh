@@ -67,8 +67,8 @@ class NameMappingPolicy(Enum):
 
           prog alpha [beta] --gamma [--delta DELTA]
 
-      That is, `alpha` and `--gamma` are mandatory while `beta` and `--delta`
-      are optional (they have default values).
+      That is, ``alpha`` and ``--gamma`` are mandatory while ``beta`` and
+      ``--delta`` are optional (they have default values).
 
     * `BY_NAME_IF_HAS_DEFAULT` is very close to the the legacy approach
       (pre-v0.30).  If a function argument has a default value, it becomes an
@@ -83,9 +83,10 @@ class NameMappingPolicy(Enum):
 
           prog [--beta BETA] [--delta DELTA] alpha gamma
 
-      That is, `alpha` and `gamma` are mandatory and positional, while `--beta`
-      and `--delta` are optional (they have default values).  Note that it's
-      impossible to have an optional positional or a mandatory named argument.
+      That is, ``alpha`` and ``gamma`` are mandatory and positional, while
+      ``--beta`` and ``--delta`` are optional (they have default values).  Note
+      that it's impossible to have an optional positional or a mandatory named
+      argument.
 
       The difference between this policy and the behaviour of Argh before
       v0.30 is in the treatment of kwonly arguments without default values:
@@ -583,15 +584,23 @@ def add_subcommands(
 
     These examples are equivalent::
 
-        add_commands(parser, [get, put], group_name="db",
-                     group_kwargs={
-                         "title": "database commands",
-                         "help": "CRUD for our silly database"
-                     })
+        add_commands(
+            parser,
+            [get, put],
+            group_name="db",
+            group_kwargs={
+                "title": "database commands",
+                "help": "CRUD for our silly database"
+            }
+        )
 
-        add_subcommands(parser, "db", [get, put],
-                        title="database commands",
-                        help="CRUD for our database")
+        add_subcommands(
+            parser,
+            "db",
+            [get, put],
+            title="database commands",
+            help="CRUD for our database"
+        )
 
     """
     add_commands(parser, functions, group_name=group_name, group_kwargs=group_kwargs)

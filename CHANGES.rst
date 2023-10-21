@@ -7,6 +7,33 @@ Version 0.30.0
 
 Backwards incompatible changes:
 
+- A new policy for mapping function arguments to CLI arguments is used by
+  default (see :class:`argh.assembling.NameMappingPolicy`).
+
+  The following function does **not** map to ``func foo [--bar]`` anymore::
+
+      def func(foo, bar=None):
+          ...
+
+  Since this release it maps to ``func foo [bar]`` instead.
+  Please update the function this way to keep `bar` an "option"::
+
+      def func(foo, *, bar=None):
+          ...
+
+  If you cannot modify the function signature to use kwonly args for options,
+  please consider explicitly specifying the legacy name mapping policy::
+
+      set_default_command(
+          func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+      )
+
+- The name mapping policy `BY_NAME_IF_HAS_DEFAULT` slightly deviates from the
+  old behaviour. Kwonly arguments without default values used to be marked as
+  required options (``--foo FOO``), now they are treated as positionals
+  (``foo``). Please consider the new default policy (`BY_NAME_IF_KWONLY`) for
+  a better treatment of kwonly.
+
 - Removed previously deprecated features (#184 → #188):
 
   - argument help string in annotations — reserved for type hints;
@@ -26,21 +53,6 @@ Backwards incompatible changes:
       func, ns = argh.parse_and_resolve(...)
       pre_call_hook(ns)
       argh.run_endpoint_function(func, ns, ...)
-
-  - A new policy for mapping function arguments to CLI arguments is used by
-    default (see :class:`argh.assembling.NameMappingPolicy`).
-    In case you need to retain the CLI mapping but cannot modify the function
-    signature to use kwonly args for options, consider using this::
-
-        set_default_command(
-            func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-        )
-
-  - The name mapping policy `BY_NAME_IF_HAS_DEFAULT` slightly deviates from the
-    old behaviour. Kwonly arguments without default values used to be marked as
-    required options (``--foo FOO``), now they are treated as positionals
-    (``foo``). Please consider the new default policy (`BY_NAME_IF_KWONLY`) for
-    a better treatment of kwonly.
 
 Deprecated:
 

@@ -45,7 +45,7 @@ def confirm(
 
     Usage::
 
-        def delete(key, silent=False):
+        def delete(key, *, silent=False):
             item = db.get(Item, args.key)
             if confirm(f"Delete {item.title}", default=True, skip=silent):
                 item.delete()

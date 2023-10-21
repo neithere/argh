@@ -438,7 +438,7 @@ class EntryPoint:
 
         from argh import EntryPoint
 
-        app = EntryPoint("main", dict(description="This is a cool app"))
+        app = EntryPoint("main", {"description": "This is a cool app"})
 
         @app
         def ls() -> None:
