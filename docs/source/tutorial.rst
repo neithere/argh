@@ -83,7 +83,7 @@ knowing about `argh`::
 
 When executed as ``app.py my-command --help``, such application prints::
 
-    usage: app.py my-command [-h] [-b BETA] [-g] alpha [delta [delta ...]]
+    usage: app.py my-command [-h] [-b BETA] [-g] alpha [delta ...]
 
     positional arguments:
       alpha
@@ -122,6 +122,24 @@ Verbose, hardly readable, requires learning another API.
 
 Hey, that's a lot for such a simple case!  But then, that's why the API feels
 natural: `argh` does a lot of work for you.
+
+.. note::
+
+    The pattern described above is the "by name if has default" mapping policy.
+    It used to be *the* policy but starting with Argh v.0.30 there's a better
+    one, "by name if kwonly".  Although the older one will remain the default
+    policy for a while, it may be eventually dropped in favour of the new one.
+
+    Please check `~argh.assembling.NameMappingPolicy` for details.
+
+    Usage example::
+
+        def my_command(alpha, beta=1, *, gamma, delta=False, **kwargs):
+            ...
+
+        argh.dispatch_command(
+            my_command, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+        )
 
 Well, there's nothing more elegant than a simple function.  But simplicity
 comes at a cost in terms of flexibility.  Fortunately, `argh` doesn't stay in

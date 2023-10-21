@@ -6,10 +6,12 @@ import argparse
 import re
 import sys
 import unittest.mock as mock
+from enum import Enum
 
 import pytest
 
 import argh
+from argh.assembling import NameMappingPolicy
 from argh.exceptions import AssemblingError
 from argh.utils import unindent
 
@@ -23,7 +25,7 @@ else:
 
 
 def test_set_default_command_integration():
-    def cmd(foo=1):
+    def cmd(*, foo=1):
         return foo
 
     parser = DebugArghParser()
@@ -36,7 +38,7 @@ def test_set_default_command_integration():
 
 def test_set_default_command_integration_merging():
     @argh.arg("--foo", help="bar")
-    def cmd(foo=1):
+    def cmd(*, foo=1):
         return foo
 
     parser = DebugArghParser()
@@ -74,7 +76,7 @@ def test_simple_function_positional():
 
 
 def test_simple_function_defaults():
-    def cmd(x="foo"):
+    def cmd(*, x="foo"):
         yield x
 
     parser = DebugArghParser()
@@ -122,7 +124,7 @@ def test_all_specs_in_one():
     @argh.arg("--bar")
     @argh.arg("fox")
     @argh.arg("--baz")
-    def cmd(foo, bar=1, *args, **kwargs):
+    def cmd(foo, *args, bar=1, **kwargs):
         yield f"foo: {foo}"
         yield f"bar: {bar}"
         yield f"*args: {args}"
@@ -169,7 +171,7 @@ def test_arg_merged():
 
     @argh.arg("my", help="a moose once bit my sister")
     @argh.arg("-b", "--brain", help="i am made entirely of wood")
-    def gumby(my, brain=None):
+    def gumby(my, *, brain=None):
         return my, brain, "hurts"
 
     parser = DebugArghParser("PROG")
@@ -184,7 +186,7 @@ def test_arg_mismatch_positional():
     """An `@arg("positional")` must match function signature."""
 
     @argh.arg("bogus-argument")
-    def confuse_a_cat(vet, funny_things=123):
+    def confuse_a_cat(vet, *, funny_things=123):
         return vet, funny_things
 
     parser = DebugArghParser("PROG")
@@ -202,7 +204,7 @@ def test_arg_mismatch_flag():
     """An `@arg("--flag")` must match function signature."""
 
     @argh.arg("--bogus-argument")
-    def confuse_a_cat(vet, funny_things=123):
+    def confuse_a_cat(vet, *, funny_things=123):
         return vet, funny_things
 
     parser = DebugArghParser("PROG")
@@ -220,7 +222,7 @@ def test_arg_mismatch_positional_vs_flag():
     """An `@arg("arg")` must match a positional arg in function signature."""
 
     @argh.arg("foo")
-    def func(foo=123):
+    def func(*, foo=123):
         return foo
 
     parser = DebugArghParser("PROG")
@@ -254,7 +256,7 @@ def test_arg_mismatch_flag_vs_positional():
 
 class TestErrorWrapping:
     def _get_parrot(self):
-        def parrot(dead=False):
+        def parrot(*, dead=False):
             if dead:
                 raise ValueError("this parrot is no more")
             else:
@@ -282,7 +284,7 @@ class TestErrorWrapping:
 
         assert run(parser, "") == R("beautiful plumage\n", "")
         assert run(parser, "--dead") == R(
-            "", "ValueError: this parrot is no more\n", exit=1
+            "", "ValueError: this parrot is no more\n", exit_code=1
         )
 
     def test_processor(self):
@@ -297,7 +299,9 @@ class TestErrorWrapping:
         parser = argh.ArghParser()
         parser.set_default_command(processed_parrot)
 
-        assert run(parser, "--dead") == R("", "ERR: this parrot is no more!\n", exit=1)
+        assert run(parser, "--dead") == R(
+            "", "ERR: this parrot is no more!\n", exit_code=1
+        )
 
     def test_stderr_vs_stdout(self):
         @argh.wrap_errors([KeyError])
@@ -309,7 +313,7 @@ class TestErrorWrapping:
         parser.set_default_command(func)
 
         assert run(parser, "a") == R(out="1\n", err="")
-        assert run(parser, "b") == R(out="", err="KeyError: 'b'\n", exit=1)
+        assert run(parser, "b") == R(out="", err="KeyError: 'b'\n", exit_code=1)
 
 
 def test_argv():
@@ -409,7 +413,7 @@ def test_echo():
 def test_bool_action():
     "Action `store_true`/`store_false` is inferred from default value."
 
-    def parrot(dead=False):
+    def parrot(*, dead=False):
         return "this parrot is no more" if dead else "beautiful plumage"
 
     parser = DebugArghParser()
@@ -443,7 +447,7 @@ def test_bare_group_name():
 def test_function_under_group_name():
     "A subcommand is resolved to a function."
 
-    def hello(name="world"):
+    def hello(*, name="world"):
         return f"Hello {name}!"
 
     def howdy(buddy):
@@ -534,7 +538,7 @@ def test_output_file():
 
 
 def test_command_error():
-    def whiner_plain(code=1):
+    def whiner_plain(*, code=1):
         raise argh.CommandError("I feel depressed.", code=code)
 
     def whiner_iterable():
@@ -545,13 +549,13 @@ def test_command_error():
     parser.add_commands([whiner_plain, whiner_iterable])
 
     assert run(parser, "whiner-plain") == R(
-        out="", err="CommandError: I feel depressed.\n", exit=1
+        out="", err="CommandError: I feel depressed.\n", exit_code=1
     )
     assert run(parser, "whiner-plain --code=127") == R(
-        out="", err="CommandError: I feel depressed.\n", exit=127
+        out="", err="CommandError: I feel depressed.\n", exit_code=127
     )
     assert run(parser, "whiner-iterable") == R(
-        out="Hello...\n", err="CommandError: I feel depressed.\n", exit=1
+        out="Hello...\n", err="CommandError: I feel depressed.\n", exit_code=1
     )
 
 
@@ -657,18 +661,57 @@ def test_class_members():
     assert run(parser, "static-meth2 foo").out == "foo\nhuh!\n"
 
 
-def test_kwonlyargs():
+def test_kwonlyargs__policy_legacy():
     "Correct dispatch in presence of keyword-only arguments"
 
     def cmd(*args, foo="1", bar, baz="3", **kwargs):
-        return " ".join(args), foo, bar, baz, len(kwargs)
+        return f"foo='{foo}' bar='{bar}' baz='{baz}' args={args} kwargs={kwargs}"
 
-    parser = DebugArghParser()
-    parser.set_default_command(cmd)
+    parser = DebugArghParser(prog="pytest")
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
+
+    expected_usage = "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
+    if sys.version_info < (3, 9):
+        # https://github.com/python/cpython/issues/82619
+        expected_usage = (
+            "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args [args ...]]\n"
+        )
+    assert parser.format_usage() == expected_usage
+
+    assert (
+        run(parser, "--baz=done test  this --baz=do").out
+        == "foo='1' bar='test' baz='do' args=('this',) kwargs={}\n"
+    )
+    assert (
+        run(parser, "test --foo=do").out
+        == "foo='do' bar='test' baz='3' args=() kwargs={}\n"
+    )
+
+
+def test_kwonlyargs__policy_modern():
+    "Correct dispatch in presence of keyword-only arguments"
+
+    def cmd(*args, foo="1", bar, baz="3", **kwargs):
+        return f"foo='{foo}' bar='{bar}' baz='{baz}' args={args} kwargs={kwargs}"
+
+    parser = DebugArghParser(prog="pytest")
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+
+    expected_usage = "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args ...]\n"
+    if sys.version_info < (3, 9):
+        # https://github.com/python/cpython/issues/82619
+        expected_usage = (
+            "usage: pytest [-h] [-f FOO] --bar BAR [--baz BAZ] [args [args ...]]\n"
+        )
+    assert parser.format_usage() == expected_usage
 
     assert (
         run(parser, "--baz=done test  this --bar=do").out
-        == "test this\n1\ndo\ndone\n0\n"
+        == "foo='1' bar='do' baz='done' args=('test', 'this') kwargs={}\n"
     )
     message = "the following arguments are required: --bar"
     assert run(parser, "test --foo=do", exit=True) == message
@@ -682,6 +725,7 @@ def test_default_arg_values_in_help():
     @argh.arg("--note", help="why is it a remarkable animal?")
     def remind(
         name,
+        *,
         task=None,
         reason="there are creatures living in it",
         note="it can speak English",
@@ -704,7 +748,7 @@ def test_default_arg_values_in_help():
 def test_default_arg_values_in_help__regression():
     "Empty string as default value → empty help string → broken argparse"
 
-    def foo(bar=""):
+    def foo(*, bar=""):
         return bar
 
     parser = DebugArghParser()
@@ -756,7 +800,7 @@ def test_prog(capsys: pytest.CaptureFixture[str]):
 
 
 def test_unknown_args():
-    def cmd(foo=1):
+    def cmd(*, foo=1):
         return foo
 
     parser = DebugArghParser()
@@ -769,6 +813,22 @@ def test_unknown_args():
     assert run(parser, "--bar 1", exit=False, kwargs={"skip_unknown_args": True}) == R(
         out="1\n", err=""
     )
+
+
+def test_add_commands_unknown_name_mapping_policy():
+    def func(foo):
+        ...
+
+    parser = argh.ArghParser(prog="myapp")
+
+    class UnsuitablePolicyContainer(Enum):
+        FOO = "Ni!!!"
+
+    with pytest.raises(
+        NotImplementedError,
+        match="Unknown name mapping policy UnsuitablePolicyContainer.FOO",
+    ):
+        parser.add_commands([func], name_mapping_policy=UnsuitablePolicyContainer.FOO)
 
 
 def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
@@ -805,7 +865,7 @@ def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
 
 
 def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         pass
 
@@ -813,9 +873,7 @@ def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
         pass
 
     parser = argh.ArghParser(prog="myapp")
-    parser.add_commands(
-        [first_func, second_func],
-    )
+    parser.add_commands([first_func, second_func])
 
     run(parser, "first-func --help", exit=True)
     captured = capsys.readouterr()
@@ -883,7 +941,7 @@ def test_add_commands_group_overrides2(capsys: pytest.CaptureFixture[str]):
     whatever was specified on function level.
     """
 
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         return foo
 
@@ -929,7 +987,7 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
     whatever was specified on function level.
     """
 
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         return foo
 
@@ -970,7 +1028,7 @@ def test_add_commands_func_overrides1(capsys: pytest.CaptureFixture[str]):
     whatever was specified on function level.
     """
 
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         pass
 
@@ -1012,7 +1070,7 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
     whatever was specified on function level.
     """
 
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         pass
 
@@ -1062,7 +1120,7 @@ def test_action_count__only_arg_decorator():
 
 def test_action_count__mixed():
     @argh.arg("-v", "--verbose", action="count")
-    def func(verbose=0):
+    def func(*, verbose=0):
         return f"verbosity: {verbose}"
 
     parser = DebugArghParser()

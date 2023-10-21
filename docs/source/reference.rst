@@ -25,9 +25,6 @@ API Reference
 .. automodule:: argh.exceptions
    :members:
 
-.. automodule:: argh.io
-   :members:
-
 .. automodule:: argh.utils
    :members:
 

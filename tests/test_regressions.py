@@ -16,7 +16,7 @@ def test_regression_issue12():
     incorrectly).
     """
 
-    def cmd(foo=1, fox=2):
+    def cmd(*, foo=1, fox=2):
         yield f"foo {foo}, fox {fox}"
 
     parser = DebugArghParser()
@@ -35,7 +35,7 @@ def test_regression_issue12_help_flag():
     without decorators.
     """
 
-    def ddos(host="localhost"):
+    def ddos(*, host="localhost"):
         return f"so be it, {host}!"
 
     # no help → no conflict
@@ -58,10 +58,10 @@ def test_regression_issue27():
     default→action) were made.
     """
 
-    def parrot(dead=False):
+    def parrot(*, dead=False):
         return "this parrot is no more" if dead else "beautiful plumage"
 
-    def grenade(count=3):
+    def grenade(*, count=3):
         if count == 3:
             return "Three shall be the number thou shalt count"
         else:
@@ -141,7 +141,7 @@ def test_regression_issue104():
     value) positional argument names contained underscores.
     """
 
-    def cmd(foo_foo, bar_bar, baz_baz=5, bip_bip=9, **kwargs):
+    def cmd(foo_foo, bar_bar, *, baz_baz=5, bip_bip=9, **kwargs):
         return "\n".join(
             [str(foo_foo), str(bar_bar), str(baz_baz), str(bip_bip), str(kwargs)]
         )

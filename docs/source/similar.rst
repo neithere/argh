@@ -25,7 +25,7 @@ supports Python3.  Not every "yes" in this table would count as pro.
 * opster_ and finaloption_ support nested commands but are based on the
   outdated `optparse` library and therefore reimplement some features available
   in `argparse`. They also introduce decorators that don't just decorate
-  functions but change their behaviour, which is bad practice.
+  functions but change their behaviour, which is a questionable practice.
 * simpleopt_ has an odd API and is rather a simple replacement for standard
   libraries than an extension.
 * opterator_ is based on the outdated `optparse` and does not support nested
@@ -36,11 +36,20 @@ supports Python3.  Not every "yes" in this table would count as pro.
   worth migrating but it is surely very flexible and easy to use.
 * baker_
 * plumbum_
-* docopt_
+* docopt_ takes an inverted approach: you write the usage docs, it generates a
+  parser.  Then you need to wire the parsing results into you code manually.
 * aaargh_
 * cliff_
 * cement_
 * autocommand_
+* click_ is a rather popular library, a bit younger than Argh.  The authors of
+  both libraries even gave lightning talks on a PyCon within a few minutes :)
+  Although I expected it to kill Argh because it comes with Flask, in fact
+  it takes an approach so different from Argh that they can coexist.
+  Like Opster, Click's decorator replaces the underlying function (a
+  questionable practice); it does not derive the CLI arguments from the
+  function signature but entirely relies on additional decorators, while Argh
+  strives for the opposite.
 
 .. _argdeclare: http://code.activestate.com/recipes/576935-argdeclare-declarative-interface-to-argparse/
 .. _argparse-cli: http://code.google.com/p/argparse-cli/
@@ -59,3 +68,4 @@ supports Python3.  Not every "yes" in this table would count as pro.
 .. _cliff: http://pypi.python.org/pypi/cliff
 .. _cement: http://builtoncement.com/2.0/
 .. _autocommand: https://pypi.python.org/pypi/autocommand/
+.. _click: https://click.palletsprojects.com
