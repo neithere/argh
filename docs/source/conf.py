@@ -39,3 +39,5 @@ intersphinx_mapping = {
 }
 
 nitpicky = True
+
+autodoc_typehints = "both"

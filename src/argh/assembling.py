@@ -238,7 +238,7 @@ def guess_extra_parser_add_argument_spec_kwargs(
 def set_default_command(
     parser,
     function: Callable,
-    name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
 ) -> None:
     """
     Sets default command (i.e. a function) for given parser.
@@ -246,9 +246,16 @@ def set_default_command(
     If `parser.description` is empty and the function has a docstring,
     it is used as the description.
 
-    :param function: the function to use as the command.
-    :name_mapping_policy: the policy to use when mapping function arguments
-        onto CLI arguments.
+    :param function:
+
+        The function to use as the command.
+
+    :name_mapping_policy:
+
+        The policy to use when mapping function arguments onto CLI arguments.
+        See :class:`.NameMappingPolicy`.
+
+        .. versionadded:: 0.30
 
     .. note::
 
@@ -273,7 +280,6 @@ def set_default_command(
     )
 
     if declared_args and not inferred_args and not has_varkw:
-        # XXX breaking change, new behaviour
         raise AssemblingError(
             f"{function.__name__}: cannot extend argument declarations "
             "for an endpoint function that takes no arguments."
@@ -464,7 +470,9 @@ def add_commands(
 
     :param name_mapping_policy:
 
-        See :class:`~NameMappingPolicy`.
+        See :class:`argh.assembling.NameMappingPolicy`.
+
+        .. versionadded:: 0.30
 
     :param group_name:
 
