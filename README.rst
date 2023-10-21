@@ -145,7 +145,7 @@ A potentially modular application with more control over the process:
         "Returns given word as is."
         return text
 
-    def greet(name, greeting: str = "Hello") -> str:
+    def greet(name: str, greeting: str = "Hello") -> str:
         "Greets the user with given name. The greeting is customizable."
         return f"{greeting}, {name}!"
 

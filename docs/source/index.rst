@@ -26,6 +26,7 @@ Details
    tutorial
    reference
    cookbook
+   the_story
    similar
    projects
    subparsers
