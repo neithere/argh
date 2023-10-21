@@ -67,9 +67,10 @@ Revival
 -------
 
 The author returned to his FOSS projects in early 2023.  To his surprise, Argh
-was all but dead and its niche as the "natural API" was not occupied by any
-other project.  It actually made sense to revive it.  So a deep modernisation
-and refactoring began.
+was not dead at all and its niche as the "natural API" was not occupied by any
+other project.  It actually made sense to revive it.
+
+A deep modernisation and refactoring began.
 
 A number of pending issues were resolved and the last version to support
 Python 2.x was released with a bunch of bugfixes.
@@ -109,10 +110,11 @@ A more complete example::
 
     argh.dispatch_command(load)
 
-The syntax is a subject to change but the essence is clear:
+The syntax is subject to change but the essence is clear:
 
 * as few surprises to the reader as possible;
-* the function is declared in the normal way, like any other function;
+* the function used as a CLI command is declared and callable in the normal
+  way, like any other function;
 * type hints are used instead of ``@arg("foo", type=int)``
 * additional metadata can be injected into type hints when necessary in a way
   that won't confuse type checkers (like in FastAPI_, requires Python 3.9+);
