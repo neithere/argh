@@ -54,6 +54,23 @@ def test_dispatch_command(mock_set_default_command, mock_dispatch, mock_parser_c
     mock_dispatch.assert_called_with(mock_parser)
 
 
+@pytest.mark.parametrize("always_flush", [True, False])
+def test_run_endpoint_function__always_flush(always_flush):
+    def func():
+        return ["first line", "second line"]
+
+    out_io = Mock(spec=io.StringIO)
+
+    argh.dispatching.run_endpoint_function(
+        func, argparse.Namespace(), output_file=out_io, always_flush=always_flush
+    )
+
+    if always_flush:
+        assert out_io.flush.call_count == 2
+    else:
+        out_io.flush.assert_not_called()
+
+
 @patch("argh.dispatching.parse_and_resolve")
 @patch("argh.dispatching.run_endpoint_function")
 def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_resolve):
@@ -68,6 +85,7 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
     mock_errors_file = Mock(io.TextIOBase)
     raw_output = False
     skip_unknown_args = False
+    always_flush = True
     mock_endpoint_function = Mock()
     mock_namespace = Mock(argparse.Namespace)
     mock_namespace_obj = Mock(argparse.Namespace)
@@ -83,6 +101,7 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
         output_file=mock_output_file,
         errors_file=mock_errors_file,
         raw_output=raw_output,
+        always_flush=always_flush,
     )
 
     mock_parse_and_resolve.assert_called_with(
@@ -98,6 +117,7 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
         output_file=mock_output_file,
         errors_file=mock_errors_file,
         raw_output=raw_output,
+        always_flush=always_flush,
     )
     assert retval == "run_endpoint_function retval"
 

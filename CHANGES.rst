@@ -2,6 +2,13 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.31.0
+--------------
+
+Enhancements:
+
+- Added `always_flush` argument to `dispatch()` (issue #145)
+
 Version 0.30.0
 --------------
 

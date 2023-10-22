@@ -79,6 +79,7 @@ def dispatch(
     raw_output: bool = False,
     namespace: Optional[argparse.Namespace] = None,
     skip_unknown_args: bool = False,
+    always_flush: bool = False,
 ) -> Optional[str]:
     """
     Parses given list of arguments using given parser, calls the relevant
@@ -142,6 +143,19 @@ def dispatch(
         that support for combined default and nested functions may be broken
         if a different type of object is forced.
 
+    :param always_flush:
+
+        If the output stream is not a terminal (i.e. redirected to a file or
+        another process), it's probably buffered.  In most cases it doesn't
+        matter.
+
+        However, if the output of your program is generated with delays
+        between the lines and you may want to redirect them to another process
+        and immediately see the results (e.g. `my_app.py | grep something`),
+        it's a good idea to force flushing of the buffer.
+
+        .. versionadded:: 0.31
+
     By default the exceptions are not wrapped and will propagate. The only
     exception that is always wrapped is :class:`~argh.exceptions.CommandError`
     which is interpreted as an expected event so the traceback is hidden.
@@ -182,6 +196,7 @@ def dispatch(
         output_file=output_file,
         errors_file=errors_file,
         raw_output=raw_output,
+        always_flush=always_flush,
     )
 
 
@@ -225,20 +240,29 @@ def run_endpoint_function(
     output_file: IO = sys.stdout,
     errors_file: IO = sys.stderr,
     raw_output: bool = False,
+    always_flush: bool = False,
 ) -> Optional[str]:
     """
     .. versionadded:: 0.30
 
     Extracts arguments from the namespace object, calls the endpoint function
     and processes its output.
+
+    :param always_flush:
+
+        Flush the buffer after every line even if `output_file` is not a TTY.
+        Turn this off if you don't need dynamic output)
     """
     lines = _execute_command(function, namespace_obj, errors_file)
 
-    return _process_command_output(lines, output_file, raw_output)
+    return _process_command_output(lines, output_file, raw_output, always_flush)
 
 
 def _process_command_output(
-    lines: Iterator[str], output_file: Optional[IO], raw_output: bool
+    lines: Iterator[str],
+    output_file: Optional[IO],
+    raw_output: bool,
+    always_flush: bool,
 ) -> Optional[str]:
     out_io: IO
 
@@ -259,6 +283,14 @@ def _process_command_output(
         if not raw_output:
             # in most cases user wants one message per line
             out_io.write("\n")
+
+        # If it's not a terminal (i.e. redirected to a file or another
+        # process), it's probably buffered.  In most cases it doesn't matter
+        # but if the output is generated with delays between the lines and we
+        # may want to monitor it (e.g. `my_app.py | grep something`), it's a
+        # good idea to force flushing.
+        if always_flush:
+            out_io.flush()
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
