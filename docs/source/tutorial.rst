@@ -17,7 +17,7 @@ Assume we need a CLI application which output is modulated by arguments:
     $ ./greet.py
     Hello unknown user!
 
-    $ ./greet.py --name John
+    $ ./greet.py John
     Hello John!
 
 This is our business logic:
@@ -33,6 +33,19 @@ Let's convert the function into a complete CLI application::
     argh.dispatch_command(main)
 
 Done.  Dead simple.
+
+You may want to make the name an "option" AKA named CLI argument, like this::
+
+    $ ./greet.py --name John
+
+In that case it's enough to make the function argument `name` "keyword-only"
+(see :pep:`3102` for explanation)::
+
+    def main(*, name: str = "unknown user") -> str:
+        ...
+
+Everything to the left of ``*`` becomes a positional CLI argument.  Everything
+to the right of ``*`` becomes a named one.
 
 What about multiple commands?  Easy::
 
@@ -75,71 +88,102 @@ Declaring Commands
 The Natural Way
 ...............
 
-You've already learned the natural way of declaring commands before even
-knowing about `argh`::
+If you are comfortable with the basics of Python, you already knew the natural
+way of declaring CLI commands with `Argh` before even learning about the
+existence of `Argh`.
 
-    def my_command(alpha, beta=1, gamma=False, *delta):
-        return
+Please read the following snippet carefully.  Is there any `Argh`-specific API?
 
-When executed as ``app.py my-command --help``, such application prints::
+::
 
-    usage: app.py my-command [-h] [-b BETA] [-g] alpha [delta ...]
+    def my_command(
+        alpha: str, beta: int = 1, *args, gamma: int, delta: bool = False
+    ) -> list[str]:
+        return [alpha, beta, args, gamma, delta]
+
+The answer is: no.  This is a completely generic Python function.
+
+Let's make this function available as a CLI command::
+
+    import argh
+
+
+    def my_command(
+        alpha: str, beta: int = 1, *args, gamma: int, delta: bool = False
+    ) -> list[str]:
+        return [alpha, beta, args, gamma, delta]
+
+
+    if __name__ == "__main__":
+        argh.dispatch_commands([my_command])
+
+That's all.  You don't need to do anything else.
+
+When executed as ``./app.py my-command --help``, such application prints::
+
+    usage: app.py my-command [-h] -g GAMMA [-d] alpha [beta] [args ...]
 
     positional arguments:
-      alpha
-      delta
+      alpha                 -
+      beta                  1
+      args                  -
 
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
-      -b BETA, --beta BETA
-      -g, --gamma
+      -g GAMMA, --gamma GAMMA
+                            -
+      -d, --delta           False
 
-The same result can be achieved with this chunk of `argparse` code (with the
-exception that in `argh` you don't immediately modify a parser but rather
-declare what's to be added to it later)::
+Now let's take a look at how we would do it without `Argh`::
 
-    parser.add_argument("alpha")
-    parser.add_argument("-b", "--beta", default=1, type=int)
-    parser.add_argument("-g", "--gamma", default=False, action="store_true")
-    parser.add_argument("delta", nargs="*")
+    import argparse
 
-Verbose, hardly readable, requires learning another API.
+
+    def my_command(
+        alpha: str, beta: int = 1, *args, gamma: int, delta: bool = False
+    ) -> list[str]:
+        return [alpha, beta, args, gamma, delta]
+
+
+    if __name__ == "__main__":
+        parser = argparse.ArgumentParser()
+
+        subparser = parser.add_subparsers().add_parser("my-command")
+
+        subparser.add_argument("alpha")
+        subparser.add_argument("beta", default=1, nargs="?", type=int)
+        subparser.add_argument("args", nargs="*")
+        subparser.add_argument("-g", "--gamma")
+        subparser.add_argument("-d", "--delta", default=False, action="store_true")
+
+        ns = parser.parse_args()
+
+        lines = my_command(ns.alpha, ns.beta, *ns.args, gamma=ns.gamma, delta=ns.delta)
+
+        for line in lines:
+            print(line)
+
+Verbose, hardly readable, requires learning the API.  With `Argh` it's just a
+single line in addition to your function.
 
 `Argh` allows for more expressive and pythonic code because:
 
 * everything is inferred from the function signature;
-* arguments without default values are interpreted as required positional
+* regular function arguments are represented as positional CLI arguments;
+* varargs (``*args``) are represented as a "zero or more" positional CLI argument;
+* kwonly (keyword-only arguments, see :pep:`3102`) are represented as named CLI
   arguments;
-* arguments with default values are interpreted as options;
 
-  * options with a `bool` as default value are considered flags and their
-    presence triggers the action `store_true` (or `store_false`);
-  * values of options that don't trigger actions are coerced to the same type
-    as the default value;
+  * keyword-only arguments with a `bool` default value are considered flags
+    (AKA toggles) and their presence triggers the action `store_true` (or
+    `store_false`).
 
-* the ``*args`` entry (function's positional arguments) is interpreted as
-  a single argument with 0..n values.
+* you can ``print()`` but you don't have to — the return value will be printed
+  for you; it can even be an iterable (feel free to ``yield`` too), then each
+  element will be printed on its own line.
 
 Hey, that's a lot for such a simple case!  But then, that's why the API feels
 natural: `argh` does a lot of work for you.
-
-.. note::
-
-    The pattern described above is the "by name if has default" mapping policy.
-    It used to be *the* policy but starting with Argh v.0.30 there's a better
-    one, "by name if kwonly".  Although the older one will remain the default
-    policy for a while, it may be eventually dropped in favour of the new one.
-
-    Please check `~argh.assembling.NameMappingPolicy` for details.
-
-    Usage example::
-
-        def my_command(alpha, beta=1, *, gamma, delta=False, **kwargs):
-            ...
-
-        argh.dispatch_command(
-            my_command, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
-        )
 
 Well, there's nothing more elegant than a simple function.  But simplicity
 comes at a cost in terms of flexibility.  Fortunately, `argh` doesn't stay in
@@ -157,6 +201,11 @@ Extended argument declaration can be helpful in that case.
 
 Extended Argument Declaration
 .............................
+
+.. note::
+
+    This section will be out of date soon.  Typing hints will be used for all
+    the cases described here including argument help.
 
 When function signature isn't enough to fine-tune the argument declarations,
 the :class:`~argh.decorators.arg` decorator comes in handy::
