@@ -13,6 +13,9 @@ Bugs fixed:
 Enhancements:
 
 - Improved the tutorial.
+- Added a more informative error message when the reason is likely to be
+  related to the migration from Argh v0.29 to a version with a new argument
+  name mapping policy.
 
 Other changes:
 
