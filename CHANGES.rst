@@ -2,6 +2,14 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.30.1
+--------------
+
+Bugs fixed:
+
+- regression: certain special values in argument default value would cause an
+  exception (#204)
+
 Version 0.30.0
 --------------
 

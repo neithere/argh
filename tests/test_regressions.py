@@ -2,6 +2,9 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
+import sys
+from typing import TextIO
+
 import pytest
 
 import argh
@@ -150,3 +153,19 @@ def test_regression_issue104():
     parser.set_default_command(cmd)
     expected = "abc\ndef\n8\n9\n{}\n"
     assert run(parser, "abc def --baz-baz 8").out == expected
+
+
+def test_regression_issue204():
+    """
+    Issue #204: `asdict(ParserAddArgumentSpec)` used `deepcopy` which would
+    lead to "TypeError: cannot pickle..." if e.g. a default value contained an
+    un-pickle-able object.
+
+    We should avoid `deepcopy()` in standard operations.
+    """
+
+    def func(x: TextIO = sys.stdout) -> None:
+        ...
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
