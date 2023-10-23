@@ -415,7 +415,10 @@ def _merge_inferred_and_declared_args(
                 kind_declared = kinds[decl_positional]
                 raise AssemblingError(
                     f'argument "{func_arg_name}" declared as {kind_inferred} '
-                    f"(in function signature) and {kind_declared} (via decorator)"
+                    f"(in function signature) and {kind_declared} (via decorator). "
+                    "If you've just migrated from Argh v.0.29, please check "
+                    "the new default NameMappingPolicy. Perhaps you need "
+                    "to replace `func(x=1)` with `func(*, x=1)`?"
                 )
 
             # merge explicit argument declaration into the inferred one

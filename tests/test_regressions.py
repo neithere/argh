@@ -116,7 +116,9 @@ def test_regression_issue47():
         parser.set_default_command(func)
     msg = (
         'func: argument "foo_bar" declared as positional (in function '
-        "signature) and optional (via decorator)"
+        "signature) and optional (via decorator). If you've just migrated "
+        "from Argh v.0.29, please check the new default NameMappingPolicy. "
+        "Perhaps you need to replace `func(x=1)` with `func(*, x=1)`?"
     )
     assert excinfo.exconly().endswith(msg)
 
