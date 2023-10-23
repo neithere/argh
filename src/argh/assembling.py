@@ -16,7 +16,6 @@ Functions and classes to properly assemble your commands in a parser.
 import inspect
 from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
 from collections import OrderedDict
-from dataclasses import asdict
 from enum import Enum
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
@@ -315,9 +314,9 @@ def set_default_command(
             raise AssemblingError(f"{function.__name__}: {exc}") from exc
 
     # add the fully formed argument specs to the parser
-    for orig_spec in parser_add_argument_specs:
-        spec = _prepare_parser_add_argument_spec(
-            parser_add_argument_spec=orig_spec, parser_adds_help_arg=parser.add_help
+    for spec in parser_add_argument_specs:
+        _extend_parser_add_argument_spec(
+            spec=spec, parser_adds_help_arg=parser.add_help
         )
 
         try:
@@ -347,12 +346,9 @@ def set_default_command(
     )
 
 
-def _prepare_parser_add_argument_spec(
-    parser_add_argument_spec: ParserAddArgumentSpec, parser_adds_help_arg: bool
-) -> ParserAddArgumentSpec:
-    # deep copy
-    spec = ParserAddArgumentSpec(**asdict(parser_add_argument_spec))
-
+def _extend_parser_add_argument_spec(
+    spec: ParserAddArgumentSpec, parser_adds_help_arg: bool
+) -> None:
     # add types, actions, etc. (e.g. default=3 implies type=int)
     spec.other_add_parser_kwargs.update(
         guess_extra_parser_add_argument_spec_kwargs(spec)
@@ -368,8 +364,6 @@ def _prepare_parser_add_argument_spec(
     # need to remove that short form now.
     if parser_adds_help_arg and "-h" in spec.cli_arg_names:
         spec.cli_arg_names = [name for name in spec.cli_arg_names if name != "-h"]
-
-    return spec
 
 
 def _merge_inferred_and_declared_args(
@@ -421,7 +415,10 @@ def _merge_inferred_and_declared_args(
                 kind_declared = kinds[decl_positional]
                 raise AssemblingError(
                     f'argument "{func_arg_name}" declared as {kind_inferred} '
-                    f"(in function signature) and {kind_declared} (via decorator)"
+                    f"(in function signature) and {kind_declared} (via decorator). "
+                    "If you've just migrated from Argh v.0.29, please check "
+                    "the new default NameMappingPolicy. Perhaps you need "
+                    "to replace `func(x=1)` with `func(*, x=1)`?"
                 )
 
             # merge explicit argument declaration into the inferred one

@@ -9,6 +9,25 @@ Enhancements:
 
 - Added `always_flush` argument to `dispatch()` (issue #145)
 
+Version 0.30.1
+--------------
+
+Bugs fixed:
+
+- Regression: certain special values in argument default value would cause an
+  exception (#204)
+
+Enhancements:
+
+- Improved the tutorial.
+- Added a more informative error message when the reason is likely to be
+  related to the migration from Argh v0.29 to a version with a new argument
+  name mapping policy.
+
+Other changes:
+
+- Added `py.typed` marker file for :pep:`561`.
+
 Version 0.30.0
 --------------
 
