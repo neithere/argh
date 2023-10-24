@@ -1,13 +1,19 @@
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import pytest
 
-from argh.assembling import NameMappingPolicy, infer_argspecs_from_function
+from argh.assembling import (
+    ArgumentNameMappingError,
+    NameMappingPolicy,
+    infer_argspecs_from_function,
+)
+
+POLICIES = list(NameMappingPolicy) + [None]
 
 
-@pytest.mark.parametrize("name_mapping_policy", list(NameMappingPolicy))
+@pytest.mark.parametrize("name_mapping_policy", POLICIES)
 def test_no_args(name_mapping_policy) -> None:
     def func() -> None:
         ...
@@ -16,7 +22,7 @@ def test_no_args(name_mapping_policy) -> None:
     assert_usage(parser, "usage: test [-h]\n")
 
 
-@pytest.mark.parametrize("name_mapping_policy", list(NameMappingPolicy))
+@pytest.mark.parametrize("name_mapping_policy", POLICIES)
 def test_one_positional(name_mapping_policy) -> None:
     def func(alpha: str) -> str:
         return f"{alpha}"
@@ -26,7 +32,7 @@ def test_one_positional(name_mapping_policy) -> None:
     assert_parsed(parser, ["hello"], Namespace(alpha="hello"))
 
 
-@pytest.mark.parametrize("name_mapping_policy", list(NameMappingPolicy))
+@pytest.mark.parametrize("name_mapping_policy", POLICIES)
 def test_two_positionals(name_mapping_policy) -> None:
     def func(alpha: str, beta: str) -> str:
         return f"{alpha}, {beta}"
@@ -62,16 +68,19 @@ def test_two_positionals_one_with_default(name_mapping_policy, expected_usage) -
         assert_parsed(parser, ["one", "two"], Namespace(alpha="one", beta="two"))
 
 
-@pytest.mark.parametrize("name_mapping_policy", list(NameMappingPolicy))
+@pytest.mark.parametrize("name_mapping_policy", POLICIES)
 def test_varargs(name_mapping_policy) -> None:
     def func(*file_paths) -> str:
         return f"{file_paths}"
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
     expected_usage = "usage: test [-h] [file-paths ...]\n"
+
+    # TODO: remove once we drop support for Python 3.8
     if sys.version_info < (3, 9):
         # https://github.com/python/cpython/issues/82619
         expected_usage = "usage: test [-h] [file-paths [file-paths ...]]\n"
+
     assert_usage(parser, expected_usage)
 
 
@@ -80,6 +89,7 @@ def test_varargs(name_mapping_policy) -> None:
     [
         (NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT, "usage: test [-h] alpha beta\n"),
         (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] -b BETA alpha\n"),
+        (None, "usage: test [-h] -b BETA alpha\n"),
     ],
 )
 def test_varargs_between_positional_and_kwonly__no_defaults(
@@ -112,13 +122,26 @@ def test_varargs_between_positional_and_kwonly__with_defaults(
     assert_usage(parser, expected_usage)
 
 
-def test_kwargs() -> None:
+def test_varargs_between_positional_and_kwonly__with_defaults__no_explicit_policy() -> (
+    None
+):
+    def func(alpha: int = 1, *, beta: int = 2) -> str:
+        return f"{alpha}, {beta}"
+
+    with pytest.raises(ArgumentNameMappingError) as exc:
+        _make_parser_for_function(func, name_mapping_policy=None)
+    assert (
+        'Argument "alpha" in function "func"\n'
+        "is not keyword-only but has a default value."
+    ) in str(exc.value)
+
+
+@pytest.mark.parametrize("name_mapping_policy", POLICIES)
+def test_kwargs(name_mapping_policy) -> None:
     def func(**kwargs) -> str:
         return f"{kwargs}"
 
-    parser = _make_parser_for_function(
-        func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
-    )
+    parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
     assert_usage(parser, "usage: test [-h]\n")
 
 
@@ -145,7 +168,7 @@ def test_all_types_mixed_no_named_varargs(name_mapping_policy, expected_usage) -
 
 def _make_parser_for_function(
     func: Callable,
-    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    name_mapping_policy: Optional[NameMappingPolicy] = None,
 ) -> ArgumentParser:
     parser = ArgumentParser(prog="test")
     parser_add_argument_specs = infer_argspecs_from_function(

@@ -786,7 +786,7 @@ def test_help_formatting_is_preserved():
 def test_prog(capsys: pytest.CaptureFixture[str]):
     "Program name propagates from sys.argv[0]"
 
-    def cmd(foo=1):
+    def cmd(*, foo=1):
         return foo
 
     parser = DebugArghParser()
@@ -832,9 +832,8 @@ def test_add_commands_unknown_name_mapping_policy():
 
 
 def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
-        pass
 
     def second_func():
         pass
@@ -867,7 +866,6 @@ def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
 def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
     def first_func(*, foo=123):
         """Owl stretching time"""
-        pass
 
     def second_func():
         pass
@@ -899,7 +897,7 @@ def test_add_commands_group_overrides1(capsys: pytest.CaptureFixture[str]):
     whatever was specified on function level.
     """
 
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         return foo
 

@@ -2,8 +2,27 @@
 Changelog
 ~~~~~~~~~
 
-Version 0.30.1
---------------
+Version 0.30.2 (2023-10-24)
+---------------------------
+
+Bugs fixed:
+
+- As reported in #204 and #206, the new default name mapping policy in fact
+  silently changed the CLI API of some scripts: arguments which were previously
+  translated as CLI options became optional positionals. Although the
+  instructions were supplied in the release notes, the upgrade may not
+  necessarily be intentional, so a waste of users' time is quite likely.
+
+  To alleviate this, the default value for `name_mapping_policy` in standard
+  functions has been changed to `None`; if it's not specified, Argh falls back
+  to the new default policy, but raises `ArgumentNameMappingError` with
+  detailed instructions if it sees a non-kwonly argument with a default value.
+
+  Please specify the policy explicitly in order to avoid this error if you need
+  to infer optional positionals (``nargs="?"``) from function signature.
+
+Version 0.30.1 (2023-10-23)
+---------------------------
 
 Bugs fixed:
 
@@ -21,8 +40,8 @@ Other changes:
 
 - Added `py.typed` marker file for :pep:`561`.
 
-Version 0.30.0
---------------
+Version 0.30.0 (2023-10-21)
+---------------------------
 
 Backwards incompatible changes:
 
@@ -106,8 +125,8 @@ Enhancements:
   Please check API docs on :class:`argh.assembling.NameMappingPolicy` for
   details.
 
-Version 0.29.4
---------------
+Version 0.29.4 (2023-09-23)
+---------------------------
 
 Bugs fixed:
 
@@ -118,8 +137,8 @@ Versions 0.29.1 through 0.29.3
 
 Technical releases for packaging purposes.  No changes in functionality.
 
-Version 0.29.0
---------------
+Version 0.29.0 (2023-09-03)
+---------------------------
 
 Backwards incompatible changes:
 
@@ -151,13 +170,13 @@ Other changes:
 
 - Avoid depending on iocapture by using pytest's built-in feature (#177)
 
-Version 0.28.1
---------------
+Version 0.28.1 (2023-02-16)
+---------------------------
 
 - Fixed bugs in tests (#171, #172)
 
-Version 0.28.0
---------------
+Version 0.28.0 (2023-02-15)
+---------------------------
 
 A major cleanup.
 
@@ -202,23 +221,23 @@ Deprecated features, to be removed in v.0.30:
 
 - Added deprecation warnings for some arguments deprecated back in v.0.26.
 
-Version 0.27.2
---------------
+Version 0.27.2 (2023-02-09)
+---------------------------
 
 Minor packaging fix:
 
 * chore: include file required by tox.ini in the sdist (#155)
 
-Version 0.27.1
---------------
+Version 0.27.1 (2023-02-09)
+---------------------------
 
 Minor building and packaging fixes:
 
 * docs: add Read the Docs config (#160)
 * chore: include tox.ini in the sdist (#155)
 
-Version 0.27.0
---------------
+Version 0.27.0 (2023-02-09)
+---------------------------
 
 This is the last version to support Python 2.7.
 
@@ -249,15 +268,15 @@ Other changes:
 - Fixed typos and links in documentation (PR #110, #116, #156).
 - Switched CI to Github Actions (PR #153).
 
-Version 0.26.2
---------------
+Version 0.26.2 (2016-05-11)
+---------------------------
 
 - Removed official support for Python 3.4, added for 3.5.
 - Various tox-related improvements for development.
 - Improved documentation.
 
-Version 0.26.1
---------------
+Version 0.26.1 (2014-10-30)
+---------------------------
 
 Fixed bugs:
 
@@ -265,8 +284,8 @@ Fixed bugs:
   was broken; fixing because at least one important app depends on it
   (issue #63).
 
-Version 0.26
-------------
+Version 0.26 (2014-10-27)
+-------------------------
 
 This release is intended to be the last one before 1.0.  Therefore a major
 cleanup was done.  This **breaks backward compatibility**.  If your code is
@@ -320,8 +339,8 @@ Fixed bugs:
 - Help formatter was broken for arguments with empty strings as default values
   (issue #76).
 
-Version 0.25
-------------
+Version 0.25 (2014-07-05)
+-------------------------
 
 - Added EntryPoint class as another way to assemble functions (issue #59).
 
@@ -336,3 +355,24 @@ Version 0.25
 - Function docstrings are now displayed verbatim in the help (issue #64).
 
 - Argh's dispatching now should work properly in Cython.
+
+Versions 0.2 through 0.24
+-------------------------
+
+A few years of development without a changelog 🫠
+
+Fortunately, a curious reader can always refer to commit messages and
+changesets.
+
+Version 0.1 (2010-11-12)
+------------------------
+
+The first version!  A single file with 182 lines of code including
+documentation :)  It featured subparsers and had the `@arg` decorator which was
+basically a deferred `ArgumentParser.add_argument()` call.
+
+Functions and classes:
+
+* class `ArghParser`
+* functions `add_commands()` and `dispatch()`
+* decorators `@arg` and `@plain_signature`
