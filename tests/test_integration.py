@@ -735,14 +735,21 @@ def test_default_arg_values_in_help():
     parser = DebugArghParser()
     parser.set_default_command(remind)
 
-    assert "Basil" in parser.format_help()
-    assert "Moose" in parser.format_help()
-    assert "creatures" in parser.format_help()
+    help_normalised = re.sub(r"\s+", " ", parser.format_help())
 
-    # explicit help message is not obscured by the implicit one...
-    assert "remarkable animal" in parser.format_help()
-    # ...but is still present
-    assert "it can speak" in parser.format_help()
+    assert "name 'Basil'" in help_normalised
+    assert "-t TASK, --task TASK 'hang the Moose'" in help_normalised
+    assert (
+        "-r REASON, --reason REASON 'there are creatures living in it'"
+        in help_normalised
+    )
+
+    # explicit help message is not obscured by the implicit one
+    # but is still present
+    assert (
+        "-n NOTE, --note NOTE why is it a remarkable animal? "
+        "(default: 'it can speak English')"
+    ) in help_normalised
 
 
 def test_default_arg_values_in_help__regression():
