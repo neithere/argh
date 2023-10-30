@@ -33,7 +33,7 @@ def test_arg():
     assert attrs == [
         ParserAddArgumentSpec(
             func_arg_name="foo",
-            cli_arg_names=("foo",),
+            cli_arg_names=["foo"],
             nargs="+",
             other_add_parser_kwargs={
                 "help": "my help",
@@ -41,7 +41,7 @@ def test_arg():
         ),
         ParserAddArgumentSpec(
             func_arg_name="bar",
-            cli_arg_names=("--bar",),
+            cli_arg_names=["--bar"],
             default_value=1,
         ),
     ]

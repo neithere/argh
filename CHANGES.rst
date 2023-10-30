@@ -2,6 +2,14 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.30.3 (2023-10-30)
+---------------------------
+
+Bugs fixed:
+
+- Regression: a positional argument with an underscore used in `@arg` decorator
+  would cause Argh fail on the assembling stage. (#208)
+
 Version 0.30.2 (2023-10-24)
 ---------------------------
 

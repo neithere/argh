@@ -171,3 +171,12 @@ def test_regression_issue204():
 
     parser = DebugArghParser()
     parser.set_default_command(func)
+
+
+def test_regression_issue208():
+    @argh.arg("foo_bar", help="fooooo")
+    def func(foo_bar):
+        return foo_bar
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)

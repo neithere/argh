@@ -141,10 +141,11 @@ def arg(*args: str, **kwargs) -> Callable:
             raise CliArgToFuncArgGuessingError("at least one CLI arg must be defined")
 
         func_arg_name = naive_guess_func_arg_name(args)
+        cli_arg_names = [name.replace("_", "-") for name in args]
         completer = kwargs.pop("completer", None)
         spec = ParserAddArgumentSpec.make_from_kwargs(
             func_arg_name=func_arg_name,
-            cli_arg_names=args,
+            cli_arg_names=cli_arg_names,
             parser_add_argument_kwargs=kwargs,
         )
         if completer:
