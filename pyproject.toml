@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "argh"
-version = "0.30.3"
+version = "0.30.4"
 description = "An unobtrusive argparse wrapper with natural syntax"
 readme = "README.rst"
 requires-python = ">=3.8"
