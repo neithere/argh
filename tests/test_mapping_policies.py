@@ -137,9 +137,7 @@ def test_varargs_between_positional_and_kwonly__with_defaults__no_explicit_polic
 
 
 # TODO: remove in v.0.33 if it happens, otherwise in v1.0.
-def test_positional_with_defaults_without_kwonly__no_explicit_policy() -> (
-    None
-):
+def test_positional_with_defaults_without_kwonly__no_explicit_policy() -> None:
     def func(alpha: str, beta: int = 1) -> str:
         return f"{alpha} {beta}"
 
