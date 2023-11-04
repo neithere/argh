@@ -2,6 +2,33 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.30.4 (2023-11-04)
+---------------------------
+
+There were complaints about the lack of a deprecation cycle for the legacy name
+mapping policy.  This version addresses the issue:
+
+- The handling introduced in v.0.30.2 (raising an exception for clarity)
+  is retained for cases when no name mapping policy is specified but function
+  signature contains defaults in non-kwonly args **and kwonly args are also
+  defined**::
+
+      def main(alpha, beta=1, *, gamma=2):  # error — explicit policy required
+
+  In a similar case but when **kwonly args are not defined** Argh now assumes
+  the legacy name mapping policy (`BY_NAME_IF_HAS_DEFAULT`) and merely issues
+  a deprecation warning with the same message as the exception mentioned above::
+
+      def main(alpha, beta=2):    # `[-b BETA] alpha` + DeprecationWarning
+
+  This ensures that most of the old scripts still work the same way despite the
+  new policy being used by default and enforced in cases when it's impossible
+  to resolve the mapping conflict.
+
+  Please note that this "soft" handling is to be removed in version v0.33
+  (or v1.0 if the former is not deemed necessary).  The new name mapping policy
+  will be used by default without warnings, like in v0.30.
+
 Version 0.30.3 (2023-10-30)
 ---------------------------
 

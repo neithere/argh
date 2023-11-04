@@ -19,7 +19,7 @@ def test_no_args(name_mapping_policy) -> None:
         ...
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
-    assert_usage(parser, "usage: test [-h]\n")
+    assert_usage(parser, "usage: test [-h]")
 
 
 @pytest.mark.parametrize("name_mapping_policy", POLICIES)
@@ -28,7 +28,7 @@ def test_one_positional(name_mapping_policy) -> None:
         return f"{alpha}"
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
-    assert_usage(parser, "usage: test [-h] alpha\n")
+    assert_usage(parser, "usage: test [-h] alpha")
     assert_parsed(parser, ["hello"], Namespace(alpha="hello"))
 
 
@@ -38,7 +38,7 @@ def test_two_positionals(name_mapping_policy) -> None:
         return f"{alpha}, {beta}"
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
-    assert_usage(parser, "usage: test [-h] alpha beta\n")
+    assert_usage(parser, "usage: test [-h] alpha beta")
     assert_parsed(parser, ["one", "two"], Namespace(alpha="one", beta="two"))
 
 
@@ -47,9 +47,9 @@ def test_two_positionals(name_mapping_policy) -> None:
     [
         (
             NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
-            "usage: test [-h] [-b BETA] alpha\n",
+            "usage: test [-h] [-b BETA] alpha",
         ),
-        (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] alpha [beta]\n"),
+        (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] alpha [beta]"),
     ],
 )
 def test_two_positionals_one_with_default(name_mapping_policy, expected_usage) -> None:
@@ -74,12 +74,12 @@ def test_varargs(name_mapping_policy) -> None:
         return f"{file_paths}"
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
-    expected_usage = "usage: test [-h] [file-paths ...]\n"
+    expected_usage = "usage: test [-h] [file-paths ...]"
 
     # TODO: remove once we drop support for Python 3.8
     if sys.version_info < (3, 9):
         # https://github.com/python/cpython/issues/82619
-        expected_usage = "usage: test [-h] [file-paths [file-paths ...]]\n"
+        expected_usage = "usage: test [-h] [file-paths [file-paths ...]]"
 
     assert_usage(parser, expected_usage)
 
@@ -87,9 +87,9 @@ def test_varargs(name_mapping_policy) -> None:
 @pytest.mark.parametrize(
     "name_mapping_policy,expected_usage",
     [
-        (NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT, "usage: test [-h] alpha beta\n"),
-        (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] -b BETA alpha\n"),
-        (None, "usage: test [-h] -b BETA alpha\n"),
+        (NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT, "usage: test [-h] alpha beta"),
+        (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] -b BETA alpha"),
+        (None, "usage: test [-h] -b BETA alpha"),
     ],
 )
 def test_varargs_between_positional_and_kwonly__no_defaults(
@@ -107,9 +107,9 @@ def test_varargs_between_positional_and_kwonly__no_defaults(
     [
         (
             NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
-            "usage: test [-h] [-a ALPHA] [-b BETA]\n",
+            "usage: test [-h] [-a ALPHA] [-b BETA]",
         ),
-        (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] [-b BETA] [alpha]\n"),
+        (NameMappingPolicy.BY_NAME_IF_KWONLY, "usage: test [-h] [-b BETA] [alpha]"),
     ],
 )
 def test_varargs_between_positional_and_kwonly__with_defaults(
@@ -136,13 +136,26 @@ def test_varargs_between_positional_and_kwonly__with_defaults__no_explicit_polic
     ) in str(exc.value)
 
 
+# TODO: remove in v.0.33 if it happens, otherwise in v1.0.
+def test_positional_with_defaults_without_kwonly__no_explicit_policy() -> (
+    None
+):
+    def func(alpha: str, beta: int = 1) -> str:
+        return f"{alpha} {beta}"
+
+    message_pattern = 'Argument "beta" in function "func"\nis not keyword-only but has a default value.'
+    with pytest.warns(DeprecationWarning, match=message_pattern):
+        parser = _make_parser_for_function(func, name_mapping_policy=None)
+    assert_usage(parser, "usage: test [-h] [-b BETA] alpha")
+
+
 @pytest.mark.parametrize("name_mapping_policy", POLICIES)
 def test_kwargs(name_mapping_policy) -> None:
     def func(**kwargs) -> str:
         return f"{kwargs}"
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
-    assert_usage(parser, "usage: test [-h]\n")
+    assert_usage(parser, "usage: test [-h]")
 
 
 @pytest.mark.parametrize(
@@ -150,11 +163,11 @@ def test_kwargs(name_mapping_policy) -> None:
     [
         (
             NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
-            "usage: test [-h] [-b BETA] [-d DELTA] alpha gamma\n",
+            "usage: test [-h] [-b BETA] [-d DELTA] alpha gamma",
         ),
         (
             NameMappingPolicy.BY_NAME_IF_KWONLY,
-            "usage: test [-h] -g GAMMA [-d DELTA] alpha [beta]\n",
+            "usage: test [-h] -g GAMMA [-d DELTA] alpha [beta]",
         ),
     ],
 )
@@ -183,6 +196,8 @@ def _make_parser_for_function(
 
 
 def assert_usage(parser: ArgumentParser, expected_usage: str) -> None:
+    if not expected_usage.endswith("\n"):
+        expected_usage += "\n"
     assert expected_usage == parser.format_usage()
 
 
