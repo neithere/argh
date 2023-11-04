@@ -735,14 +735,21 @@ def test_default_arg_values_in_help():
     parser = DebugArghParser()
     parser.set_default_command(remind)
 
-    assert "Basil" in parser.format_help()
-    assert "Moose" in parser.format_help()
-    assert "creatures" in parser.format_help()
+    help_normalised = re.sub(r"\s+", " ", parser.format_help())
 
-    # explicit help message is not obscured by the implicit one...
-    assert "remarkable animal" in parser.format_help()
-    # ...but is still present
-    assert "it can speak" in parser.format_help()
+    assert "name 'Basil'" in help_normalised
+    assert "-t TASK, --task TASK 'hang the Moose'" in help_normalised
+    assert (
+        "-r REASON, --reason REASON 'there are creatures living in it'"
+        in help_normalised
+    )
+
+    # explicit help message is not obscured by the implicit one
+    # but is still present
+    assert (
+        "-n NOTE, --note NOTE why is it a remarkable animal? "
+        "(default: 'it can speak English')"
+    ) in help_normalised
 
 
 def test_default_arg_values_in_help__regression():
@@ -786,7 +793,7 @@ def test_help_formatting_is_preserved():
 def test_prog(capsys: pytest.CaptureFixture[str]):
     "Program name propagates from sys.argv[0]"
 
-    def cmd(foo=1):
+    def cmd(*, foo=1):
         return foo
 
     parser = DebugArghParser()
@@ -832,9 +839,8 @@ def test_add_commands_unknown_name_mapping_policy():
 
 
 def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
-        pass
 
     def second_func():
         pass
@@ -867,7 +873,6 @@ def test_add_commands_no_overrides1(capsys: pytest.CaptureFixture[str]):
 def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
     def first_func(*, foo=123):
         """Owl stretching time"""
-        pass
 
     def second_func():
         pass
@@ -899,7 +904,7 @@ def test_add_commands_group_overrides1(capsys: pytest.CaptureFixture[str]):
     whatever was specified on function level.
     """
 
-    def first_func(foo=123):
+    def first_func(*, foo=123):
         """Owl stretching time"""
         return foo
 

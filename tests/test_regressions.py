@@ -130,7 +130,7 @@ def test_regression_issue76():
     This is also tested in integration tests but in a different way.
     """
 
-    def cmd(foo=""):
+    def cmd(*, foo=""):
         pass
 
     parser = DebugArghParser()
@@ -166,8 +166,17 @@ def test_regression_issue204():
     We should avoid `deepcopy()` in standard operations.
     """
 
-    def func(x: TextIO = sys.stdout) -> None:
+    def func(*, x: TextIO = sys.stdout) -> None:
         ...
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
+
+
+def test_regression_issue208():
+    @argh.arg("foo_bar", help="fooooo")
+    def func(foo_bar):
+        return foo_bar
 
     parser = DebugArghParser()
     parser.set_default_command(func)

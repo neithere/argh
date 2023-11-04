@@ -14,6 +14,8 @@ Assembling
 Functions and classes to properly assemble your commands in a parser.
 """
 import inspect
+import textwrap
+import warnings
 from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
 from collections import OrderedDict
 from enum import Enum
@@ -105,17 +107,16 @@ class NameMappingPolicy(Enum):
 
 def infer_argspecs_from_function(
     function: Callable,
-    name_mapping_policy: Optional[
-        NameMappingPolicy
-    ] = NameMappingPolicy.BY_NAME_IF_KWONLY,
+    name_mapping_policy: Optional[NameMappingPolicy] = None,
 ) -> Iterator[ParserAddArgumentSpec]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
 
-    if name_mapping_policy not in NameMappingPolicy:
+    if name_mapping_policy and name_mapping_policy not in NameMappingPolicy:
         raise NotImplementedError(f"Unknown name mapping policy {name_mapping_policy}")
 
     func_spec = get_arg_spec(function)
+    has_kwonly = bool(func_spec.kwonlyargs)
 
     default_by_arg_name: Dict[str, Any] = dict(
         zip(reversed(func_spec.args), reversed(func_spec.defaults or tuple()))
@@ -151,6 +152,47 @@ def infer_argspecs_from_function(
         )
         default_value = default_by_arg_name.get(arg_name, NotDefined)
 
+        if default_value != NotDefined and not name_mapping_policy:
+            message = textwrap.dedent(
+                f"""
+                Argument "{arg_name}" in function "{function.__name__}"
+                is not keyword-only but has a default value.
+
+                Please note that since Argh v.0.30 the default name mapping
+                policy has changed.
+
+                More information:
+                https://argh.readthedocs.io/en/latest/changes.html#version-0-30-0-2023-10-21
+
+                You need to upgrade your functions so that the arguments
+                that have default values become keyword-only:
+
+                    f(x=1) -> f(*, x=1)
+
+                If you actually want an optional positional argument,
+                please set the name mapping policy explicitly to `BY_NAME_IF_KWONLY`.
+
+                If you choose to postpone the migration, you have two options:
+
+                a) set the policy explicitly to `BY_NAME_IF_HAS_DEFAULT`;
+                b) pin Argh version to 0.29 until you are ready to migrate.
+
+                Thank you for understanding!
+                """
+            ).strip()
+
+            # Assume legacy policy and show a warning if the signature is
+            # simple (without kwonly args) so that the script continues working
+            # but the author is urged to upgrade it.
+            # When it cannot be auto-resolved (kwonly args mixed with old-style
+            # ones but no policy specified), throw an error.
+            #
+            # TODO: remove in v.0.33 if it happens, otherwise in v1.0.
+            if has_kwonly:
+                raise ArgumentNameMappingError(message)
+            warnings.warn(DeprecationWarning(message))
+            name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+
         arg_spec = ParserAddArgumentSpec(
             func_arg_name=arg_name,
             cli_arg_names=cli_arg_names_positional,
@@ -158,10 +200,10 @@ def infer_argspecs_from_function(
         )
 
         if default_value != NotDefined:
-            if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_KWONLY:
-                arg_spec.nargs = OPTIONAL
-            else:
+            if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
                 arg_spec.cli_arg_names = cli_arg_names_options
+            else:
+                arg_spec.nargs = OPTIONAL
 
         yield arg_spec
 
@@ -181,13 +223,13 @@ def infer_argspecs_from_function(
             default_value=default_value,
         )
 
-        if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_KWONLY:
+        if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
+            if default_value != NotDefined:
+                arg_spec.cli_arg_names = cli_arg_names_options
+        else:
             arg_spec.cli_arg_names = cli_arg_names_options
             if default_value == NotDefined:
                 arg_spec.is_required = True
-        else:
-            if default_value != NotDefined:
-                arg_spec.cli_arg_names = cli_arg_names_options
 
         yield arg_spec
 
@@ -252,7 +294,7 @@ def guess_extra_parser_add_argument_spec_kwargs(
 def set_default_command(
     parser,
     function: Callable,
-    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_KWONLY,
+    name_mapping_policy: Optional[NameMappingPolicy] = None,
 ) -> None:
     """
     Sets default command (i.e. a function) for given parser.
@@ -267,9 +309,17 @@ def set_default_command(
     :name_mapping_policy:
 
         The policy to use when mapping function arguments onto CLI arguments.
-        See :class:`.NameMappingPolicy`.
+        See :class:`.NameMappingPolicy`.  If not defined explicitly,
+        :meth:`.NameMappingPolicy.BY_NAME_IF_KWONLY` is used.
 
         .. versionadded:: 0.30
+
+        .. versionchanged:: 0.30.2
+           Raises `ArgumentNameMappingError` if the policy was not explicitly
+           defined and a non-kwonly argument has a default value.  The reason
+           is that it's very likely to be a case of non-migrated code where
+           the argument was intended to be mapped onto a CLI option.  It's
+           better to fail explicitly than to silently change the CLI API.
 
     .. note::
 
@@ -277,7 +327,7 @@ def set_default_command(
        :func:`~argh.decorators.arg`) and ones inferred from the function
        signature, declared ones will be merged into inferred ones.
        If an argument does not conform to the function signature,
-       `AssemblingError` is raised.
+       `ArgumentNameMappingError` is raised.
 
     .. note::
 
@@ -294,7 +344,7 @@ def set_default_command(
     )
 
     if declared_args and not inferred_args and not has_varkw:
-        raise AssemblingError(
+        raise ArgumentNameMappingError(
             f"{function.__name__}: cannot extend argument declarations "
             "for an endpoint function that takes no arguments."
         )
@@ -309,9 +359,8 @@ def set_default_command(
                 declared_args=declared_args,
                 has_varkw=has_varkw,
             )
-        except AssemblingError as exc:
-            print(exc)
-            raise AssemblingError(f"{function.__name__}: {exc}") from exc
+        except ArgumentNameMappingError as exc:
+            raise ArgumentNameMappingError(f"{function.__name__}: {exc}") from exc
 
     # add the fully formed argument specs to the parser
     for spec in parser_add_argument_specs:
@@ -413,7 +462,7 @@ def _merge_inferred_and_declared_args(
                 kinds = {True: "positional", False: "optional"}
                 kind_inferred = kinds[infr_positional]
                 kind_declared = kinds[decl_positional]
-                raise AssemblingError(
+                raise ArgumentNameMappingError(
                     f'argument "{func_arg_name}" declared as {kind_inferred} '
                     f"(in function signature) and {kind_declared} (via decorator). "
                     "If you've just migrated from Argh v.0.29, please check "
@@ -438,7 +487,7 @@ def _merge_inferred_and_declared_args(
                 )
                 msg_flags = ", ".join(declared_spec.cli_arg_names)
                 msg_signature = ", ".join("/".join(x) for x in dest_option_strings)
-                raise AssemblingError(
+                raise ArgumentNameMappingError(
                     f"argument {msg_flags} does not fit "
                     f"function signature: {msg_signature}"
                 )
@@ -458,7 +507,7 @@ def _is_positional(args: List[str], prefix_chars: str = "-") -> bool:
 def add_commands(
     parser: ArgumentParser,
     functions: List[Callable],
-    name_mapping_policy: NameMappingPolicy = NameMappingPolicy.BY_NAME_IF_KWONLY,
+    name_mapping_policy: Optional[NameMappingPolicy] = None,
     group_name: Optional[str] = None,
     group_kwargs: Optional[Dict[str, Any]] = None,
     func_kwargs: Optional[Dict[str, Any]] = None,
@@ -601,3 +650,7 @@ def add_subcommands(
 
     """
     add_commands(parser, functions, group_name=group_name, group_kwargs=group_kwargs)
+
+
+class ArgumentNameMappingError(AssemblingError):
+    ...
