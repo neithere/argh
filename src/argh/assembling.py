@@ -15,6 +15,7 @@ Functions and classes to properly assemble your commands in a parser.
 """
 import inspect
 import textwrap
+import warnings
 from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
 from collections import OrderedDict
 from enum import Enum
@@ -115,6 +116,7 @@ def infer_argspecs_from_function(
         raise NotImplementedError(f"Unknown name mapping policy {name_mapping_policy}")
 
     func_spec = get_arg_spec(function)
+    has_kwonly = bool(func_spec.kwonlyargs)
 
     default_by_arg_name: Dict[str, Any] = dict(
         zip(reversed(func_spec.args), reversed(func_spec.defaults or tuple()))
@@ -151,36 +153,45 @@ def infer_argspecs_from_function(
         default_value = default_by_arg_name.get(arg_name, NotDefined)
 
         if default_value != NotDefined and not name_mapping_policy:
-            # TODO: remove this after something like v.0.31+2
-            raise ArgumentNameMappingError(
-                textwrap.dedent(
-                    f"""
-                    Argument "{arg_name}" in function "{function.__name__}"
-                    is not keyword-only but has a default value.
+            message = textwrap.dedent(
+                f"""
+                Argument "{arg_name}" in function "{function.__name__}"
+                is not keyword-only but has a default value.
 
-                    Please note that since Argh v.0.30 the default name mapping
-                    policy has changed.
+                Please note that since Argh v.0.30 the default name mapping
+                policy has changed.
 
-                    More information:
-                    https://argh.readthedocs.io/en/latest/changes.html#version-0-30-0-2023-10-21
+                More information:
+                https://argh.readthedocs.io/en/latest/changes.html#version-0-30-0-2023-10-21
 
-                    You need to upgrade your functions so that the arguments
-                    that have default values become keyword-only:
+                You need to upgrade your functions so that the arguments
+                that have default values become keyword-only:
 
-                        f(x=1) -> f(*, x=1)
+                    f(x=1) -> f(*, x=1)
 
-                    If you actually want an optional positional argument,
-                    please set the name mapping policy explicitly to `BY_NAME_IF_KWONLY`.
+                If you actually want an optional positional argument,
+                please set the name mapping policy explicitly to `BY_NAME_IF_KWONLY`.
 
-                    If you choose to postpone the migration, you have two options:
+                If you choose to postpone the migration, you have two options:
 
-                    a) set the policy explicitly to `BY_NAME_IF_HAS_DEFAULT`;
-                    b) pin Argh version to 0.29 until you are ready to migrate.
+                a) set the policy explicitly to `BY_NAME_IF_HAS_DEFAULT`;
+                b) pin Argh version to 0.29 until you are ready to migrate.
 
-                    Thank you for understanding!
-                    """
-                ).strip()
-            )
+                Thank you for understanding!
+                """
+            ).strip()
+
+            # Assume legacy policy and show a warning if the signature is
+            # simple (without kwonly args) so that the script continues working
+            # but the author is urged to upgrade it.
+            # When it cannot be auto-resolved (kwonly args mixed with old-style
+            # ones but no policy specified), throw an error.
+            #
+            # TODO: remove in v.0.33 if it happens, otherwise in v1.0.
+            if has_kwonly:
+                raise ArgumentNameMappingError(message)
+            warnings.warn(DeprecationWarning(message))
+            name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
 
         arg_spec = ParserAddArgumentSpec(
             func_arg_name=arg_name,
