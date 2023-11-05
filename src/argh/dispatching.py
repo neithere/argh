@@ -12,6 +12,7 @@ Dispatching
 ~~~~~~~~~~~
 """
 import argparse
+import inspect
 import io
 import sys
 import warnings
@@ -28,7 +29,6 @@ from argh.constants import (
     PARSER_FORMATTER,
 )
 from argh.exceptions import CommandError, DispatchingError
-from argh.utils import get_arg_spec
 
 __all__ = [
     "ArghNamespace",
@@ -346,32 +346,43 @@ def _execute_command(
             def _flat_key(key):
                 return key.replace("-", "_")
 
-            all_input = dict((_flat_key(k), v) for k, v in vars(namespace_obj).items())
+            values_by_arg_name = dict(
+                (_flat_key(k), v) for k, v in vars(namespace_obj).items()
+            )
 
             # filter the namespace variables so that only those expected
             # by the actual function will pass
 
-            spec = get_arg_spec(function)
+            func_signature = inspect.signature(function)
+            func_params = func_signature.parameters.values()
 
-            positional = [all_input[k] for k in spec.args]
-            kwonly = getattr(spec, "kwonlyargs", [])
-            keywords = dict((k, all_input[k]) for k in kwonly)
+            positional_names = [
+                p.name
+                for p in func_params
+                if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+            ]
+            kwonly_names = [p.name for p in func_params if p.kind == p.KEYWORD_ONLY]
+            varargs_names = [p.name for p in func_params if p.kind == p.VAR_POSITIONAL]
+            positional_values = [values_by_arg_name[name] for name in positional_names]
+            values_by_name = dict((k, values_by_arg_name[k]) for k in kwonly_names)
 
             # *args
-            if spec.varargs:
-                positional += all_input[spec.varargs]
+            if varargs_names:
+                value = varargs_names[0]
+                positional_values += values_by_arg_name[value]
 
             # **kwargs
-            varkw = getattr(spec, "varkw", getattr(spec, "keywords", []))
-            if varkw:
-                not_kwargs = [DEST_FUNCTION] + spec.args + [spec.varargs] + kwonly
+            if any(p for p in func_params if p.kind == p.VAR_KEYWORD):
+                not_kwargs = (
+                    [DEST_FUNCTION] + positional_names + varargs_names + kwonly_names
+                )
                 for k in vars(namespace_obj):
                     normalized_k = _flat_key(k)
                     if k.startswith("_") or normalized_k in not_kwargs:
                         continue
-                    keywords[normalized_k] = getattr(namespace_obj, k)
+                    values_by_name[normalized_k] = getattr(namespace_obj, k)
 
-            result = function(*positional, **keywords)
+            result = function(*positional_values, **values_by_name)
 
         # Yield the results
         if isinstance(result, (GeneratorType, list, tuple)):

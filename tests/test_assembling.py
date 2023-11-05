@@ -398,6 +398,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_leg
         call("--gamma-pos-opt", default="gamma named", type=str, help=help_tmpl),
         call("--delta-pos-opt", default="delta named", type=str, help=help_tmpl),
         call("-t", "--theta-pos-opt", default="theta named", type=str, help=help_tmpl),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
         call("delta-kwonly-req", help=help_tmpl),
         call("epsilon-kwonly-req-one", help=help_tmpl),
@@ -405,7 +406,6 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_leg
         call(
             "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
         ),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
     assert parser.set_defaults.mock_calls == [
         call(function=big_command_with_everything)
@@ -472,6 +472,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_mod
             type=str,
             help=help_tmpl,
         ),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
         call("--delta-kwonly-req", required=True, help=help_tmpl),
         call("--epsilon-kwonly-req-one", required=True, help=help_tmpl),
@@ -479,7 +480,6 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_mod
         call(
             "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
         ),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
     assert parser.set_defaults.mock_calls == [
         call(function=big_command_with_everything)
@@ -641,9 +641,9 @@ def test_kwonlyargs__policy_legacy():
     assert parser.add_argument.mock_calls == [
         call("foo-pos", help=help_tmpl),
         call("bar-pos", help=help_tmpl),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("-f", "--foo-kwonly", default="foo_kwonly", type=str, help=help_tmpl),
         call("bar-kwonly", help=help_tmpl),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
 
 
@@ -662,9 +662,9 @@ def test_kwonlyargs__policy_modern():
     assert parser.add_argument.mock_calls == [
         call("foo-pos", help=help_tmpl),
         call("bar-pos", help=help_tmpl),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("-f", "--foo-kwonly", default="foo_kwonly", type=str, help=help_tmpl),
         call("-b", "--bar-kwonly", required=True, help=help_tmpl),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
 
 

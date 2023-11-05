@@ -5,9 +5,27 @@ Changelog
 Version 0.31.0
 --------------
 
+Breaking changes:
+
+- A small change in the legacy argument mapping policy `BY_NAME_IF_HAS_DEFAULT`
+  concerning the order of variadic positional vs. keyword-only arguments.
+
+  The following function now results in ``main alpha [args ...] beta`` instead of
+  ``main alpha beta [args ...]``::
+
+      def main(alpha, *args, beta): ...
+
+  This does **not** concern the default name mapping policy.  Even for the
+  legacy one it's an edge case which is extremely unlikely to appear in any
+  real-life application.
+
 Enhancements:
 
 - Added `always_flush` argument to `dispatch()` (issue #145)
+
+Other changes:
+
+- Refactoring.
 
 Version 0.30.4 (2023-11-04)
 ---------------------------

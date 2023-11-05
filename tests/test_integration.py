@@ -672,17 +672,17 @@ def test_kwonlyargs__policy_legacy():
         cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
     )
 
-    expected_usage = "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args ...]\n"
+    expected_usage = "usage: pytest [-h] [-f FOO] [--baz BAZ] [args ...] bar\n"
     if sys.version_info < (3, 9):
         # https://github.com/python/cpython/issues/82619
         expected_usage = (
-            "usage: pytest [-h] [-f FOO] [--baz BAZ] bar [args [args ...]]\n"
+            "usage: pytest [-h] [-f FOO] [--baz BAZ] [args [args ...]] bar\n"
         )
     assert parser.format_usage() == expected_usage
 
     assert (
-        run(parser, "--baz=done test  this --baz=do").out
-        == "foo='1' bar='test' baz='do' args=('this',) kwargs={}\n"
+        run(parser, "--baz=baz! one  two").out
+        == "foo='1' bar='two' baz='baz!' args=('one',) kwargs={}\n"
     )
     assert (
         run(parser, "test --foo=do").out
@@ -710,8 +710,8 @@ def test_kwonlyargs__policy_modern():
     assert parser.format_usage() == expected_usage
 
     assert (
-        run(parser, "--baz=done test  this --bar=do").out
-        == "foo='1' bar='do' baz='done' args=('test', 'this') kwargs={}\n"
+        run(parser, "--baz=baz! one  two --bar=bar!").out
+        == "foo='1' bar='bar!' baz='baz!' args=('one', 'two') kwargs={}\n"
     )
     message = "the following arguments are required: --bar"
     assert run(parser, "test --foo=do", exit=True) == message
