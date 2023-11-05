@@ -2,6 +2,9 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
+import sys
+from typing import TextIO
+
 import pytest
 
 import argh
@@ -113,7 +116,9 @@ def test_regression_issue47():
         parser.set_default_command(func)
     msg = (
         'func: argument "foo_bar" declared as positional (in function '
-        "signature) and optional (via decorator)"
+        "signature) and optional (via decorator). If you've just migrated "
+        "from Argh v.0.29, please check the new default NameMappingPolicy. "
+        "Perhaps you need to replace `func(x=1)` with `func(*, x=1)`?"
     )
     assert excinfo.exconly().endswith(msg)
 
@@ -125,7 +130,7 @@ def test_regression_issue76():
     This is also tested in integration tests but in a different way.
     """
 
-    def cmd(foo=""):
+    def cmd(*, foo=""):
         pass
 
     parser = DebugArghParser()
@@ -150,3 +155,28 @@ def test_regression_issue104():
     parser.set_default_command(cmd)
     expected = "abc\ndef\n8\n9\n{}\n"
     assert run(parser, "abc def --baz-baz 8").out == expected
+
+
+def test_regression_issue204():
+    """
+    Issue #204: `asdict(ParserAddArgumentSpec)` used `deepcopy` which would
+    lead to "TypeError: cannot pickle..." if e.g. a default value contained an
+    un-pickle-able object.
+
+    We should avoid `deepcopy()` in standard operations.
+    """
+
+    def func(*, x: TextIO = sys.stdout) -> None:
+        ...
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
+
+
+def test_regression_issue208():
+    @argh.arg("foo_bar", help="fooooo")
+    def func(foo_bar):
+        return foo_bar
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)

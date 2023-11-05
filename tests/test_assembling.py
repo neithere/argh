@@ -88,7 +88,9 @@ def test_positional_with_default_int():
         ...
 
     parser = argh.ArghParser(prog="test")
-    parser.set_default_command(func)
+    parser.set_default_command(
+        func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
     assert parser.format_usage() == "usage: test [-h] [pos-int-default]\n"
     assert "pos-int-default  123" in parser.format_help()
 
@@ -98,7 +100,9 @@ def test_positional_with_default_bool():
         ...
 
     parser = argh.ArghParser(prog="test")
-    parser.set_default_command(func)
+    parser.set_default_command(
+        func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
     assert parser.format_usage() == "usage: test [-h] [pos-bool-default]\n"
     assert "pos-bool-default  False" in parser.format_help()
 
