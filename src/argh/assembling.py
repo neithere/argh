@@ -277,10 +277,16 @@ def guess_extra_parser_add_argument_spec_kwargs(
                 # (not applicable to positionals: _StoreAction doesn't accept `nargs`)
                 guessed["action"] = "store_false" if default_value else "store_true"
         elif other_add_parser_kwargs.get("type") is None:
-            # infer type from default value
-            # (make sure that action handler supports this keyword)
-            if other_add_parser_kwargs.get("action", "store") in TYPE_AWARE_ACTIONS:
-                guessed["type"] = type(default_value)
+            if isinstance(default_value, (list, tuple)):
+                if "nargs" not in other_add_parser_kwargs:
+                    # the argument has a default value, so it doesn't have to
+                    # be passed; "zero or more" is a reasonable guess
+                    guessed["nargs"] = ZERO_OR_MORE
+            else:
+                # infer type from default value
+                # (make sure that action handler supports this keyword)
+                if other_add_parser_kwargs.get("action", "store") in TYPE_AWARE_ACTIONS:
+                    guessed["type"] = type(default_value)
 
     # guess type from choices (first item)
     if other_add_parser_kwargs.get("choices") and "type" not in list(guessed) + list(

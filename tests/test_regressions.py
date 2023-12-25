@@ -3,7 +3,7 @@ Regression tests
 ~~~~~~~~~~~~~~~~
 """
 import sys
-from typing import TextIO
+from typing import List, Optional, TextIO
 
 import pytest
 
@@ -180,3 +180,65 @@ def test_regression_issue208():
 
     parser = DebugArghParser()
     parser.set_default_command(func)
+
+
+def test_regression_issue212_orig_use_case():
+    """
+    Issue #212: a combination of nargs with list as default value would result
+    in a nested list instead of a flat list.
+
+    Variation: original use case (default value via decorator).
+    """
+
+    @argh.arg("paths", nargs="*", default=["one", "two"])
+    def func(paths: List[str]):
+        return f"{paths}"
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
+
+    assert run(parser, "").out == "['one', 'two']\n"
+    assert run(parser, "alpha").out == "['alpha']\n"
+    assert run(parser, "alpha beta gamma").out == "['alpha', 'beta', 'gamma']\n"
+
+
+def test_regression_issue212_funcsig_centric_positional():
+    """
+    Issue #212: a combination of nargs with list as default value would result
+    in a nested list instead of a flat list.
+
+    Variation: default value via function signature (positional).
+    """
+
+    @argh.arg("paths", nargs="*")
+    def func(paths: Optional[List[str]] = ["one", "two"]):
+        return f"{paths}"
+
+    parser = DebugArghParser()
+    parser.set_default_command(
+        func, name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+
+    assert run(parser, "").out == "['one', 'two']\n"
+    assert run(parser, "alpha").out == "['alpha']\n"
+    assert run(parser, "alpha beta gamma").out == "['alpha', 'beta', 'gamma']\n"
+
+
+def test_regression_issue212_funcsig_centric_named():
+    """
+    Issue #212: a combination of nargs with list as default value would result
+    in a nested list instead of a flat list.
+
+    Variation: default value via function signature (named).
+    """
+
+    @argh.arg("--paths", nargs="*")
+    def func(*, paths: Optional[List[str]] = ["one", "two"]):
+        return f"{paths}"
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
+
+    assert run(parser, "").out == "['one', 'two']\n"
+    assert run(parser, "--paths alpha").out == "['alpha']\n"
+    assert run(parser, "--paths alpha beta gamma").out == "['alpha', 'beta', 'gamma']\n"
