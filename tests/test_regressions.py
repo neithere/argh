@@ -234,7 +234,6 @@ def test_regression_issue212_funcsig_centric_named():
 
     @argh.arg("--paths", nargs="*")
     def func(*, paths: Optional[List[str]] = ["one", "two"]):
-        print(f"paths: {paths}")
         return f"{paths}"
 
     parser = DebugArghParser()
