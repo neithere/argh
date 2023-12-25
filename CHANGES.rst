@@ -2,6 +2,14 @@
 Changelog
 ~~~~~~~~~
 
+Version 0.30.5 (2023-12-25)
+---------------------------
+
+Bugs fixed:
+
+- A combination of `nargs` with a list as default value would lead to the
+  values coming from CLI being wrapped in another list (issue #212).
+
 Version 0.30.4 (2023-11-04)
 ---------------------------
 
