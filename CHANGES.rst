@@ -13,7 +13,7 @@ Bugs fixed:
 Enhancements:
 
 - Argspec guessing: if `nargs` is not specified but the default value
-  is a list, `nargs="*"` is assumed and passed to argparse.
+  is a list, ``nargs="*"`` is assumed and passed to argparse.
 
 Version 0.30.4 (2023-11-04)
 ---------------------------
