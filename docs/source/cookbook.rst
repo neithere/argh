@@ -10,10 +10,11 @@ Use `nargs` from argparse by amending the function signature with the
 .. code-block:: python
 
     @argh.arg("-p", "--patterns", nargs="*")
-    def cmd(patterns: list[str] | None = None) -> list:
+    def cmd(*, patterns: list[str] | None = None) -> list:
         distros = ("abc", "xyz")
-        return [d for d in distros if not patterns
-                                      or any(p in d for p in patterns)]
+        return [
+            d for d in distros if not patterns or any(p in d for p in patterns)
+        ]
 
 Resulting CLI::
 
@@ -34,3 +35,20 @@ Resulting CLI::
 
 Note that you need to specify both short and long names of the argument because
 `@arg` turns off the "smart" mechanism.
+
+In fact, you don't even need to use `nargs` if you specify a list as the
+default value (and provided that you're using the name mapping policy which
+will be eventually the default one):
+
+.. code-block:: python
+
+    def cmd(patterns: list[str] = ["default-pattern"]) -> list:
+        distros = ("abc", "xyz")
+        return [d for d in distros if any(p in d for p in patterns)]
+
+    if __name__ == "__main__":
+        parser = argh.ArghParser()
+        parser.set_default_command(
+            cmd, name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY
+        )
+        argh.dispatch(parser)
