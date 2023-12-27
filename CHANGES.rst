@@ -9,6 +9,19 @@ Enhancements:
 
 - Added `always_flush` argument to `dispatch()` (issue #145)
 
+Version 0.30.5 (2023-12-25)
+---------------------------
+
+Bugs fixed:
+
+- A combination of `nargs` with a list as default value would lead to the
+  values coming from CLI being wrapped in another list (issue #212).
+
+Enhancements:
+
+- Argspec guessing: if `nargs` is not specified but the default value
+  is a list, ``nargs="*"`` is assumed and passed to argparse.
+
 Version 0.30.4 (2023-11-04)
 ---------------------------
 
