@@ -21,6 +21,11 @@ Breaking changes:
 
 Enhancements:
 
+- Added experimental support for basic typing hints (issue #203)
+
+  - The feature is automatically enabled for any command (function) which does
+    **not** have any arguments specified via `@arg` decorator.
+
 - Added `always_flush` argument to `dispatch()` (issue #145)
 
 Other changes:
