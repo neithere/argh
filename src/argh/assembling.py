@@ -19,7 +19,26 @@ import warnings
 from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
 from collections import OrderedDict
 from enum import Enum
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    get_args,
+    get_origin,
+)
+
+# types.UnionType was introduced in Python < 3.10
+try:  # pragma: no cover
+    from types import UnionType
+
+    UNION_TYPES = [Union, UnionType]
+except ImportError:  # pragma: no cover
+    UNION_TYPES = [Union]
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
@@ -108,6 +127,7 @@ class NameMappingPolicy(Enum):
 def infer_argspecs_from_function(
     function: Callable,
     name_mapping_policy: Optional[NameMappingPolicy] = None,
+    can_use_hints: bool = False,
 ) -> Iterator[ParserAddArgumentSpec]:
     if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
         return
@@ -156,6 +176,17 @@ def infer_argspecs_from_function(
             default_value = parameter.default
         else:
             default_value = NotDefined
+
+        extra_spec_kwargs = {}
+
+        if can_use_hints:
+            hints = function.__annotations__
+            if parameter.name in hints:
+                extra_spec_kwargs = (
+                    TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params(
+                        hints[parameter.name]
+                    )
+                )
 
         if parameter.kind in (
             parameter.POSITIONAL_ONLY,
@@ -206,12 +237,21 @@ def infer_argspecs_from_function(
                 func_arg_name=parameter.name,
                 cli_arg_names=cli_arg_names_positional,
                 default_value=default_value,
+                other_add_parser_kwargs=extra_spec_kwargs,
             )
 
             if default_value != NotDefined:
                 if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
                     arg_spec.cli_arg_names = cli_arg_names_options
                 else:
+                    arg_spec.nargs = OPTIONAL
+
+            # "required" is invalid for positional CLI argument;
+            # it may have been set from Optional[...] hint above.
+            # Reinterpret it as "optional positional" instead.
+            if can_use_hints and "required" in arg_spec.other_add_parser_kwargs:
+                value = arg_spec.other_add_parser_kwargs.pop("required")
+                if value is False:
                     arg_spec.nargs = OPTIONAL
 
             yield arg_spec
@@ -221,6 +261,7 @@ def infer_argspecs_from_function(
                 func_arg_name=parameter.name,
                 cli_arg_names=cli_arg_names_positional,
                 default_value=default_value,
+                other_add_parser_kwargs=extra_spec_kwargs,
             )
 
             if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
@@ -238,6 +279,7 @@ def infer_argspecs_from_function(
                 func_arg_name=parameter.name,
                 cli_arg_names=[parameter.name.replace("_", "-")],
                 nargs=ZERO_OR_MORE,
+                other_add_parser_kwargs=extra_spec_kwargs,
             )
 
 
@@ -347,8 +389,16 @@ def set_default_command(
     has_varkw = any(p.kind == p.VAR_KEYWORD for p in func_signature.parameters.values())
 
     declared_args: List[ParserAddArgumentSpec] = getattr(function, ATTR_ARGS, [])
+
+    # transitional period: hints are used for types etc. only if @arg is not used
+    can_use_hints = not declared_args
+
     inferred_args: List[ParserAddArgumentSpec] = list(
-        infer_argspecs_from_function(function, name_mapping_policy=name_mapping_policy)
+        infer_argspecs_from_function(
+            function,
+            name_mapping_policy=name_mapping_policy,
+            can_use_hints=can_use_hints,
+        )
     )
 
     if declared_args and not inferred_args and not has_varkw:
@@ -662,3 +712,64 @@ def add_subcommands(
 
 class ArgumentNameMappingError(AssemblingError):
     ...
+
+
+class TypingHintArgSpecGuesser:
+    BASIC_TYPES = (str, int, float, bool)
+
+    @classmethod
+    def typing_hint_to_arg_spec_params(
+        cls, type_def: type, is_positional: bool = False
+    ) -> Dict[str, Any]:
+        origin = get_origin(type_def)
+        args = get_args(type_def)
+
+        # if not origin and not args and type_def in BASIC_TYPES:
+        if type_def in cls.BASIC_TYPES:
+            # `str`
+            return {
+                "type": type_def
+                # "type": _parse_basic_type(type_def)
+            }
+
+        if type_def == list:
+            # `list`
+            return {"nargs": "*"}
+
+        if any(origin is t for t in UNION_TYPES):
+            # `str | int`
+
+            retval = {}
+            first_subtype = args[0]
+            if first_subtype in cls.BASIC_TYPES:
+                retval["type"] = first_subtype
+
+            if first_subtype == list:
+                retval["nargs"] = "*"
+
+            if get_origin(first_subtype) == list:
+                retval["nargs"] = "*"
+                item_type = cls._extract_item_type_from_list_type(first_subtype)
+                if item_type:
+                    retval["type"] = item_type
+
+            if type(None) in args:
+                retval["required"] = False
+            return retval
+
+        if origin == list:
+            # `list[str]`
+            retval = {}
+            retval["nargs"] = "*"
+            if args[0] in cls.BASIC_TYPES:
+                retval["type"] = args[0]
+            return retval
+
+        return {}
+
+    @classmethod
+    def _extract_item_type_from_list_type(cls, type_def) -> Optional[type]:
+        args = get_args(type_def)
+        if args[0] in cls.BASIC_TYPES:
+            return args[0]
+        return None

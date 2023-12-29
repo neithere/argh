@@ -3,6 +3,7 @@ Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import argparse
+from typing import Optional
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -762,3 +763,75 @@ def test_is_positional():
     # this spec is invalid but validation is out of scope of the function
     # as it only checks if the first argument has the leading dash
     assert argh.assembling._is_positional(["-f", "foo"]) is False
+
+
+def test_typing_hints_only_used_when_arg_deco_not_used():
+    @argh.arg("foo", type=int)
+    def func_decorated(foo: Optional[float]):
+        ...
+
+    def func_undecorated(bar: Optional[float]):
+        ...
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(parser, func_decorated)
+    assert parser.add_argument.mock_calls == [
+        call("foo", type=int, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+    ]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(parser, func_undecorated)
+    assert parser.add_argument.mock_calls == [
+        call(
+            "bar",
+            nargs="?",
+            type=float,
+            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
+        ),
+    ]
+
+
+def test_typing_hints():
+    def func(
+        alpha,
+        beta: str,
+        gamma: Optional[int] = None,
+        *,
+        delta: float = 1.5,
+        epsilon: Optional[int] = 42,
+    ) -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}, epsilon={epsilon}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    assert parser.add_argument.mock_calls == [
+        call("alpha", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("beta", type=str, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call(
+            "gamma",
+            default=None,
+            nargs="?",
+            type=int,
+            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
+        ),
+        call(
+            "-d",
+            "--delta",
+            type=float,
+            default=1.5,
+            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
+        ),
+        call(
+            "-e",
+            "--epsilon",
+            type=int,
+            default=42,
+            required=False,
+            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
+        ),
+    ]

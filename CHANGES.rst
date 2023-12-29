@@ -7,6 +7,18 @@ Version 0.31.0
 
 Breaking changes:
 
+- The typing hints introspection feature is automatically enabled for any
+  command (function) which does **not** have any arguments specified via `@arg`
+  decorator.
+
+  This means that, for example, the following function used to fail and now
+  it will pass::
+
+      def main(count: int):
+          assert isinstance(count, int)
+
+  This may lead to unexpected behaviour in some rare cases.
+
 - A small change in the legacy argument mapping policy `BY_NAME_IF_HAS_DEFAULT`
   concerning the order of variadic positional vs. keyword-only arguments.
 
@@ -23,8 +35,16 @@ Enhancements:
 
 - Added experimental support for basic typing hints (issue #203)
 
-  - The feature is automatically enabled for any command (function) which does
-    **not** have any arguments specified via `@arg` decorator.
+  The following hints are currently supported:
+
+  - ``str``, ``int``, ``float``, ``bool`` (goes to ``type``);
+  - ``list`` (affects ``nargs``), ``list[T]`` (first subtype goes into ``type``);
+  - ``Optional[T]`` AKA ``T | None`` (currently interpreted as
+    ``required=False`` for optional and ``nargs="?"`` for positional
+    arguments; likely to change in the future as use cases accumulate).
+
+  The exact interpretation of the type hints is subject to change in the
+  upcoming versions of Argh.
 
 - Added `always_flush` argument to `dispatch()` (issue #145)
 

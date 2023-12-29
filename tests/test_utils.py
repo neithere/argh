@@ -3,17 +3,11 @@ Unit Tests For Utility Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
-import functools
 from argparse import ArgumentParser, _SubParsersAction
-from typing import Callable
 
 import pytest
 
-from argh.utils import (
-    SubparsersNotDefinedError,
-    get_subparsers,
-    unindent,
-)
+from argh.utils import SubparsersNotDefinedError, get_subparsers, unindent
 
 
 def test_util_unindent():
