@@ -143,6 +143,10 @@ def dispatch(
         that support for combined default and nested functions may be broken
         if a different type of object is forced.
 
+        .. deprecated:: 0.31
+
+          This argument will be removed soon after v0.31.
+
     :param always_flush:
 
         If the output stream is not a terminal (i.e. redirected to a file or
@@ -211,6 +215,12 @@ def parse_and_resolve(
     .. versionadded:: 0.30
 
     Parses CLI arguments and resolves the endpoint function.
+
+    :param namespace:
+
+        .. deprecated:: 0.31
+
+          This argument will be removed soon after v0.31.
     """
     if completion:
         autocomplete(parser)

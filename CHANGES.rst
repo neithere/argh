@@ -28,6 +28,14 @@ Enhancements:
 
 - Added `always_flush` argument to `dispatch()` (issue #145)
 
+Deprecated:
+
+- the `namespace` argument in `argh.dispatch()` and `argh.parse_and_resolve()`.
+  Rationale: continued API cleanup.  It's already possible to mutate the
+  namespace object between parsing and calling the endpoint; it's unlikely that
+  anyone would need to specify a custom namespace class or pre-populate it
+  before parsing.  Please file an issue if you have a valid use case.
+
 Other changes:
 
 - Refactoring.
