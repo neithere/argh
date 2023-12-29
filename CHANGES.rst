@@ -31,6 +31,8 @@ Breaking changes:
   legacy one it's an edge case which is extremely unlikely to appear in any
   real-life application.
 
+- Removed the previously deprecated decorator `@expects_obj`.
+
 Enhancements:
 
 - Added experimental support for basic typing hints (issue #203)

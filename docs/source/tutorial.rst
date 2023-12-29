@@ -253,35 +253,6 @@ Mixing ``**kwargs`` with straightforward signatures is also possible::
    declared via decorators because the results can be pretty confusing (though
    predictable).  See `argh` tests for details.
 
-Namespace Objects
-.................
-
-The default approach of `argparse` is similar to ``**kwargs``: the function
-expects a single object and the CLI arguments are defined elsewhere.
-
-In order to dispatch such "argparse-style" command via `argh`, you need to
-tell the latter that the function expects a namespace object.  This is done by
-wrapping the function into the :func:`~argh.decorators.expects_obj` decorator::
-
-    @expects_obj
-    def cmd(args) -> str:
-        return args.foo
-
-This way arguments cannot be defined in the Natural Way but the
-:class:`~argh.decorators.arg` decorator works as usual.
-
-.. deprecated:: 0.30
-    The `@expects_obj` decorator will removed in v0.31 or a later version.
-    Please consider using the main feature Argh offers — the mapping of
-    function signature to CLI.  Otherwise you are basically using vanilla
-    Argparse.
-
-.. note::
-
-   In both cases — ``**kwargs``-only and `@expects_obj` — the arguments
-   **must** be declared via decorators or directly via the `argparse` API.
-   Otherwise the command has zero arguments (apart from ``--help``).
-
 Assembling Commands
 -------------------
 

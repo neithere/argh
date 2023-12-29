@@ -559,20 +559,6 @@ def test_command_error():
     )
 
 
-# TODO: deprecated — remove in v0.31+
-def test_custom_argparse_namespace():
-    @argh.expects_obj
-    def cmd(args):
-        return args.custom_value
-
-    parser = DebugArghParser()
-    parser.set_default_command(cmd)
-    namespace = argparse.Namespace()
-    namespace.custom_value = "foo"
-
-    assert run(parser, "", {"namespace": namespace}).out == "foo\n"
-
-
 @pytest.mark.parametrize(
     "argparse_namespace_class", [argparse.Namespace, argh.dispatching.ArghNamespace]
 )

@@ -19,7 +19,6 @@ __all__ = (
     "ATTR_ARGS",
     "ATTR_WRAPPED_EXCEPTIONS",
     "ATTR_WRAPPED_EXCEPTIONS_PROCESSOR",
-    "ATTR_EXPECTS_NAMESPACE_OBJECT",
     "PARSER_FORMATTER",
     "DEFAULT_ARGUMENT_TEMPLATE",
     "DEST_FUNCTION",
@@ -45,9 +44,6 @@ ATTR_WRAPPED_EXCEPTIONS = "argh_wrap_errors"
 
 #: a function to preprocess the exception object when it is wrapped
 ATTR_WRAPPED_EXCEPTIONS_PROCESSOR = "argh_wrap_errors_processor"
-
-#: forcing argparse.Namespace object instead of signature introspection
-ATTR_EXPECTS_NAMESPACE_OBJECT = "argh_expects_namespace_object"
 
 #
 # Dest names in parser defaults

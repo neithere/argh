@@ -44,7 +44,6 @@ from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
     ATTR_ALIASES,
     ATTR_ARGS,
-    ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_NAME,
     DEFAULT_ARGUMENT_TEMPLATE,
     DEST_FUNCTION,
@@ -129,9 +128,6 @@ def infer_argspecs_from_function(
     name_mapping_policy: Optional[NameMappingPolicy] = None,
     can_use_hints: bool = False,
 ) -> Iterator[ParserAddArgumentSpec]:
-    if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
-        return
-
     if name_mapping_policy and name_mapping_policy not in NameMappingPolicy:
         raise NotImplementedError(f"Unknown name mapping policy {name_mapping_policy}")
 

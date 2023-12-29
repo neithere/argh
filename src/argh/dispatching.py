@@ -22,7 +22,6 @@ from typing import IO, Any, Callable, Dict, Iterator, List, Optional, Tuple
 from argh.assembling import add_commands, set_default_command
 from argh.completion import autocomplete
 from argh.constants import (
-    ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
     DEST_FUNCTION,
@@ -138,11 +137,6 @@ def dispatch(
 
     :param namespace:
 
-        An `argparse.Namespace`-like object.  By default an
-        :class:`argh.dispatching.ArghNamespace` object is used.  Please note
-        that support for combined default and nested functions may be broken
-        if a different type of object is forced.
-
         .. deprecated:: 0.31
 
           This argument will be removed soon after v0.31.
@@ -169,6 +163,13 @@ def dispatch(
     Wrapped exceptions, or other "expected errors" like parse failures,
     will cause a SystemExit to be raised.
     """
+    if namespace:
+        warnings.warn(
+            DeprecationWarning(
+                "The argument `namespace` in `dispatch()` is deprecated. "
+                "It will be removed in the next minor version after v0.31."
+            )
+        )
 
     # TODO: remove in v0.31+/v1.0
     if add_help_command:  # pragma: nocover
@@ -349,50 +350,48 @@ def _execute_command(
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
-        if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
-            result = function(namespace_obj)
-        else:
-            # namespace -> dictionary
-            def _flat_key(key):
-                return key.replace("-", "_")
 
-            values_by_arg_name = dict(
-                (_flat_key(k), v) for k, v in vars(namespace_obj).items()
+        # namespace -> dictionary
+        def _flat_key(key):
+            return key.replace("-", "_")
+
+        values_by_arg_name = dict(
+            (_flat_key(k), v) for k, v in vars(namespace_obj).items()
+        )
+
+        # filter the namespace variables so that only those expected
+        # by the actual function will pass
+
+        func_signature = inspect.signature(function)
+        func_params = func_signature.parameters.values()
+
+        positional_names = [
+            p.name
+            for p in func_params
+            if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+        ]
+        kwonly_names = [p.name for p in func_params if p.kind == p.KEYWORD_ONLY]
+        varargs_names = [p.name for p in func_params if p.kind == p.VAR_POSITIONAL]
+        positional_values = [values_by_arg_name[name] for name in positional_names]
+        values_by_name = dict((k, values_by_arg_name[k]) for k in kwonly_names)
+
+        # *args
+        if varargs_names:
+            value = varargs_names[0]
+            positional_values += values_by_arg_name[value]
+
+        # **kwargs
+        if any(p for p in func_params if p.kind == p.VAR_KEYWORD):
+            not_kwargs = (
+                [DEST_FUNCTION] + positional_names + varargs_names + kwonly_names
             )
+            for k in vars(namespace_obj):
+                normalized_k = _flat_key(k)
+                if k.startswith("_") or normalized_k in not_kwargs:
+                    continue
+                values_by_name[normalized_k] = getattr(namespace_obj, k)
 
-            # filter the namespace variables so that only those expected
-            # by the actual function will pass
-
-            func_signature = inspect.signature(function)
-            func_params = func_signature.parameters.values()
-
-            positional_names = [
-                p.name
-                for p in func_params
-                if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
-            ]
-            kwonly_names = [p.name for p in func_params if p.kind == p.KEYWORD_ONLY]
-            varargs_names = [p.name for p in func_params if p.kind == p.VAR_POSITIONAL]
-            positional_values = [values_by_arg_name[name] for name in positional_names]
-            values_by_name = dict((k, values_by_arg_name[k]) for k in kwonly_names)
-
-            # *args
-            if varargs_names:
-                value = varargs_names[0]
-                positional_values += values_by_arg_name[value]
-
-            # **kwargs
-            if any(p for p in func_params if p.kind == p.VAR_KEYWORD):
-                not_kwargs = (
-                    [DEST_FUNCTION] + positional_names + varargs_names + kwonly_names
-                )
-                for k in vars(namespace_obj):
-                    normalized_k = _flat_key(k)
-                    if k.startswith("_") or normalized_k in not_kwargs:
-                        continue
-                    values_by_name[normalized_k] = getattr(namespace_obj, k)
-
-            result = function(*positional_values, **values_by_name)
+        result = function(*positional_values, **values_by_name)
 
         # Yield the results
         if isinstance(result, (GeneratorType, list, tuple)):
