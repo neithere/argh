@@ -101,14 +101,10 @@ A more complete example::
     from argh import Help
 
 
-    FORMAT_CHOICES = "json", "yaml"
-    DEFAULT_FORMAT = FORMAT_CHOICES[0]
-
-
     def load(
         path: Annotated[str, Help("path to the file to load")],
         *,
-        file_format: Annotated[str, Literal[FORMAT_CHOICES])] = DEFAULT_FORMAT,
+        file_format: Literal["json", "yaml"] = "json",
         dry_run: bool = False
     ) -> str:
         return do_something(path, file_format, dry_run)
