@@ -40,6 +40,7 @@ Enhancements:
 
   - ``str``, ``int``, ``float``, ``bool`` (goes to ``type``);
   - ``list`` (affects ``nargs``), ``list[T]`` (first subtype goes into ``type``);
+  - ``Literal[T1, T2, ...]`` (interpreted as ``choices``);
   - ``Optional[T]`` AKA ``T | None`` (currently interpreted as
     ``required=False`` for optional and ``nargs="?"`` for positional
     arguments; likely to change in the future as use cases accumulate).
