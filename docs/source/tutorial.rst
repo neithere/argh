@@ -112,7 +112,7 @@ In that case it's enough to make the function argument `name` "keyword-only"
 
 We just took the previous function and added ``*,`` before the first argument.
 
-Let's check how the app help now look like::
+Let's check how the app help now looks like::
 
     $ ./greet.py --help
 

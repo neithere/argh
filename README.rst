@@ -116,6 +116,23 @@ Run it:
     $ ./app.py
     Hello world
 
+Type annotations are used to infer argument types:
+
+.. code-block:: python
+
+    def summarise(numbers: list[int]) -> int:
+        return sum(numbers)
+
+    argh.dispatch_command(summarise)
+
+Run it (note that ``nargs="+"`` + ``type=int`` were inferred from the
+annotation):
+
+.. code-block:: bash
+
+    $ ./app.py 1 2 3
+    6
+
 An app with multiple commands:
 
 .. code-block:: python
