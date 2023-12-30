@@ -19,13 +19,32 @@ import warnings
 from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
 from collections import OrderedDict
 from enum import Enum
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    get_args,
+    get_origin,
+)
+
+# types.UnionType was introduced in Python < 3.10
+try:  # pragma: no cover
+    from types import UnionType
+
+    UNION_TYPES = [Union, UnionType]
+except ImportError:  # pragma: no cover
+    UNION_TYPES = [Union]
 
 from argh.completion import COMPLETION_ENABLED
 from argh.constants import (
     ATTR_ALIASES,
     ATTR_ARGS,
-    ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_NAME,
     DEFAULT_ARGUMENT_TEMPLATE,
     DEST_FUNCTION,
@@ -33,7 +52,7 @@ from argh.constants import (
 )
 from argh.dto import NotDefined, ParserAddArgumentSpec
 from argh.exceptions import AssemblingError
-from argh.utils import get_arg_spec, get_subparsers
+from argh.utils import get_subparsers
 
 __all__ = [
     "set_default_command",
@@ -108,23 +127,23 @@ class NameMappingPolicy(Enum):
 def infer_argspecs_from_function(
     function: Callable,
     name_mapping_policy: Optional[NameMappingPolicy] = None,
+    can_use_hints: bool = False,
 ) -> Iterator[ParserAddArgumentSpec]:
-    if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
-        return
-
     if name_mapping_policy and name_mapping_policy not in NameMappingPolicy:
         raise NotImplementedError(f"Unknown name mapping policy {name_mapping_policy}")
 
-    func_spec = get_arg_spec(function)
-    has_kwonly = bool(func_spec.kwonlyargs)
-
-    default_by_arg_name: Dict[str, Any] = dict(
-        zip(reversed(func_spec.args), reversed(func_spec.defaults or tuple()))
+    func_signature = inspect.signature(function)
+    has_kwonly = any(
+        p.kind == p.KEYWORD_ONLY for p in func_signature.parameters.values()
     )
 
     # define the list of conflicting option strings
     # (short forms, i.e. single-character ones)
-    named_args = set(list(default_by_arg_name) + func_spec.kwonlyargs)
+    named_args = [
+        p.name
+        for p in func_signature.parameters.values()
+        if p.default is not p.empty or p.kind == p.KEYWORD_ONLY
+    ]
     named_arg_chars = [a[0] for a in named_args]
     named_arg_char_counts = dict(
         (char, named_arg_chars.count(char)) for char in set(named_arg_chars)
@@ -146,99 +165,146 @@ def infer_argspecs_from_function(
         return positionals, options
 
     default_value: Any
-    for arg_name in func_spec.args:
-        cli_arg_names_positional, cli_arg_names_options = _make_cli_arg_names_options(
-            arg_name
+    for parameter in func_signature.parameters.values():
+        (cli_arg_names_positional, cli_arg_names_options) = _make_cli_arg_names_options(
+            parameter.name
         )
-        default_value = default_by_arg_name.get(arg_name, NotDefined)
-
-        if default_value != NotDefined and not name_mapping_policy:
-            message = textwrap.dedent(
-                f"""
-                Argument "{arg_name}" in function "{function.__name__}"
-                is not keyword-only but has a default value.
-
-                Please note that since Argh v.0.30 the default name mapping
-                policy has changed.
-
-                More information:
-                https://argh.readthedocs.io/en/latest/changes.html#version-0-30-0-2023-10-21
-
-                You need to upgrade your functions so that the arguments
-                that have default values become keyword-only:
-
-                    f(x=1) -> f(*, x=1)
-
-                If you actually want an optional positional argument,
-                please set the name mapping policy explicitly to `BY_NAME_IF_KWONLY`.
-
-                If you choose to postpone the migration, you have two options:
-
-                a) set the policy explicitly to `BY_NAME_IF_HAS_DEFAULT`;
-                b) pin Argh version to 0.29 until you are ready to migrate.
-
-                Thank you for understanding!
-                """
-            ).strip()
-
-            # Assume legacy policy and show a warning if the signature is
-            # simple (without kwonly args) so that the script continues working
-            # but the author is urged to upgrade it.
-            # When it cannot be auto-resolved (kwonly args mixed with old-style
-            # ones but no policy specified), throw an error.
-            #
-            # TODO: remove in v.0.33 if it happens, otherwise in v1.0.
-            if has_kwonly:
-                raise ArgumentNameMappingError(message)
-            warnings.warn(DeprecationWarning(message))
-            name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
-
-        arg_spec = ParserAddArgumentSpec(
-            func_arg_name=arg_name,
-            cli_arg_names=cli_arg_names_positional,
-            default_value=default_value,
-        )
-
-        if default_value != NotDefined:
-            if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
-                arg_spec.cli_arg_names = cli_arg_names_options
-            else:
-                arg_spec.nargs = OPTIONAL
-
-        yield arg_spec
-
-    for arg_name in func_spec.kwonlyargs:
-        cli_arg_names_positional, cli_arg_names_options = _make_cli_arg_names_options(
-            arg_name
-        )
-
-        if func_spec.kwonlydefaults and arg_name in func_spec.kwonlydefaults:
-            default_value = func_spec.kwonlydefaults[arg_name]
+        if parameter.default is not parameter.empty:
+            default_value = parameter.default
         else:
             default_value = NotDefined
 
-        arg_spec = ParserAddArgumentSpec(
-            func_arg_name=arg_name,
-            cli_arg_names=cli_arg_names_positional,
-            default_value=default_value,
-        )
+        extra_spec_kwargs = {}
 
-        if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
+        if can_use_hints:
+            hints = function.__annotations__
+            if parameter.name in hints:
+                extra_spec_kwargs = (
+                    TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params(
+                        hints[parameter.name]
+                    )
+                )
+
+        if parameter.kind in (
+            parameter.POSITIONAL_ONLY,
+            parameter.POSITIONAL_OR_KEYWORD,
+        ):
+            if default_value != NotDefined and not name_mapping_policy:
+                message = textwrap.dedent(
+                    f"""
+                    Argument "{parameter.name}" in function "{function.__name__}"
+                    is not keyword-only but has a default value.
+
+                    Please note that since Argh v.0.30 the default name mapping
+                    policy has changed.
+
+                    More information:
+                    https://argh.readthedocs.io/en/latest/changes.html#version-0-30-0-2023-10-21
+
+                    You need to upgrade your functions so that the arguments
+                    that have default values become keyword-only:
+
+                        f(x=1) -> f(*, x=1)
+
+                    If you actually want an optional positional argument,
+                    please set the name mapping policy explicitly to `BY_NAME_IF_KWONLY`.
+
+                    If you choose to postpone the migration, you have two options:
+
+                    a) set the policy explicitly to `BY_NAME_IF_HAS_DEFAULT`;
+                    b) pin Argh version to 0.29 until you are ready to migrate.
+
+                    Thank you for understanding!
+                    """
+                ).strip()
+
+                # Assume legacy policy and show a warning if the signature is
+                # simple (without kwonly args) so that the script continues working
+                # but the author is urged to upgrade it.
+                # When it cannot be auto-resolved (kwonly args mixed with old-style
+                # ones but no policy specified), throw an error.
+                #
+                # TODO: remove in v.0.33 if it happens, otherwise in v1.0.
+                if has_kwonly:
+                    raise ArgumentNameMappingError(message)
+                warnings.warn(DeprecationWarning(message))
+                name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+
+            arg_spec = ParserAddArgumentSpec(
+                func_arg_name=parameter.name,
+                cli_arg_names=cli_arg_names_positional,
+                default_value=default_value,
+                other_add_parser_kwargs=extra_spec_kwargs,
+            )
+
             if default_value != NotDefined:
+                if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
+                    arg_spec.cli_arg_names = cli_arg_names_options
+                else:
+                    arg_spec.nargs = OPTIONAL
+
+            # annotations are interpreted without regard to the broader
+            # context, e.g. default values; in some cases argparse requires
+            # pretty specific combinations of props, so we need to adjust them
+            if can_use_hints:
+                # "required" is invalid for positional CLI argument;
+                # it may have been set from Optional[...] hint above.
+                # Reinterpret it as "optional positional" instead.
+                if "required" in arg_spec.other_add_parser_kwargs:
+                    value = arg_spec.other_add_parser_kwargs.pop("required")
+                    if value is False:
+                        arg_spec.nargs = OPTIONAL
+
+                if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
+                    # The guesser yields `type=bool` from `foo: bool = False`
+                    # but `type` is incompatible with `action="store_true"` which
+                    # is added by guess_extra_parser_add_argument_spec_kwargs().
+                    if (
+                        isinstance(arg_spec.default_value, bool)
+                        and arg_spec.other_add_parser_kwargs.get("type") == bool
+                    ):
+                        del arg_spec.other_add_parser_kwargs["type"]
+
+            yield arg_spec
+
+        elif parameter.kind == parameter.KEYWORD_ONLY:
+            arg_spec = ParserAddArgumentSpec(
+                func_arg_name=parameter.name,
+                cli_arg_names=cli_arg_names_positional,
+                default_value=default_value,
+                other_add_parser_kwargs=extra_spec_kwargs,
+            )
+
+            if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
+                if default_value != NotDefined:
+                    arg_spec.cli_arg_names = cli_arg_names_options
+            else:
                 arg_spec.cli_arg_names = cli_arg_names_options
-        else:
-            arg_spec.cli_arg_names = cli_arg_names_options
-            if default_value == NotDefined:
-                arg_spec.is_required = True
+                if default_value == NotDefined:
+                    arg_spec.is_required = True
 
-        yield arg_spec
+            # annotations are interpreted without regard to the broader
+            # context, e.g. default values; in some cases argparse requires
+            # pretty specific combinations of props, so we need to adjust them
+            if can_use_hints:
+                # The guesser yields `type=bool` from `foo: bool = False`
+                # but `type` is incompatible with `action="store_true"` which
+                # is added by guess_extra_parser_add_argument_spec_kwargs().
+                if (
+                    isinstance(arg_spec.default_value, bool)
+                    and arg_spec.other_add_parser_kwargs.get("type") == bool
+                ):
+                    del arg_spec.other_add_parser_kwargs["type"]
 
-    if func_spec.varargs:
-        yield ParserAddArgumentSpec(
-            func_arg_name=func_spec.varargs,
-            cli_arg_names=[func_spec.varargs.replace("_", "-")],
-            nargs=ZERO_OR_MORE,
-        )
+            yield arg_spec
+
+        elif parameter.kind == parameter.VAR_POSITIONAL:
+            yield ParserAddArgumentSpec(
+                func_arg_name=parameter.name,
+                cli_arg_names=[parameter.name.replace("_", "-")],
+                nargs=ZERO_OR_MORE,
+                other_add_parser_kwargs=extra_spec_kwargs,
+            )
 
 
 def guess_extra_parser_add_argument_spec_kwargs(
@@ -341,12 +407,22 @@ def set_default_command(
        option name ``-h`` is silently removed from any argument.
 
     """
-    func_spec = get_arg_spec(function)
-    has_varkw = bool(func_spec.varkw)  # the **kwargs thing
+    func_signature = inspect.signature(function)
+
+    # the **kwargs thing
+    has_varkw = any(p.kind == p.VAR_KEYWORD for p in func_signature.parameters.values())
 
     declared_args: List[ParserAddArgumentSpec] = getattr(function, ATTR_ARGS, [])
+
+    # transitional period: hints are used for types etc. only if @arg is not used
+    can_use_hints = not declared_args
+
     inferred_args: List[ParserAddArgumentSpec] = list(
-        infer_argspecs_from_function(function, name_mapping_policy=name_mapping_policy)
+        infer_argspecs_from_function(
+            function,
+            name_mapping_policy=name_mapping_policy,
+            can_use_hints=can_use_hints,
+        )
     )
 
     if declared_args and not inferred_args and not has_varkw:
@@ -660,3 +736,66 @@ def add_subcommands(
 
 class ArgumentNameMappingError(AssemblingError):
     ...
+
+
+class TypingHintArgSpecGuesser:
+    BASIC_TYPES = (str, int, float, bool)
+
+    @classmethod
+    def typing_hint_to_arg_spec_params(
+        cls, type_def: type, is_positional: bool = False
+    ) -> Dict[str, Any]:
+        origin = get_origin(type_def)
+        args = get_args(type_def)
+
+        # `str`
+        if type_def in cls.BASIC_TYPES:
+            return {
+                "type": type_def
+                # "type": _parse_basic_type(type_def)
+            }
+
+        # `list`
+        if type_def == list:
+            return {"nargs": ZERO_OR_MORE}
+
+        # `Literal["a", "b"]`
+        if origin == Literal:
+            return {"choices": args, "type": type(args[0])}
+
+        # `str | int`
+        if any(origin is t for t in UNION_TYPES):
+            retval = {}
+            first_subtype = args[0]
+            if first_subtype in cls.BASIC_TYPES:
+                retval["type"] = first_subtype
+
+            if first_subtype == list:
+                retval["nargs"] = ZERO_OR_MORE
+
+            if get_origin(first_subtype) == list:
+                retval["nargs"] = ZERO_OR_MORE
+                item_type = cls._extract_item_type_from_list_type(first_subtype)
+                if item_type:
+                    retval["type"] = item_type
+
+            if type(None) in args:
+                retval["required"] = False
+            return retval
+
+        # `list[str]`
+        if origin == list:
+            retval = {}
+            retval["nargs"] = ZERO_OR_MORE
+            if args[0] in cls.BASIC_TYPES:
+                retval["type"] = args[0]
+            return retval
+
+        return {}
+
+    @classmethod
+    def _extract_item_type_from_list_type(cls, type_def) -> Optional[type]:
+        args = get_args(type_def)
+        if args[0] in cls.BASIC_TYPES:
+            return args[0]
+        return None

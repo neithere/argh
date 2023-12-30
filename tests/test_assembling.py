@@ -3,6 +3,7 @@ Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import argparse
+from typing import Literal, Optional
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -398,6 +399,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_leg
         call("--gamma-pos-opt", default="gamma named", type=str, help=help_tmpl),
         call("--delta-pos-opt", default="delta named", type=str, help=help_tmpl),
         call("-t", "--theta-pos-opt", default="theta named", type=str, help=help_tmpl),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
         call("delta-kwonly-req", help=help_tmpl),
         call("epsilon-kwonly-req-one", help=help_tmpl),
@@ -405,7 +407,6 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_leg
         call(
             "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
         ),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
     assert parser.set_defaults.mock_calls == [
         call(function=big_command_with_everything)
@@ -472,6 +473,7 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_mod
             type=str,
             help=help_tmpl,
         ),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("--gamma-kwonly-opt", default="gamma kwonly", type=str, help=help_tmpl),
         call("--delta-kwonly-req", required=True, help=help_tmpl),
         call("--epsilon-kwonly-req-one", required=True, help=help_tmpl),
@@ -479,7 +481,6 @@ def test_set_default_command_infer_cli_arg_names_from_func_signature__policy_mod
         call(
             "-z", "--zeta-kwonly-opt", default="zeta kwonly", type=str, help=help_tmpl
         ),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
     assert parser.set_defaults.mock_calls == [
         call(function=big_command_with_everything)
@@ -641,9 +642,9 @@ def test_kwonlyargs__policy_legacy():
     assert parser.add_argument.mock_calls == [
         call("foo-pos", help=help_tmpl),
         call("bar-pos", help=help_tmpl),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("-f", "--foo-kwonly", default="foo_kwonly", type=str, help=help_tmpl),
         call("bar-kwonly", help=help_tmpl),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
 
 
@@ -662,9 +663,9 @@ def test_kwonlyargs__policy_modern():
     assert parser.add_argument.mock_calls == [
         call("foo-pos", help=help_tmpl),
         call("bar-pos", help=help_tmpl),
+        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
         call("-f", "--foo-kwonly", default="foo_kwonly", type=str, help=help_tmpl),
         call("-b", "--bar-kwonly", required=True, help=help_tmpl),
-        call("args", nargs=argparse.ZERO_OR_MORE, help=help_tmpl),
     ]
 
 
@@ -762,3 +763,160 @@ def test_is_positional():
     # this spec is invalid but validation is out of scope of the function
     # as it only checks if the first argument has the leading dash
     assert argh.assembling._is_positional(["-f", "foo"]) is False
+
+
+def test_typing_hints_only_used_when_arg_deco_not_used():
+    @argh.arg("foo", type=int)
+    def func_decorated(foo: Optional[float]):
+        ...
+
+    def func_undecorated(bar: Optional[float]):
+        ...
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(parser, func_decorated)
+    assert parser.add_argument.mock_calls == [
+        call("foo", type=int, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+    ]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(parser, func_undecorated)
+    assert parser.add_argument.mock_calls == [
+        call(
+            "bar",
+            nargs="?",
+            type=float,
+            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
+        ),
+    ]
+
+
+def test_typing_hints_overview():
+    def func(
+        alpha,
+        beta: str,
+        gamma: Optional[int] = None,
+        *,
+        delta: float = 1.5,
+        epsilon: Optional[int] = 42,
+        zeta: bool = False,
+    ) -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}, epsilon={epsilon}, zeta={zeta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", **_extra_kw),
+        call("beta", type=str, **_extra_kw),
+        call("gamma", default=None, nargs="?", type=int, **_extra_kw),
+        call("-d", "--delta", type=float, default=1.5, **_extra_kw),
+        call("-e", "--epsilon", type=int, default=42, required=False, **_extra_kw),
+        call("-z", "--zeta", default=False, action="store_true", **_extra_kw),
+    ]
+
+
+def test_typing_hints_str__policy_by_name_if_has_default():
+    def func(alpha: str, beta: str = "N/A", *, gamma: str, delta: str = "N/A") -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=str, **_extra_kw),
+        call("-b", "--beta", default="N/A", type=str, **_extra_kw),
+        call("gamma", type=str, **_extra_kw),
+        call("-d", "--delta", default="N/A", type=str, **_extra_kw),
+    ]
+
+
+def test_typing_hints_str__policy_by_name_if_kwonly():
+    def func(alpha: str, beta: str = "N/A", *, gamma: str, delta: str = "N/A") -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=str, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("beta", type=str, default="N/A", nargs="?", **_extra_kw),
+        call("-g", "--gamma", required=True, type=str, **_extra_kw),
+        call("-d", "--delta", default="N/A", type=str, **_extra_kw),
+    ]
+
+
+def test_typing_hints_bool__policy_by_name_if_has_default():
+    def func(
+        alpha: bool, beta: bool = False, *, gamma: bool, delta: bool = False
+    ) -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=bool, **_extra_kw),
+        call("-b", "--beta", default=False, action="store_true", **_extra_kw),
+        call("gamma", type=bool, **_extra_kw),
+        call("-d", "--delta", default=False, action="store_true", **_extra_kw),
+    ]
+
+
+def test_typing_hints_bool__policy_by_name_if_kwonly():
+    def func(
+        alpha: bool, beta: bool = False, *, gamma: bool, delta: bool = False
+    ) -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=bool, **_extra_kw),
+        call("beta", type=bool, default=False, nargs="?", **_extra_kw),
+        call("-g", "--gamma", required=True, type=bool, **_extra_kw),
+        call("-d", "--delta", default=False, action="store_true", **_extra_kw),
+    ]
+
+
+def test_typing_hints_literal():
+    def func(
+        name: Literal["Alice", "Bob"], *, greeting: Literal["Hello", "Hi"] = "Hello"
+    ) -> str:
+        return f"{greeting}, {name}!"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("name", choices=("Alice", "Bob"), type=str, **_extra_kw),
+        call(
+            "-g",
+            "--greeting",
+            choices=("Hello", "Hi"),
+            type=str,
+            default="Hello",
+            **_extra_kw,
+        ),
+    ]

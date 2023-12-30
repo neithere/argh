@@ -11,13 +11,11 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
-import warnings
 from typing import Callable, List, Optional
 
 from argh.constants import (
     ATTR_ALIASES,
     ATTR_ARGS,
-    ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_NAME,
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
@@ -25,7 +23,7 @@ from argh.constants import (
 from argh.dto import ParserAddArgumentSpec
 from argh.utils import CliArgToFuncArgGuessingError, naive_guess_func_arg_name
 
-__all__ = ["aliases", "named", "arg", "wrap_errors", "expects_obj"]
+__all__ = ["aliases", "named", "arg", "wrap_errors"]
 
 
 def named(new_name: str) -> Callable:
@@ -205,40 +203,3 @@ def wrap_errors(
         return func
 
     return wrapper
-
-
-# TODO: deprecated — remove in v0.31+
-def expects_obj(func: Callable) -> Callable:
-    """
-    Marks given function as expecting a namespace object.
-
-    .. deprecated:: 0.30
-        Will removed in v0.31 or a later version.
-
-        Please consider using the main feature Argh offers — the mapping of
-        function signature to CLI.  Otherwise you are basically using vanilla
-        Argparse.
-
-    Usage::
-
-        @arg("bar")
-        @arg("--quux", default=123)
-        @expects_obj
-        def foo(args):
-            yield args.bar, args.quux
-
-    This is equivalent to::
-
-        def foo(bar, quux=123):
-            yield bar, quux
-
-    In most cases you don't need this decorator.
-    """
-    warnings.warn(
-        DeprecationWarning(
-            "The @expects_obj decorator is deprecated. Please update "
-            'your code to use the standard approach AKA "Natural Way".'
-        )
-    )
-    setattr(func, ATTR_EXPECTS_NAMESPACE_OBJECT, True)
-    return func

@@ -12,23 +12,22 @@ Dispatching
 ~~~~~~~~~~~
 """
 import argparse
+import inspect
 import io
 import sys
 import warnings
 from types import GeneratorType
 from typing import IO, Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-from argh.assembling import add_commands, set_default_command
+from argh.assembling import NameMappingPolicy, add_commands, set_default_command
 from argh.completion import autocomplete
 from argh.constants import (
-    ATTR_EXPECTS_NAMESPACE_OBJECT,
     ATTR_WRAPPED_EXCEPTIONS,
     ATTR_WRAPPED_EXCEPTIONS_PROCESSOR,
     DEST_FUNCTION,
     PARSER_FORMATTER,
 )
 from argh.exceptions import CommandError, DispatchingError
-from argh.utils import get_arg_spec
 
 __all__ = [
     "ArghNamespace",
@@ -79,6 +78,7 @@ def dispatch(
     raw_output: bool = False,
     namespace: Optional[argparse.Namespace] = None,
     skip_unknown_args: bool = False,
+    always_flush: bool = False,
 ) -> Optional[str]:
     """
     Parses given list of arguments using given parser, calls the relevant
@@ -137,10 +137,22 @@ def dispatch(
 
     :param namespace:
 
-        An `argparse.Namespace`-like object.  By default an
-        :class:`argh.dispatching.ArghNamespace` object is used.  Please note
-        that support for combined default and nested functions may be broken
-        if a different type of object is forced.
+        .. deprecated:: 0.31
+
+          This argument will be removed soon after v0.31.
+
+    :param always_flush:
+
+        If the output stream is not a terminal (i.e. redirected to a file or
+        another process), it's probably buffered.  In most cases it doesn't
+        matter.
+
+        However, if the output of your program is generated with delays
+        between the lines and you may want to redirect them to another process
+        and immediately see the results (e.g. `my_app.py | grep something`),
+        it's a good idea to force flushing of the buffer.
+
+        .. versionadded:: 0.31
 
     By default the exceptions are not wrapped and will propagate. The only
     exception that is always wrapped is :class:`~argh.exceptions.CommandError`
@@ -151,6 +163,13 @@ def dispatch(
     Wrapped exceptions, or other "expected errors" like parse failures,
     will cause a SystemExit to be raised.
     """
+    if namespace:
+        warnings.warn(
+            DeprecationWarning(
+                "The argument `namespace` in `dispatch()` is deprecated. "
+                "It will be removed in the next minor version after v0.31."
+            )
+        )
 
     # TODO: remove in v0.31+/v1.0
     if add_help_command:  # pragma: nocover
@@ -182,6 +201,7 @@ def dispatch(
         output_file=output_file,
         errors_file=errors_file,
         raw_output=raw_output,
+        always_flush=always_flush,
     )
 
 
@@ -196,6 +216,12 @@ def parse_and_resolve(
     .. versionadded:: 0.30
 
     Parses CLI arguments and resolves the endpoint function.
+
+    :param namespace:
+
+        .. deprecated:: 0.31
+
+          This argument will be removed soon after v0.31.
     """
     if completion:
         autocomplete(parser)
@@ -225,20 +251,29 @@ def run_endpoint_function(
     output_file: IO = sys.stdout,
     errors_file: IO = sys.stderr,
     raw_output: bool = False,
+    always_flush: bool = False,
 ) -> Optional[str]:
     """
     .. versionadded:: 0.30
 
     Extracts arguments from the namespace object, calls the endpoint function
     and processes its output.
+
+    :param always_flush:
+
+        Flush the buffer after every line even if `output_file` is not a TTY.
+        Turn this off if you don't need dynamic output)
     """
     lines = _execute_command(function, namespace_obj, errors_file)
 
-    return _process_command_output(lines, output_file, raw_output)
+    return _process_command_output(lines, output_file, raw_output, always_flush)
 
 
 def _process_command_output(
-    lines: Iterator[str], output_file: Optional[IO], raw_output: bool
+    lines: Iterator[str],
+    output_file: Optional[IO],
+    raw_output: bool,
+    always_flush: bool,
 ) -> Optional[str]:
     out_io: IO
 
@@ -259,6 +294,14 @@ def _process_command_output(
         if not raw_output:
             # in most cases user wants one message per line
             out_io.write("\n")
+
+        # If it's not a terminal (i.e. redirected to a file or another
+        # process), it's probably buffered.  In most cases it doesn't matter
+        # but if the output is generated with delays between the lines and we
+        # may want to monitor it (e.g. `my_app.py | grep something`), it's a
+        # good idea to force flushing.
+        if always_flush:
+            out_io.flush()
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
@@ -307,39 +350,48 @@ def _execute_command(
     # the function is nested to catch certain exceptions (see below)
     def _call():
         # Actually call the function
-        if getattr(function, ATTR_EXPECTS_NAMESPACE_OBJECT, False):
-            result = function(namespace_obj)
-        else:
-            # namespace -> dictionary
-            def _flat_key(key):
-                return key.replace("-", "_")
 
-            all_input = dict((_flat_key(k), v) for k, v in vars(namespace_obj).items())
+        # namespace -> dictionary
+        def _flat_key(key):
+            return key.replace("-", "_")
 
-            # filter the namespace variables so that only those expected
-            # by the actual function will pass
+        values_by_arg_name = dict(
+            (_flat_key(k), v) for k, v in vars(namespace_obj).items()
+        )
 
-            spec = get_arg_spec(function)
+        # filter the namespace variables so that only those expected
+        # by the actual function will pass
 
-            positional = [all_input[k] for k in spec.args]
-            kwonly = getattr(spec, "kwonlyargs", [])
-            keywords = dict((k, all_input[k]) for k in kwonly)
+        func_signature = inspect.signature(function)
+        func_params = func_signature.parameters.values()
 
-            # *args
-            if spec.varargs:
-                positional += all_input[spec.varargs]
+        positional_names = [
+            p.name
+            for p in func_params
+            if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+        ]
+        kwonly_names = [p.name for p in func_params if p.kind == p.KEYWORD_ONLY]
+        varargs_names = [p.name for p in func_params if p.kind == p.VAR_POSITIONAL]
+        positional_values = [values_by_arg_name[name] for name in positional_names]
+        values_by_name = dict((k, values_by_arg_name[k]) for k in kwonly_names)
 
-            # **kwargs
-            varkw = getattr(spec, "varkw", getattr(spec, "keywords", []))
-            if varkw:
-                not_kwargs = [DEST_FUNCTION] + spec.args + [spec.varargs] + kwonly
-                for k in vars(namespace_obj):
-                    normalized_k = _flat_key(k)
-                    if k.startswith("_") or normalized_k in not_kwargs:
-                        continue
-                    keywords[normalized_k] = getattr(namespace_obj, k)
+        # *args
+        if varargs_names:
+            value = varargs_names[0]
+            positional_values += values_by_arg_name[value]
 
-            result = function(*positional, **keywords)
+        # **kwargs
+        if any(p for p in func_params if p.kind == p.VAR_KEYWORD):
+            not_kwargs = (
+                [DEST_FUNCTION] + positional_names + varargs_names + kwonly_names
+            )
+            for k in vars(namespace_obj):
+                normalized_k = _flat_key(k)
+                if k.startswith("_") or normalized_k in not_kwargs:
+                    continue
+                values_by_name[normalized_k] = getattr(namespace_obj, k)
+
+        result = function(*positional_values, **values_by_name)
 
         # Yield the results
         if isinstance(result, (GeneratorType, list, tuple)):
@@ -375,10 +427,22 @@ def _execute_command(
         sys.exit(code)
 
 
-def dispatch_command(function: Callable, *args, **kwargs) -> None:
+def dispatch_command(
+    function: Callable, *args, old_name_mapping_policy=True, **kwargs
+) -> None:
     """
     A wrapper for :func:`dispatch` that creates a one-command parser.
     Uses :attr:`argh.constants.PARSER_FORMATTER`.
+
+    :param old_name_mapping_policy:
+
+        .. versionadded:: 0.31
+
+        If `True`, sets the default argument naming policy to
+        `~argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT`, otherwise
+        to `~argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY`.
+
+        .. warning:: tho default will be changed to `False` in v.0.33 (or v.1.0).
 
     This::
 
@@ -387,7 +451,7 @@ def dispatch_command(function: Callable, *args, **kwargs) -> None:
     ...is a shortcut for::
 
         parser = ArgumentParser()
-        set_default_command(parser, foo)
+        set_default_command(parser, foo, name_mapping_policy=...)
         dispatch(parser)
 
     This function can be also used as a decorator::
@@ -397,16 +461,33 @@ def dispatch_command(function: Callable, *args, **kwargs) -> None:
             return foo + 1
 
     """
+    if old_name_mapping_policy:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    else:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_KWONLY
+
     parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
-    set_default_command(parser, function)
+    set_default_command(parser, function, name_mapping_policy=name_mapping_policy)
     dispatch(parser, *args, **kwargs)
 
 
-def dispatch_commands(functions: List[Callable], *args, **kwargs) -> None:
+def dispatch_commands(
+    functions: List[Callable], *args, old_name_mapping_policy=True, **kwargs
+) -> None:
     """
     A wrapper for :func:`dispatch` that creates a parser, adds commands to
     the parser and dispatches them.
     Uses :attr:`PARSER_FORMATTER`.
+
+    :param old_name_mapping_policy:
+
+        .. versionadded:: 0.31
+
+        If `True`, sets the default argument naming policy to
+        `~argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT`, otherwise
+        to `~argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY`.
+
+        .. warning:: tho default will be changed to `False` in v.0.33 (or v.1.0).
 
     This::
 
@@ -415,12 +496,17 @@ def dispatch_commands(functions: List[Callable], *args, **kwargs) -> None:
     ...is a shortcut for::
 
         parser = ArgumentParser()
-        add_commands(parser, [foo, bar])
+        add_commands(parser, [foo, bar], name_mapping_policy=...)
         dispatch(parser)
 
     """
+    if old_name_mapping_policy:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    else:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_KWONLY
+
     parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
-    add_commands(parser, functions)
+    add_commands(parser, functions, name_mapping_policy=name_mapping_policy)
     dispatch(parser, *args, **kwargs)
 
 
@@ -441,13 +527,13 @@ class EntryPoint:
         app = EntryPoint("main", {"description": "This is a cool app"})
 
         @app
-        def ls() -> None:
+        def ls() -> Iterator[int]:
             for i in range(10):
-                print i
+                yield i
 
         @app
-        def greet() -> None:
-            print "hello"
+        def greet() -> str:
+            return "hello"
 
         if __name__ == "__main__":
             app()

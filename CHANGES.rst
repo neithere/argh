@@ -1,6 +1,71 @@
-~~~~~~~~~
 Changelog
-~~~~~~~~~
+=========
+
+Version 0.31.0 (2023-12-30)
+---------------------------
+
+Breaking changes:
+
+- The typing hints introspection feature is automatically enabled for any
+  command (function) which does **not** have any arguments specified via `@arg`
+  decorator.
+
+  This means that, for example, the following function used to fail and now
+  it will pass::
+
+      def main(count: int):
+          assert isinstance(count, int)
+
+  This may lead to unexpected behaviour in some rare cases.
+
+- A small change in the legacy argument mapping policy `BY_NAME_IF_HAS_DEFAULT`
+  concerning the order of variadic positional vs. keyword-only arguments.
+
+  The following function now results in ``main alpha [args ...] beta`` instead of
+  ``main alpha beta [args ...]``::
+
+      def main(alpha, *args, beta): ...
+
+  This does **not** concern the default name mapping policy.  Even for the
+  legacy one it's an edge case which is extremely unlikely to appear in any
+  real-life application.
+
+- Removed the previously deprecated decorator `@expects_obj`.
+
+Enhancements:
+
+- Added experimental support for basic typing hints (issue #203)
+
+  The following hints are currently supported:
+
+  - ``str``, ``int``, ``float``, ``bool`` (goes to ``type``);
+  - ``list`` (affects ``nargs``), ``list[T]`` (first subtype goes into ``type``);
+  - ``Literal[T1, T2, ...]`` (interpreted as ``choices``);
+  - ``Optional[T]`` AKA ``T | None`` (currently interpreted as
+    ``required=False`` for optional and ``nargs="?"`` for positional
+    arguments; likely to change in the future as use cases accumulate).
+
+  The exact interpretation of the type hints is subject to change in the
+  upcoming versions of Argh.
+
+- Added `always_flush` argument to `dispatch()` (issue #145)
+
+- High-level functions `argh.dispatch_command()` and `argh.dispatch_commands()`
+  now accept a new parameter `old_name_mapping_policy`.  The behaviour hasn't
+  changed because the parameter is `True` by default.  It will change to
+  `False` in Argh v.0.33 or v.1.0.
+
+Deprecated:
+
+- the `namespace` argument in `argh.dispatch()` and `argh.parse_and_resolve()`.
+  Rationale: continued API cleanup.  It's already possible to mutate the
+  namespace object between parsing and calling the endpoint; it's unlikely that
+  anyone would need to specify a custom namespace class or pre-populate it
+  before parsing.  Please file an issue if you have a valid use case.
+
+Other changes:
+
+- Refactoring.
 
 Version 0.30.5 (2023-12-25)
 ---------------------------

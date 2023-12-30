@@ -1,5 +1,5 @@
 Real-life usage
-~~~~~~~~~~~~~~~
+===============
 
 Below are some examples of applications using `argh`, grouped by supported
 version of Python.

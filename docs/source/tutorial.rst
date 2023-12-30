@@ -1,5 +1,5 @@
 Tutorial
-~~~~~~~~
+========
 
 `Argh` is a small library that provides several layers of abstraction on top
 of `argparse`.  You are free to use any layer that fits given task best.
@@ -7,80 +7,7 @@ The layers can be mixed.  It is always possible to declare a command with
 the  highest possible (and least flexible) layer and then tune the behaviour
 with any of the lower layers including the native API of `argparse`.
 
-Dive In
--------
-
-Assume we need a CLI application which output is modulated by arguments:
-
-.. code-block:: bash
-
-    $ ./greet.py
-    Hello unknown user!
-
-    $ ./greet.py John
-    Hello John!
-
-This is our business logic:
-
-.. code-block:: python
-
-    def main(name: str = "unknown user") -> str:
-        return f"Hello {name}!"
-
-That was plain Python, nothing CLI-specific.
-Let's convert the function into a complete CLI application::
-
-    argh.dispatch_command(main)
-
-Done.  Dead simple.
-
-You may want to make the name an "option" AKA named CLI argument, like this::
-
-    $ ./greet.py --name John
-
-In that case it's enough to make the function argument `name` "keyword-only"
-(see :pep:`3102` for explanation)::
-
-    def main(*, name: str = "unknown user") -> str:
-        ...
-
-Everything to the left of ``*`` becomes a positional CLI argument.  Everything
-to the right of ``*`` becomes a named one.
-
-What about multiple commands?  Easy::
-
-    argh.dispatch_commands([load, dump])
-
-And then call your script like this::
-
-    $ ./app.py dump
-    $ ./app.py load fixture.json
-    $ ./app.py load fixture.yaml --format=yaml
-
-I guess you get the picture.  The commands are **ordinary functions**
-with ordinary signatures:
-
-* Declare them somewhere, dispatch them elsewhere.  This ensures **loose
-  coupling** of components in your application.
-* They are **natural** and pythonic. No fiddling with the parser and the
-  related intricacies like ``action="store_true"`` which you could never
-  remember.
-
-Still, there's much more to commands than this.
-
-The examples above raise some questions, including:
-
-* do we have to ``return``, or ``print`` and ``yield`` are also supported?
-* what's the difference between ``dispatch_command()``
-  and ``dispatch_commands()``?  What's going on under the hood?
-* how do I add help for each argument?
-* how do I access the parser to fine-tune its behaviour?
-* how to keep the code as DRY as possible?
-* how do I expose the function under custom name and/or define aliases?
-* how do I have values converted to given type?
-* can I use a namespace object instead of the natural way?
-
-Just read on.
+Please make sure you have read the :doc:`quickstart` before proceeding.
 
 Declaring Commands
 ------------------
@@ -115,9 +42,25 @@ Let's make this function available as a CLI command::
 
 
     if __name__ == "__main__":
-        argh.dispatch_commands([my_command])
+        argh.dispatch_commands([my_command], old_name_mapping_policy=False)
 
 That's all.  You don't need to do anything else.
+
+.. note::
+
+    Note that we're using ``old_name_mapping_policy=False`` here and in some
+    other examples.  This has to do with the recent changes in the default way
+    Argh maps function arguments to CLI arguments.  We're currently in a
+    transitional period.
+
+    In most cases Argh can guess what you want but there are edge cases, and
+    the `beta` argument is one of them.  It's a positional argument with
+    default value.  Usually you will not need those but it's shown here for the
+    sake of completeness.  Argh does not know how you want to treat it, so you
+    should specify the name mapping policy explicitly.  This issue will go away
+    when `BY_NAME_IF_KWONLY` becomes the default policy (v.1.0 or earlier).
+
+    See :class:`~argh.assembling.NameMappingPolicy` for details.
 
 When executed as ``./app.py my-command --help``, such application prints::
 
@@ -168,7 +111,7 @@ single line in addition to your function.
 
 `Argh` allows for more expressive and pythonic code because:
 
-* everything is inferred from the function signature;
+* everything is inferred from the function signature and type annotations;
 * regular function arguments are represented as positional CLI arguments;
 * varargs (``*args``) are represented as a "zero or more" positional CLI argument;
 * kwonly (keyword-only arguments, see :pep:`3102`) are represented as named CLI
@@ -188,6 +131,72 @@ natural: `argh` does a lot of work for you.
 Well, there's nothing more elegant than a simple function.  But simplicity
 comes at a cost in terms of flexibility.  Fortunately, `argh` doesn't stay in
 the way and offers less natural but more powerful tools.
+
+Annotations
+...........
+
+Since v.0.31 `Argh` can use type annotations to infer the argument types and
+some other properties.  This approach will eventually replace the `@arg`
+decorator.
+
+Inferring the type
+~~~~~~~~~~~~~~~~~~
+
+Let's consider this example::
+
+    def increment(n: int) -> int:
+        return n + 1
+
+The `n` argument will be automatically converted to `int`.
+
+Currently supported types are:
+
+- `str`
+- `int`
+- `float`
+- `bool`
+
+Inferring choices
+~~~~~~~~~~~~~~~~~
+
+Use `Literal` to specify the choices::
+
+    from typing import Literal
+    import argh
+
+    def greet(name: Literal["Alice", "Bob"]) -> str:
+        return f"Hello, {name}!"
+
+    argh.dispatch_command(greet)
+
+Let's explore this CLI::
+
+    $ ./greet.py foo
+    usage: greet.py [-h] {Alice,Bob}
+    greet.py: error: argument name: invalid choice: 'foo' (choose from 'Alice', 'Bob')
+
+    $ ./greet.py Alice
+    Hello, Alice!
+
+Inferring nargs and nested type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here's another example::
+
+    def summarise(numbers: list[int]) -> int:
+        return sum(numbers)
+
+    argh.dispatch_command(summarise)
+
+Let's call it::
+
+    $ ./app.py 1 2 3
+    6
+
+The ``list[int]`` hint was interpreted as ``nargs="+"`` + ``type=int``.
+
+Please note that this part of the API is experimental and may change in the
+future releases.
 
 Documenting Your Commands
 .........................
@@ -252,35 +261,6 @@ Mixing ``**kwargs`` with straightforward signatures is also possible::
    It is not recommended to mix ``*args`` with extra *positional* arguments
    declared via decorators because the results can be pretty confusing (though
    predictable).  See `argh` tests for details.
-
-Namespace Objects
-.................
-
-The default approach of `argparse` is similar to ``**kwargs``: the function
-expects a single object and the CLI arguments are defined elsewhere.
-
-In order to dispatch such "argparse-style" command via `argh`, you need to
-tell the latter that the function expects a namespace object.  This is done by
-wrapping the function into the :func:`~argh.decorators.expects_obj` decorator::
-
-    @expects_obj
-    def cmd(args) -> str:
-        return args.foo
-
-This way arguments cannot be defined in the Natural Way but the
-:class:`~argh.decorators.arg` decorator works as usual.
-
-.. deprecated:: 0.30
-    The `@expects_obj` decorator will removed in v0.31 or a later version.
-    Please consider using the main feature Argh offers — the mapping of
-    function signature to CLI.  Otherwise you are basically using vanilla
-    Argparse.
-
-.. note::
-
-   In both cases — ``**kwargs``-only and `@expects_obj` — the arguments
-   **must** be declared via decorators or directly via the `argparse` API.
-   Otherwise the command has zero arguments (apart from ``--help``).
 
 Assembling Commands
 -------------------

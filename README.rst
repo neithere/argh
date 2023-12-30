@@ -43,28 +43,15 @@ In a nutshell
 
 `Argh`-powered applications are *simple* but *flexible*:
 
-:Modular:
-    Declaration of commands can be decoupled from assembling and dispatching;
-
-:Pythonic:
-    Commands are declared naturally, no complex API calls in most cases;
+:Pythonic, KISS:
+    Commands are plain Python functions.  Almost no CLI-specific API to learn.
 
 :Reusable:
-    Commands are plain functions, can be used directly outside of CLI context;
+    Endpoint functions can be used directly outside of CLI context.
 
-:Layered:
-    The complexity of code raises with requirements;
-
-:Transparent:
-    The full power of argparse is available whenever needed;
-
-:Namespaced:
-    Nested commands are a piece of cake, no messing with subparsers (though
-    they are of course used under the hood);
-
-:Unobtrusive:
-    `Argh` can dispatch a subset of pure-`argparse` code, and pure-`argparse`
-    code can update and dispatch a parser assembled with `Argh`;
+:Static typing friendly:
+    100% of the code including endpoint functions can be type-checked.
+    Argh is driven primarily by type annotations.
 
 :DRY:
     Don't Repeat Yourself.  The amount of boilerplate code is minimal.
@@ -72,14 +59,28 @@ In a nutshell
 
     * infer command name from function name;
     * infer arguments from function signature;
-    * infer argument type from the default value;
-    * infer argument action from the default value (for booleans);
+    * infer argument types, actions and much more from annotations.
+
+:Modular:
+    Declaration of commands can be decoupled from assembling and dispatching.
+
+:Layered:
+    The complexity of code raises with requirements.
+
+:Transparent:
+    You can directly access `argparse.ArgumentParser` if needed.
+
+:Subcommands:
+    Easily nested commands.  Argh isolates the complexity of subparsers.
 
 :NIH free:
     `Argh` supports *completion*, *progress bars* and everything else by being
     friendly to excellent 3rd-party libraries.  No need to reinvent the wheel.
 
-Sounds good?  Check the tutorial!
+:Compact:
+    No dependencies apart from Python's standard library.
+
+Sounds good?  Check the :doc:`quickstart` and the :doc:`tutorial`!
 
 Relation to argparse
 --------------------
@@ -97,6 +98,9 @@ Installation
 
 Examples
 --------
+
+Hello World
+...........
 
 A very simple application with one command:
 
@@ -116,6 +120,29 @@ Run it:
     $ ./app.py
     Hello world
 
+Type Annotations
+................
+
+Type annotations are used to infer argument types:
+
+.. code-block:: python
+
+    def summarise(numbers: list[int]) -> int:
+        return sum(numbers)
+
+    argh.dispatch_command(summarise)
+
+Run it (note that ``nargs="+"`` + ``type=int`` were inferred from the
+annotation):
+
+.. code-block:: bash
+
+    $ ./app.py 1 2 3
+    6
+
+Multiple Commands
+.................
+
 An app with multiple commands:
 
 .. code-block:: python
@@ -132,6 +159,9 @@ Run it:
 
     $ ./app.py echo Hey
     Hey
+
+Modularity
+..........
 
 A potentially modular application with more control over the process:
 
@@ -195,31 +225,19 @@ to CLI arguments)::
 
 (The help messages have been simplified a bit for brevity.)
 
+Decorators
+..........
+
 `Argh` easily maps plain Python functions to CLI.  Sometimes this is not
 enough; in these cases the powerful API of `argparse` is also available:
 
 .. code-block:: python
 
-    @arg("text", default="hello world", nargs="+", help="The message")
-    def echo(text: str) -> None:
-        print text
+    @arg("words", default="hello world", nargs="+", help="The message")
+    def echo(words: list[str]) -> str:
+        return " ".join(words)
 
-The approaches can be safely combined even up to this level:
-
-.. code-block:: python
-
-    # adding help to `foo` which is in the function signature:
-    @arg("foo", help="blah")
-    # these are not in the signature so they go to **kwargs:
-    @arg("baz")
-    @arg("-q", "--quux")
-    # the function itself:
-    def cmd(foo: str, bar: int = 1, *args, **kwargs) -> Iterator[str]:
-        yield foo
-        yield bar
-        yield ", ".join(args)
-        yield kwargs["baz"]
-        yield kwargs["quux"]
+Please note that decorators will soon be fully replaced with annotations.
 
 Links
 -----

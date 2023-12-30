@@ -50,8 +50,29 @@ def test_dispatch_command(mock_set_default_command, mock_dispatch, mock_parser_c
 
     mock_parser_class.assert_called_once()
     mock_parser = mock_parser_class.return_value
-    mock_set_default_command.assert_called_with(mock_parser, func)
+    mock_set_default_command.assert_called_with(
+        mock_parser,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
     mock_dispatch.assert_called_with(mock_parser)
+
+
+@pytest.mark.parametrize("always_flush", [True, False])
+def test_run_endpoint_function__always_flush(always_flush):
+    def func():
+        return ["first line", "second line"]
+
+    out_io = Mock(spec=io.StringIO)
+
+    argh.dispatching.run_endpoint_function(
+        func, argparse.Namespace(), output_file=out_io, always_flush=always_flush
+    )
+
+    if always_flush:
+        assert out_io.flush.call_count == 2
+    else:
+        out_io.flush.assert_not_called()
 
 
 @patch("argh.dispatching.parse_and_resolve")
@@ -68,6 +89,7 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
     mock_errors_file = Mock(io.TextIOBase)
     raw_output = False
     skip_unknown_args = False
+    always_flush = True
     mock_endpoint_function = Mock()
     mock_namespace = Mock(argparse.Namespace)
     mock_namespace_obj = Mock(argparse.Namespace)
@@ -83,6 +105,7 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
         output_file=mock_output_file,
         errors_file=mock_errors_file,
         raw_output=raw_output,
+        always_flush=always_flush,
     )
 
     mock_parse_and_resolve.assert_called_with(
@@ -98,6 +121,7 @@ def test_dispatch_command_two_stage(mock_run_endpoint_function, mock_parse_and_r
         output_file=mock_output_file,
         errors_file=mock_errors_file,
         raw_output=raw_output,
+        always_flush=always_flush,
     )
     assert retval == "run_endpoint_function retval"
 
@@ -113,7 +137,11 @@ def test_dispatch_commands(mock_add_commands, mock_dispatch, mock_parser_class):
 
     mock_parser_class.assert_called_once()
     mock_parser = mock_parser_class.return_value
-    mock_add_commands.assert_called_with(mock_parser, [func])
+    mock_add_commands.assert_called_with(
+        mock_parser,
+        [func],
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
     mock_dispatch.assert_called_with(mock_parser)
 
 
@@ -162,3 +190,75 @@ def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
     add_commands_mock.assert_called_with(mocked_parser, [greet, hit])
     assert dispatch_mock.called
     dispatch_mock.assert_called_with(mocked_parser)
+
+
+@patch("argh.dispatching.dispatch")
+@patch("argh.dispatching.set_default_command")
+@patch("argparse.ArgumentParser")
+def test_dispatch_command_naming_policy(
+    parser_cls_mock, set_default_command_mock, dispatch_mock
+):
+    def func():
+        ...
+
+    parser_mock = Mock()
+    parser_cls_mock.return_value = parser_mock
+
+    argh.dispatching.dispatch_command(func)
+    set_default_command_mock.assert_called_with(
+        parser_mock,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
+    set_default_command_mock.reset_mock()
+
+    argh.dispatching.dispatch_command(func, old_name_mapping_policy=True)
+    set_default_command_mock.assert_called_with(
+        parser_mock,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
+    set_default_command_mock.reset_mock()
+
+    argh.dispatching.dispatch_command(func, old_name_mapping_policy=False)
+    set_default_command_mock.assert_called_with(
+        parser_mock,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY,
+    )
+
+
+@patch("argh.dispatching.dispatch")
+@patch("argh.dispatching.add_commands")
+@patch("argparse.ArgumentParser")
+def test_dispatch_commands_naming_policy(
+    parser_cls_mock, add_commands_mock, dispatch_mock
+):
+    def func():
+        ...
+
+    parser_mock = Mock()
+    parser_cls_mock.return_value = parser_mock
+
+    argh.dispatching.dispatch_commands(func)
+    add_commands_mock.assert_called_with(
+        parser_mock,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
+    add_commands_mock.reset_mock()
+
+    argh.dispatching.dispatch_commands(func, old_name_mapping_policy=True)
+    add_commands_mock.assert_called_with(
+        parser_mock,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT,
+    )
+    add_commands_mock.reset_mock()
+
+    argh.dispatching.dispatch_commands(func, old_name_mapping_policy=False)
+    add_commands_mock.assert_called_with(
+        parser_mock,
+        func,
+        name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY,
+    )
