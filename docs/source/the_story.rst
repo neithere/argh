@@ -98,15 +98,21 @@ A minimal example (note how there's literally nothing CLI-specific here)::
 A more complete example::
 
     from typing import Annotated
-    from argh import Choices, Help
+    from argh import Help
+
+
+    FORMAT_CHOICES = "json", "yaml"
+    DEFAULT_FORMAT = FORMAT_CHOICES[0]
+
 
     def load(
         path: Annotated[str, Help("path to the file to load")],
         *,
-        file_format: Annotated[str, Choices(FORMAT_CHOICES))] = DEFAULT_FORMAT,
+        file_format: Annotated[str, Literal[FORMAT_CHOICES])] = DEFAULT_FORMAT,
         dry_run: bool = False
     ) -> str:
         return do_something(path, file_format, dry_run)
+
 
     argh.dispatch_command(load)
 
