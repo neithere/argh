@@ -23,6 +23,7 @@ Details
 .. toctree::
    :maxdepth: 2
 
+   quickstart
    tutorial
    reference
    cookbook

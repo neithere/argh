@@ -79,7 +79,7 @@ In a nutshell
     `Argh` supports *completion*, *progress bars* and everything else by being
     friendly to excellent 3rd-party libraries.  No need to reinvent the wheel.
 
-Sounds good?  Check the tutorial!
+Sounds good?  Check the :doc:`quickstart` and the :doc:`tutorial`!
 
 Relation to argparse
 --------------------
