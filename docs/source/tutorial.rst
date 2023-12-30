@@ -49,7 +49,17 @@ Save it as `greet.py` and try to run it::
     $ ./greet.py
     Hello unknown user!
 
-It works!  Now try passing arguments.  Use ``--help`` if unsure.
+It works!  Now try passing arguments.  Use ``--help`` if unsure::
+
+    $ ./greet.py --help
+
+    usage: greet.py [-h] [name]
+
+    positional arguments:
+      name        'unknown user'
+
+    options:
+      -h, --help  show this help message and exit
 
 Multiple positional arguments; limitations
 ..........................................
@@ -96,6 +106,16 @@ In that case it's enough to make the function argument `name` "keyword-only"
         ...
 
 We just took the previous function and added ``*,`` before the first argument.
+
+Let's check how the app help now look like::
+
+    $ ./greet.py --help
+
+    usage: greet.py [-h] [-n NAME]
+
+    options:
+      -h, --help            show this help message and exit
+      -n NAME, --name NAME  'unknown user'
 
 Positional vs options: recap
 ............................
