@@ -3,7 +3,7 @@ Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 import argparse
-from typing import Optional
+from typing import Literal, Optional
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -894,4 +894,20 @@ def test_typing_hints_bool__policy_by_name_if_kwonly():
         call("beta", type=bool, default=False, nargs="?", **_extra_kw),
         call("-g", "--gamma", required=True, type=bool, **_extra_kw),
         call("-d", "--delta", default=False, action="store_true", **_extra_kw),
+    ]
+
+
+def test_typing_hints_literal():
+    def func(name: Literal["Alice", "Bob"], *, greeting: Literal["Hello", "Hi"] = "Hello") -> str:
+        return f"{greeting}, {name}!"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("name", choices=("Alice", "Bob"), type=str, **_extra_kw),
+        call("-g", "--greeting", choices=("Hello", "Hi"), type=str, default="Hello", **_extra_kw),
     ]

@@ -139,13 +139,47 @@ Since v.0.31 `Argh` can use type annotations to infer the argument types and
 some other properties.  This approach will eventually replace the `@arg`
 decorator.
 
+Inferring the type
+~~~~~~~~~~~~~~~~~~
+
 Let's consider this example::
 
     def increment(n: int) -> int:
         return n + 1
 
-The `n` argument will be automatically converted to `int`.  Currently supported
-types are `str`, `int`, `float` and `bool`.
+The `n` argument will be automatically converted to `int`.
+
+Currently supported types are:
+
+- `str`
+- `int`
+- `float`
+- `bool`
+
+Inferring choices
+~~~~~~~~~~~~~~~~~
+
+Use `Literal` to specify the choices::
+
+    from typing import Literal
+    import argh
+
+    def greet(name: Literal["Alice", "Bob"]) -> str:
+        return f"Hello, {name}!"
+
+    argh.dispatch_command(greet)
+
+Let's explore this CLI::
+
+    $ ./greet.py foo
+    usage: greet.py [-h] {Alice,Bob}
+    greet.py: error: argument name: invalid choice: 'foo' (choose from 'Alice', 'Bob')
+
+    $ ./greet.py Alice
+    Hello, Alice!
+
+Inferring nargs and nested type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here's another example::
 

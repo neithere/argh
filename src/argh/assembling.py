@@ -25,6 +25,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     Tuple,
     Union,
@@ -757,6 +758,10 @@ class TypingHintArgSpecGuesser:
         # `list`
         if type_def == list:
             return {"nargs": "*"}
+
+        # `Literal["a", "b"]`
+        if origin == Literal:
+            return {"choices": args, "type": type(args[0])}
 
         # `str | int`
         if any(origin is t for t in UNION_TYPES):

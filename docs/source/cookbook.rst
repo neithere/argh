@@ -46,9 +46,4 @@ will be eventually the default one):
         distros = ("abc", "xyz")
         return [d for d in distros if any(p in d for p in patterns)]
 
-    if __name__ == "__main__":
-        parser = argh.ArghParser()
-        parser.set_default_command(
-            cmd, name_mapping_policy=argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY
-        )
-        argh.dispatch(parser)
+    argh.dispatch_command(cmd, old_name_mapping_policy=False)

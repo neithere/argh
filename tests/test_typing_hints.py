@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 import pytest
 
@@ -43,6 +43,14 @@ def test_list():
 
     assert guess(List[list]) == {"nargs": "*"}
     assert guess(List[tuple]) == {"nargs": "*"}
+
+
+def test_literal():
+    guess = TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params
+
+    assert guess(Literal["a"]) == {"choices": ("a",), "type": str}
+    assert guess(Literal["a", "b"]) == {"choices": ("a", "b"), "type": str}
+    assert guess(Literal[1]) == {"choices": (1,), "type": int}
 
 
 @pytest.mark.parametrize("arg_type", (dict, tuple))
