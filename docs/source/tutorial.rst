@@ -23,14 +23,14 @@ Assume we need a CLI application which output is modulated by arguments:
     $ ./greet.py John
     Hello John!
 
-Let's start with a simple function::
+Let's start with a simple function:
 
 .. code-block:: python
 
     def main(name: str = "unknown user") -> str:
         return f"Hello {name}!"
 
-Now make it a CLI command::
+Now make it a CLI command:
 
 .. code-block:: python
 
