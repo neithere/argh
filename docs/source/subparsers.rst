@@ -1,5 +1,5 @@
 Subparsers
-~~~~~~~~~~
+==========
 
 The statement ``parser.add_commands([bar, quux])`` builds two subparsers named
 `bar` and `quux`. A "subparser" is an argument parser bound to a group name. In

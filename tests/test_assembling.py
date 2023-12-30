@@ -898,7 +898,9 @@ def test_typing_hints_bool__policy_by_name_if_kwonly():
 
 
 def test_typing_hints_literal():
-    def func(name: Literal["Alice", "Bob"], *, greeting: Literal["Hello", "Hi"] = "Hello") -> str:
+    def func(
+        name: Literal["Alice", "Bob"], *, greeting: Literal["Hello", "Hi"] = "Hello"
+    ) -> str:
         return f"{greeting}, {name}!"
 
     parser = argparse.ArgumentParser()
@@ -909,5 +911,12 @@ def test_typing_hints_literal():
     _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
     assert parser.add_argument.mock_calls == [
         call("name", choices=("Alice", "Bob"), type=str, **_extra_kw),
-        call("-g", "--greeting", choices=("Hello", "Hi"), type=str, default="Hello", **_extra_kw),
+        call(
+            "-g",
+            "--greeting",
+            choices=("Hello", "Hi"),
+            type=str,
+            default="Hello",
+            **_extra_kw,
+        ),
     ]

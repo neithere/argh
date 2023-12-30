@@ -1,5 +1,5 @@
 Tutorial
-~~~~~~~~
+========
 
 `Argh` is a small library that provides several layers of abstraction on top
 of `argparse`.  You are free to use any layer that fits given task best.

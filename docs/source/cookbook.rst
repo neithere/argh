@@ -1,5 +1,5 @@
 Cookbook
-~~~~~~~~
+========
 
 Multiple values per argument
 ----------------------------
