@@ -7,8 +7,11 @@ The layers can be mixed.  It is always possible to declare a command with
 the  highest possible (and least flexible) layer and then tune the behaviour
 with any of the lower layers including the native API of `argparse`.
 
-Dive In
--------
+Quick Start
+-----------
+
+Passing name as positional argument
+...................................
 
 Assume we need a CLI application which output is modulated by arguments:
 
@@ -20,21 +23,69 @@ Assume we need a CLI application which output is modulated by arguments:
     $ ./greet.py John
     Hello John!
 
-This is our business logic:
+Let's start with a simple function::
 
 .. code-block:: python
 
     def main(name: str = "unknown user") -> str:
         return f"Hello {name}!"
 
-That was plain Python, nothing CLI-specific.
-Let's convert the function into a complete CLI application::
+Now make it a CLI command::
 
-    argh.dispatch_command(main)
+.. code-block:: python
 
-Done.  Dead simple.
+    #!/usr/bin/env python3
 
-You may want to make the name an "option" AKA named CLI argument, like this::
+    import argh
+
+    def main(name: str = "unknown user") -> str:
+        return f"Hello {name}!"
+
+    argh.dispatch_command(main, old_name_mapping_policy=False)
+
+Save it as `greet.py` and try to run it::
+
+    $ chmod +x greet.py
+    $ ./greet.py
+    Hello unknown user!
+
+It works!  Now try passing arguments.  Use ``--help`` if unsure.
+
+Multiple positional arguments; limitations
+..........................................
+
+You can add more positional arguments.  They are determined by their position
+in the function signature::
+
+    def main(one, two, three):
+        print(f"two: {two}")
+
+    main(1, 2, 3)  # prints "two: 2"
+
+Same will happen if we dispatch this function as a CLI command::
+
+    $ ./app.py 1 2 3
+    two: 2
+
+This is fine, but it's already hard to remember the order of arguments.
+Moreover, you may want to omit the first one and specify the rest — but it's
+impossible.  How does the computer know if you are skipping the first or the
+last?  It doesn't.  If only such arguments had names instead of positions!
+
+We have just went through the reasons to pass arguments by name.
+
+In Python you can do it by calling your function this way::
+
+    main(one=1, two=2, three=3)
+
+In CLI named arguments are called "options".  Please see the next section to
+learn how to use them.
+
+Passing name as an option
+.........................
+
+Let's return to our small application and see if we can make the name
+an "option" AKA named CLI argument, like this::
 
     $ ./greet.py --name John
 
@@ -44,21 +95,65 @@ In that case it's enough to make the function argument `name` "keyword-only"
     def main(*, name: str = "unknown user") -> str:
         ...
 
-Everything to the left of ``*`` becomes a positional CLI argument.  Everything
-to the right of ``*`` becomes a named one.
+We just took the previous function and added ``*,`` before the first argument.
 
-What about multiple commands?  Easy::
+Positional vs options: recap
+............................
+
+Here's a function with one positional argument and one "option"::
+
+    def main(name: str, *, age: int = 0) -> str:
+        ...
+
+* All arguments to the left of ``*`` are considered positional.
+* All arguments to the right of ``*`` are considered named (or "options").
+
+Multiple Commands
+.................
+
+We used `argh.dispatch_command()` to run a single command.
+
+In order to enable multiple commands we simply use a sister function
+`argh.dispatch_commands()` and pass a list of functions to it::
 
     argh.dispatch_commands([load, dump])
 
-And then call your script like this::
+Bam!  Now we can call our script like this::
 
     $ ./app.py dump
     $ ./app.py load fixture.json
     $ ./app.py load fixture.yaml --format=yaml
+      \______/ \__/ \________________________/
+       |        |    |
+       |        |    `-- command arguments
+       |        |
+       |        `-- command name (function name)
+       |
+       `-- script file name
 
-I guess you get the picture.  The commands are **ordinary functions**
-with ordinary signatures:
+Typing Hints
+............
+
+Typing hints are picked up when it makes sense too.  Consider this::
+
+    def summarise(numbers: list[int]) -> int:
+        return sum(numbers)
+
+    argh.dispatch_command(summarise)
+
+Call it::
+
+    $ ./app 1 2 3
+    6
+
+It worked exactly as you would expect.  Argh looked at the annotation and
+understood that you want a list of integers.  This information was then
+reworded for `argparse`.
+
+Quick Start Wrap-Up
+...................
+
+To sum up, the commands are **ordinary functions** with ordinary signatures:
 
 * Declare them somewhere, dispatch them elsewhere.  This ensures **loose
   coupling** of components in your application.
@@ -184,7 +279,7 @@ single line in addition to your function.
 
 `Argh` allows for more expressive and pythonic code because:
 
-* everything is inferred from the function signature;
+* everything is inferred from the function signature and type annotations;
 * regular function arguments are represented as positional CLI arguments;
 * varargs (``*args``) are represented as a "zero or more" positional CLI argument;
 * kwonly (keyword-only arguments, see :pep:`3102`) are represented as named CLI
@@ -204,6 +299,38 @@ natural: `argh` does a lot of work for you.
 Well, there's nothing more elegant than a simple function.  But simplicity
 comes at a cost in terms of flexibility.  Fortunately, `argh` doesn't stay in
 the way and offers less natural but more powerful tools.
+
+Annotations
+...........
+
+Since v.0.31 `Argh` can use type annotations to infer the argument types and
+some other properties.  This approach will eventually replace the `@arg`
+decorator.
+
+Let's consider this example::
+
+    def increment(n: int) -> int:
+        return n + 1
+
+The `n` argument will be automatically converted to `int`.  Currently supported
+types are `str`, `int`, `float` and `bool`.
+
+Here's another example::
+
+    def summarise(numbers: list[int]) -> int:
+        return sum(numbers)
+
+    argh.dispatch_command(summarise)
+
+Let's call it::
+
+    $ ./app.py 1 2 3
+    6
+
+The ``list[int]`` hint was interpreted as ``nargs="+"`` + ``type=int``.
+
+Please note that this part of the API is experimental and may change in the
+future releases.
 
 Documenting Your Commands
 .........................
