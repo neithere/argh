@@ -43,14 +43,20 @@ In a nutshell
 
 `Argh`-powered applications are *simple* but *flexible*:
 
+:Pythonic:
+    Commands are plain Python functions.  No CLI-specific API to learn.
+
 :Modular:
     Declaration of commands can be decoupled from assembling and dispatching;
 
-:Pythonic:
-    Commands are declared naturally, no complex API calls in most cases;
-
 :Reusable:
-    Commands are plain functions, can be used directly outside of CLI context;
+    Endpoint functions can be used directly outside of CLI context;
+
+:Static typing friendly:
+    100% of the code including endpoint functions can be type-checked.
+    Argh relies on type annotations while other libraries tend to rely on
+    decorators and namespace objects, sometimes even mangling function
+    signatures;
 
 :Layered:
     The complexity of code raises with requirements;
@@ -59,12 +65,8 @@ In a nutshell
     The full power of argparse is available whenever needed;
 
 :Namespaced:
-    Nested commands are a piece of cake, no messing with subparsers (though
-    they are of course used under the hood);
-
-:Unobtrusive:
-    `Argh` can dispatch a subset of pure-`argparse` code, and pure-`argparse`
-    code can update and dispatch a parser assembled with `Argh`;
+    Nested commands are a piece of cake, Argh isolates the complexity of
+    subparsers;
 
 :DRY:
     Don't Repeat Yourself.  The amount of boilerplate code is minimal.
@@ -72,12 +74,14 @@ In a nutshell
 
     * infer command name from function name;
     * infer arguments from function signature;
-    * infer argument type from the default value;
-    * infer argument action from the default value (for booleans);
+    * infer argument types, actions and much more from annotations.
 
 :NIH free:
     `Argh` supports *completion*, *progress bars* and everything else by being
     friendly to excellent 3rd-party libraries.  No need to reinvent the wheel.
+
+:Compact:
+    No dependencies apart from Python's standard library.
 
 Sounds good?  Check the :doc:`quickstart` and the :doc:`tutorial`!
 
@@ -236,22 +240,7 @@ enough; in these cases the powerful API of `argparse` is also available:
     def echo(text: str) -> None:
         print text
 
-The approaches can be safely combined even up to this level:
-
-.. code-block:: python
-
-    # adding help to `foo` which is in the function signature:
-    @arg("foo", help="blah")
-    # these are not in the signature so they go to **kwargs:
-    @arg("baz")
-    @arg("-q", "--quux")
-    # the function itself:
-    def cmd(foo: str, bar: int = 1, *args, **kwargs) -> Iterator[str]:
-        yield foo
-        yield bar
-        yield ", ".join(args)
-        yield kwargs["baz"]
-        yield kwargs["quux"]
+Please note that decorators will soon be fully replaced with annotations.
 
 Links
 -----
