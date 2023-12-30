@@ -80,7 +80,10 @@ In a nutshell
 :Compact:
     No dependencies apart from Python's standard library.
 
-Sounds good?  Check the :doc:`quickstart` and the :doc:`tutorial`!
+Sounds good?  Dive in! :)
+
+* `Quick Start <https://argh.readthedocs.io/en/latest/quickstart.html>`_
+* `Tutorial <https://argh.readthedocs.io/en/latest/tutorial.html>`_
 
 Relation to argparse
 --------------------
