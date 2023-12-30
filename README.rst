@@ -98,6 +98,9 @@ Installation
 Examples
 --------
 
+Hello World
+...........
+
 A very simple application with one command:
 
 .. code-block:: python
@@ -116,6 +119,9 @@ Run it:
     $ ./app.py
     Hello world
 
+Type Annotations
+................
+
 Type annotations are used to infer argument types:
 
 .. code-block:: python
@@ -133,6 +139,9 @@ annotation):
     $ ./app.py 1 2 3
     6
 
+Multiple Commands
+.................
+
 An app with multiple commands:
 
 .. code-block:: python
@@ -149,6 +158,9 @@ Run it:
 
     $ ./app.py echo Hey
     Hey
+
+Modularity
+..........
 
 A potentially modular application with more control over the process:
 
@@ -211,6 +223,9 @@ to CLI arguments)::
       -g GREETING, --greeting GREETING   'Hello'
 
 (The help messages have been simplified a bit for brevity.)
+
+Decorators
+..........
 
 `Argh` easily maps plain Python functions to CLI.  Sometimes this is not
 enough; in these cases the powerful API of `argparse` is also available:
