@@ -67,8 +67,8 @@ Multiple positional arguments; limitations
 You can add more positional arguments.  They are determined by their position
 in the function signature::
 
-    def main(one, two, three):
-        print(f"two: {two}")
+    def main(first, second, third):
+        print(f"second: {second}")
 
     main(1, 2, 3)  # prints "two: 2"
 
@@ -77,16 +77,21 @@ Same will happen if we dispatch this function as a CLI command::
     $ ./app.py 1 2 3
     two: 2
 
-This is fine, but it's already hard to remember the order of arguments.
-Moreover, you may want to omit the first one and specify the rest — but it's
-impossible.  How does the computer know if you are skipping the first or the
-last?  It doesn't.  If only such arguments had names instead of positions!
+This is fine, but it's usually hard to remember the order of arguments when
+their number is over three or so.
 
-We have just went through the reasons to pass arguments by name.
+Moreover, you may want to omit the first one and specify the rest — but it's
+impossible.  How would the computer know if the element you are skipping is
+supposed to be the first, the last or somewhere in the middle?  There's no way.
+
+If only it was possible to pass such arguments by name!
+
+Indeed, a good command-line interface is likely to have one or two positional
+arguments but the rest should be named.
 
 In Python you can do it by calling your function this way::
 
-    main(one=1, two=2, three=3)
+    main(first=1, second=2, third=3)
 
 In CLI named arguments are called "options".  Please see the next section to
 learn how to use them.
