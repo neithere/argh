@@ -757,7 +757,7 @@ class TypingHintArgSpecGuesser:
 
         # `list`
         if type_def == list:
-            return {"nargs": "*"}
+            return {"nargs": ZERO_OR_MORE}
 
         # `Literal["a", "b"]`
         if origin == Literal:
@@ -771,10 +771,10 @@ class TypingHintArgSpecGuesser:
                 retval["type"] = first_subtype
 
             if first_subtype == list:
-                retval["nargs"] = "*"
+                retval["nargs"] = ZERO_OR_MORE
 
             if get_origin(first_subtype) == list:
-                retval["nargs"] = "*"
+                retval["nargs"] = ZERO_OR_MORE
                 item_type = cls._extract_item_type_from_list_type(first_subtype)
                 if item_type:
                     retval["type"] = item_type
@@ -786,7 +786,7 @@ class TypingHintArgSpecGuesser:
         # `list[str]`
         if origin == list:
             retval = {}
-            retval["nargs"] = "*"
+            retval["nargs"] = ZERO_OR_MORE
             if args[0] in cls.BASIC_TYPES:
                 retval["type"] = args[0]
             return retval
