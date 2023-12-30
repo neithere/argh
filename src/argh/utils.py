@@ -12,9 +12,8 @@ Utilities
 ~~~~~~~~~
 """
 import argparse
-import inspect
 import re
-from typing import Callable, Tuple
+from typing import Tuple
 
 
 def get_subparsers(
@@ -44,23 +43,6 @@ def get_subparsers(
         return parser.add_subparsers()
 
     raise SubparsersNotDefinedError()
-
-
-def get_arg_spec(function: Callable) -> inspect.FullArgSpec:
-    """
-    Returns argument specification for given function.
-
-    Gets to the innermost function through decorators.
-
-    Omits special arguments of instance methods (`self`) and class methods
-    (usually `cls` or something like this).  Supports static methods.
-    """
-    while hasattr(function, "__wrapped__"):
-        function = function.__wrapped__
-    spec = inspect.getfullargspec(function)
-    if inspect.ismethod(function):
-        spec = spec._replace(args=spec.args[1:])
-    return spec
 
 
 def unindent(text: str) -> str:

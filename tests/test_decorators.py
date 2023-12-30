@@ -74,16 +74,6 @@ def test_wrap_errors_processor():
     assert attr == "STUB"
 
 
-# TODO: deprecated — remove in v0.31+
-def test_expects_obj():
-    @argh.expects_obj
-    def func(args):
-        pass
-
-    attr = getattr(func, argh.constants.ATTR_EXPECTS_NAMESPACE_OBJECT)
-    assert attr is True
-
-
 def test_naive_guess_func_arg_name() -> None:
     # none (error)
     with pytest.raises(CliArgToFuncArgGuessingError):

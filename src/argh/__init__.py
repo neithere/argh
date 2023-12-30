@@ -12,7 +12,7 @@ Argh
 #  Software Foundation. See the file README.rst for copying conditions.
 #
 from .assembling import add_commands, add_subcommands, set_default_command
-from .decorators import aliases, arg, expects_obj, named, wrap_errors
+from .decorators import aliases, arg, named, wrap_errors
 from .dispatching import (
     PARSER_FORMATTER,
     ArghNamespace,
@@ -33,7 +33,6 @@ __all__ = (
     "set_default_command",
     "aliases",
     "arg",
-    "expects_obj",
     "named",
     "wrap_errors",
     "PARSER_FORMATTER",

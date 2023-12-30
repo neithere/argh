@@ -79,7 +79,7 @@ In a nutshell
     `Argh` supports *completion*, *progress bars* and everything else by being
     friendly to excellent 3rd-party libraries.  No need to reinvent the wheel.
 
-Sounds good?  Check the tutorial!
+Sounds good?  Check the :doc:`quickstart` and the :doc:`tutorial`!
 
 Relation to argparse
 --------------------
@@ -97,6 +97,9 @@ Installation
 
 Examples
 --------
+
+Hello World
+...........
 
 A very simple application with one command:
 
@@ -116,6 +119,29 @@ Run it:
     $ ./app.py
     Hello world
 
+Type Annotations
+................
+
+Type annotations are used to infer argument types:
+
+.. code-block:: python
+
+    def summarise(numbers: list[int]) -> int:
+        return sum(numbers)
+
+    argh.dispatch_command(summarise)
+
+Run it (note that ``nargs="+"`` + ``type=int`` were inferred from the
+annotation):
+
+.. code-block:: bash
+
+    $ ./app.py 1 2 3
+    6
+
+Multiple Commands
+.................
+
 An app with multiple commands:
 
 .. code-block:: python
@@ -132,6 +158,9 @@ Run it:
 
     $ ./app.py echo Hey
     Hey
+
+Modularity
+..........
 
 A potentially modular application with more control over the process:
 
@@ -194,6 +223,9 @@ to CLI arguments)::
       -g GREETING, --greeting GREETING   'Hello'
 
 (The help messages have been simplified a bit for brevity.)
+
+Decorators
+..........
 
 `Argh` easily maps plain Python functions to CLI.  Sometimes this is not
 enough; in these cases the powerful API of `argparse` is also available:
