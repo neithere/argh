@@ -26,7 +26,7 @@ The equivalent code without `Argh` would be::
     bar_parser.set_defaults(function=bar)
 
     args = parser.parse_args()
-    print args.function(args)
+    print(args.function(args))
 
 Now consider this expression::
 
@@ -54,7 +54,7 @@ to write something like this (generic argparse API)::
     foo_quux_parser.set_defaults(function=quux)
 
     args = parser.parse_args()
-    print args.function(args)
+    print(args.function(args))
 
 .. note::
 

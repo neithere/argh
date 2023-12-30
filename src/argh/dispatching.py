@@ -527,13 +527,13 @@ class EntryPoint:
         app = EntryPoint("main", {"description": "This is a cool app"})
 
         @app
-        def ls() -> None:
+        def ls() -> Iterator[int]:
             for i in range(10):
-                print i
+                yield i
 
         @app
-        def greet() -> None:
-            print "hello"
+        def greet() -> str:
+            return "hello"
 
         if __name__ == "__main__":
             app()

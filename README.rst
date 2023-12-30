@@ -233,9 +233,9 @@ enough; in these cases the powerful API of `argparse` is also available:
 
 .. code-block:: python
 
-    @arg("text", default="hello world", nargs="+", help="The message")
-    def echo(text: str) -> None:
-        print text
+    @arg("words", default="hello world", nargs="+", help="The message")
+    def echo(words: list[str]) -> str:
+        return " ".join(words)
 
 Please note that decorators will soon be fully replaced with annotations.
 
