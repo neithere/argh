@@ -793,7 +793,7 @@ def test_typing_hints_only_used_when_arg_deco_not_used():
     ]
 
 
-def test_typing_hints():
+def test_typing_hints_overview():
     def func(
         alpha,
         beta: str,
@@ -801,37 +801,97 @@ def test_typing_hints():
         *,
         delta: float = 1.5,
         epsilon: Optional[int] = 42,
+        zeta: bool = False,
     ) -> str:
-        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}, epsilon={epsilon}"
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}, epsilon={epsilon}, zeta={zeta}"
 
     parser = argparse.ArgumentParser()
     parser.add_argument = MagicMock()
     argh.set_default_command(
         parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
     )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
     assert parser.add_argument.mock_calls == [
-        call("alpha", help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
-        call("beta", type=str, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
-        call(
-            "gamma",
-            default=None,
-            nargs="?",
-            type=int,
-            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
-        ),
-        call(
-            "-d",
-            "--delta",
-            type=float,
-            default=1.5,
-            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
-        ),
-        call(
-            "-e",
-            "--epsilon",
-            type=int,
-            default=42,
-            required=False,
-            help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE,
-        ),
+        call("alpha", **_extra_kw),
+        call("beta", type=str, **_extra_kw),
+        call("gamma", default=None, nargs="?", type=int, **_extra_kw),
+        call("-d", "--delta", type=float, default=1.5, **_extra_kw),
+        call("-e", "--epsilon", type=int, default=42, required=False, **_extra_kw),
+        call("-z", "--zeta", default=False, action="store_true", **_extra_kw),
+    ]
+
+
+def test_typing_hints_str__policy_by_name_if_has_default():
+    def func(alpha: str, beta: str = "N/A", *, gamma: str, delta: str = "N/A") -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=str, **_extra_kw),
+        call("-b", "--beta", default="N/A", type=str, **_extra_kw),
+        call("gamma", type=str, **_extra_kw),
+        call("-d", "--delta", default="N/A", type=str, **_extra_kw),
+    ]
+
+
+def test_typing_hints_str__policy_by_name_if_kwonly():
+    def func(alpha: str, beta: str = "N/A", *, gamma: str, delta: str = "N/A") -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=str, help=argh.constants.DEFAULT_ARGUMENT_TEMPLATE),
+        call("beta", type=str, default="N/A", nargs="?", **_extra_kw),
+        call("-g", "--gamma", required=True, type=str, **_extra_kw),
+        call("-d", "--delta", default="N/A", type=str, **_extra_kw),
+    ]
+
+
+def test_typing_hints_bool__policy_by_name_if_has_default():
+    def func(
+        alpha: bool, beta: bool = False, *, gamma: bool, delta: bool = False
+    ) -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=bool, **_extra_kw),
+        call("-b", "--beta", default=False, action="store_true", **_extra_kw),
+        call("gamma", type=bool, **_extra_kw),
+        call("-d", "--delta", default=False, action="store_true", **_extra_kw),
+    ]
+
+
+def test_typing_hints_bool__policy_by_name_if_kwonly():
+    def func(
+        alpha: bool, beta: bool = False, *, gamma: bool, delta: bool = False
+    ) -> str:
+        return f"alpha={alpha}, beta={beta}, gamma={gamma}, delta={delta}"
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument = MagicMock()
+    argh.set_default_command(
+        parser, func, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    _extra_kw = {"help": argh.constants.DEFAULT_ARGUMENT_TEMPLATE}
+    assert parser.add_argument.mock_calls == [
+        call("alpha", type=bool, **_extra_kw),
+        call("beta", type=bool, default=False, nargs="?", **_extra_kw),
+        call("-g", "--gamma", required=True, type=bool, **_extra_kw),
+        call("-d", "--delta", default=False, action="store_true", **_extra_kw),
     ]

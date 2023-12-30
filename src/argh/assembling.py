@@ -242,13 +242,27 @@ def infer_argspecs_from_function(
                 else:
                     arg_spec.nargs = OPTIONAL
 
-            # "required" is invalid for positional CLI argument;
-            # it may have been set from Optional[...] hint above.
-            # Reinterpret it as "optional positional" instead.
-            if can_use_hints and "required" in arg_spec.other_add_parser_kwargs:
-                value = arg_spec.other_add_parser_kwargs.pop("required")
-                if value is False:
-                    arg_spec.nargs = OPTIONAL
+            # annotations are interpreted without regard to the broader
+            # context, e.g. default values; in some cases argparse requires
+            # pretty specific combinations of props, so we need to adjust them
+            if can_use_hints:
+                # "required" is invalid for positional CLI argument;
+                # it may have been set from Optional[...] hint above.
+                # Reinterpret it as "optional positional" instead.
+                if "required" in arg_spec.other_add_parser_kwargs:
+                    value = arg_spec.other_add_parser_kwargs.pop("required")
+                    if value is False:
+                        arg_spec.nargs = OPTIONAL
+
+                if name_mapping_policy == NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT:
+                    # The guesser yields `type=bool` from `foo: bool = False`
+                    # but `type` is incompatible with `action="store_true"` which
+                    # is added by guess_extra_parser_add_argument_spec_kwargs().
+                    if (
+                        isinstance(arg_spec.default_value, bool)
+                        and arg_spec.other_add_parser_kwargs.get("type") == bool
+                    ):
+                        del arg_spec.other_add_parser_kwargs["type"]
 
             yield arg_spec
 
@@ -267,6 +281,19 @@ def infer_argspecs_from_function(
                 arg_spec.cli_arg_names = cli_arg_names_options
                 if default_value == NotDefined:
                     arg_spec.is_required = True
+
+            # annotations are interpreted without regard to the broader
+            # context, e.g. default values; in some cases argparse requires
+            # pretty specific combinations of props, so we need to adjust them
+            if can_use_hints:
+                # The guesser yields `type=bool` from `foo: bool = False`
+                # but `type` is incompatible with `action="store_true"` which
+                # is added by guess_extra_parser_add_argument_spec_kwargs().
+                if (
+                    isinstance(arg_spec.default_value, bool)
+                    and arg_spec.other_add_parser_kwargs.get("type") == bool
+                ):
+                    del arg_spec.other_add_parser_kwargs["type"]
 
             yield arg_spec
 
@@ -720,21 +747,19 @@ class TypingHintArgSpecGuesser:
         origin = get_origin(type_def)
         args = get_args(type_def)
 
-        # if not origin and not args and type_def in BASIC_TYPES:
+        # `str`
         if type_def in cls.BASIC_TYPES:
-            # `str`
             return {
                 "type": type_def
                 # "type": _parse_basic_type(type_def)
             }
 
+        # `list`
         if type_def == list:
-            # `list`
             return {"nargs": "*"}
 
+        # `str | int`
         if any(origin is t for t in UNION_TYPES):
-            # `str | int`
-
             retval = {}
             first_subtype = args[0]
             if first_subtype in cls.BASIC_TYPES:
@@ -753,8 +778,8 @@ class TypingHintArgSpecGuesser:
                 retval["required"] = False
             return retval
 
+        # `list[str]`
         if origin == list:
-            # `list[str]`
             retval = {}
             retval["nargs"] = "*"
             if args[0] in cls.BASIC_TYPES:
