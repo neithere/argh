@@ -43,30 +43,15 @@ In a nutshell
 
 `Argh`-powered applications are *simple* but *flexible*:
 
-:Pythonic:
-    Commands are plain Python functions.  No CLI-specific API to learn.
-
-:Modular:
-    Declaration of commands can be decoupled from assembling and dispatching;
+:Pythonic, KISS:
+    Commands are plain Python functions.  Almost no CLI-specific API to learn.
 
 :Reusable:
-    Endpoint functions can be used directly outside of CLI context;
+    Endpoint functions can be used directly outside of CLI context.
 
 :Static typing friendly:
     100% of the code including endpoint functions can be type-checked.
-    Argh relies on type annotations while other libraries tend to rely on
-    decorators and namespace objects, sometimes even mangling function
-    signatures;
-
-:Layered:
-    The complexity of code raises with requirements;
-
-:Transparent:
-    The full power of argparse is available whenever needed;
-
-:Namespaced:
-    Nested commands are a piece of cake, Argh isolates the complexity of
-    subparsers;
+    Argh is driven primarily by type annotations.
 
 :DRY:
     Don't Repeat Yourself.  The amount of boilerplate code is minimal.
@@ -75,6 +60,18 @@ In a nutshell
     * infer command name from function name;
     * infer arguments from function signature;
     * infer argument types, actions and much more from annotations.
+
+:Modular:
+    Declaration of commands can be decoupled from assembling and dispatching.
+
+:Layered:
+    The complexity of code raises with requirements.
+
+:Transparent:
+    You can directly access `argparse.ArgumentParser` if needed.
+
+:Subcommands:
+    Easily nested commands.  Argh isolates the complexity of subparsers.
 
 :NIH free:
     `Argh` supports *completion*, *progress bars* and everything else by being
