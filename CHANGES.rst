@@ -50,6 +50,11 @@ Enhancements:
 
 - Added `always_flush` argument to `dispatch()` (issue #145)
 
+- High-level functions `argh.dispatch_command()` and `argh.dispatch_commands()`
+  now accept a new parameter `old_name_mapping_policy`.  The behaviour hasn't
+  changed because the parameter is `True` by default.  It will change to
+  `False` in Argh v.0.33 or v.1.0.
+
 Deprecated:
 
 - the `namespace` argument in `argh.dispatch()` and `argh.parse_and_resolve()`.

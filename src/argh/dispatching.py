@@ -19,7 +19,7 @@ import warnings
 from types import GeneratorType
 from typing import IO, Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-from argh.assembling import add_commands, set_default_command
+from argh.assembling import NameMappingPolicy, add_commands, set_default_command
 from argh.completion import autocomplete
 from argh.constants import (
     ATTR_WRAPPED_EXCEPTIONS,
@@ -427,10 +427,22 @@ def _execute_command(
         sys.exit(code)
 
 
-def dispatch_command(function: Callable, *args, **kwargs) -> None:
+def dispatch_command(
+    function: Callable, *args, old_name_mapping_policy=True, **kwargs
+) -> None:
     """
     A wrapper for :func:`dispatch` that creates a one-command parser.
     Uses :attr:`argh.constants.PARSER_FORMATTER`.
+
+    :param old_name_mapping_policy:
+
+        .. versionadded:: 0.31
+
+        If `True`, sets the default argument naming policy to
+        `~argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT`, otherwise
+        to `~argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY`.
+
+        .. warning:: tho default will be changed to `False` in v.0.33 (or v.1.0).
 
     This::
 
@@ -439,7 +451,7 @@ def dispatch_command(function: Callable, *args, **kwargs) -> None:
     ...is a shortcut for::
 
         parser = ArgumentParser()
-        set_default_command(parser, foo)
+        set_default_command(parser, foo, name_mapping_policy=...)
         dispatch(parser)
 
     This function can be also used as a decorator::
@@ -449,16 +461,33 @@ def dispatch_command(function: Callable, *args, **kwargs) -> None:
             return foo + 1
 
     """
+    if old_name_mapping_policy:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    else:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_KWONLY
+
     parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
-    set_default_command(parser, function)
+    set_default_command(parser, function, name_mapping_policy=name_mapping_policy)
     dispatch(parser, *args, **kwargs)
 
 
-def dispatch_commands(functions: List[Callable], *args, **kwargs) -> None:
+def dispatch_commands(
+    functions: List[Callable], *args, old_name_mapping_policy=True, **kwargs
+) -> None:
     """
     A wrapper for :func:`dispatch` that creates a parser, adds commands to
     the parser and dispatches them.
     Uses :attr:`PARSER_FORMATTER`.
+
+    :param old_name_mapping_policy:
+
+        .. versionadded:: 0.31
+
+        If `True`, sets the default argument naming policy to
+        `~argh.assembling.NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT`, otherwise
+        to `~argh.assembling.NameMappingPolicy.BY_NAME_IF_KWONLY`.
+
+        .. warning:: tho default will be changed to `False` in v.0.33 (or v.1.0).
 
     This::
 
@@ -467,12 +496,17 @@ def dispatch_commands(functions: List[Callable], *args, **kwargs) -> None:
     ...is a shortcut for::
 
         parser = ArgumentParser()
-        add_commands(parser, [foo, bar])
+        add_commands(parser, [foo, bar], name_mapping_policy=...)
         dispatch(parser)
 
     """
+    if old_name_mapping_policy:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_HAS_DEFAULT
+    else:
+        name_mapping_policy = NameMappingPolicy.BY_NAME_IF_KWONLY
+
     parser = argparse.ArgumentParser(formatter_class=PARSER_FORMATTER)
-    add_commands(parser, functions)
+    add_commands(parser, functions, name_mapping_policy=name_mapping_policy)
     dispatch(parser, *args, **kwargs)
 
 

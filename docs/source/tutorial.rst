@@ -115,9 +115,25 @@ Let's make this function available as a CLI command::
 
 
     if __name__ == "__main__":
-        argh.dispatch_commands([my_command])
+        argh.dispatch_commands([my_command], old_name_mapping_policy=False)
 
 That's all.  You don't need to do anything else.
+
+.. note::
+
+    Note that we're using ``old_name_mapping_policy=False`` here and in some
+    other examples.  This has to do with the recent changes in the default way
+    Argh maps function arguments to CLI arguments.  We're currently in a
+    transitional period.
+
+    In most cases Argh can guess what you want but there are edge cases, and
+    the `beta` argument is one of them.  It's a positional argument with
+    default value.  Usually you will not need those but it's shown here for the
+    sake of completeness.  Argh does not know how you want to treat it, so you
+    should specify the name mapping policy explicitly.  This issue will go away
+    when `BY_NAME_IF_KWONLY` becomes the default policy (v.1.0 or earlier).
+
+    See :class:`~argh.assembling.NameMappingPolicy` for details.
 
 When executed as ``./app.py my-command --help``, such application prints::
 

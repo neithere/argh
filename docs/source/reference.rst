@@ -4,13 +4,13 @@ API Reference
 .. automodule:: argh
    :members:
 
-.. automodule:: argh.decorators
-   :members:
-
 .. automodule:: argh.assembling
    :members:
 
 .. automodule:: argh.dispatching
+   :members:
+
+.. automodule:: argh.decorators
    :members:
 
 .. automodule:: argh.interaction
