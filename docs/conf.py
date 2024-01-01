@@ -7,7 +7,7 @@ from sphinx_pyproject import SphinxConfig
 
 current_year = date.today().year
 
-config = SphinxConfig("../../pyproject.toml")
+config = SphinxConfig("../pyproject.toml")
 
 # -- Project information
 
