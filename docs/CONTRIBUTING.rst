@@ -11,7 +11,7 @@ Issues, Bug reports, Feature requests
 -------------------------------------
 
 If you have a question, a bug report or a feature request, please
-`create an issue <https://github.com/neithere/argh/issues/new>`.
+`create an issue <https://github.com/neithere/argh/issues/new/choose>`_.
 
 Please include, if possible:
 

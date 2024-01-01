@@ -15,7 +15,7 @@ Contributors
     Also, please don't hesitate to file issues_ and create pull requests
     and *become a contributor*! ❤️
 
-    Here's how to contribute: :doc:`CONTRIBUTING`_.
+    Here's how to contribute: :doc:`CONTRIBUTING`.
 
 .. _issues: https://github.com/neithere/argh/issues
 
