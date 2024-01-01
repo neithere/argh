@@ -11,14 +11,14 @@ assignees: neithere
 A clear and concise description of what the bug is.
 
 ### To Reproduce
-Example script:
-```
+Python script:
+```python
 import argh
 
 SOME CODE
 ```
 
-Example command line interaction:
+Command line input/output:
 ```
 $ my-script.py ...
 SOME OUTPUT
