@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 0.31.1 (TODO: DATE)
+---------------------------
+
+Enhancements:
+
+- cleaned up the README, rearranged other documentation.
+
 Version 0.31.0 (2023-12-30)
 ---------------------------
 
