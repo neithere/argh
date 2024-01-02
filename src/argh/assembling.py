@@ -382,7 +382,7 @@ def set_default_command(
 
         The policy to use when mapping function arguments onto CLI arguments.
         See :class:`.NameMappingPolicy`.  If not defined explicitly,
-        :meth:`.NameMappingPolicy.BY_NAME_IF_KWONLY` is used.
+        `BY_NAME_IF_KWONLY` is used.
 
         .. versionadded:: 0.30
 
