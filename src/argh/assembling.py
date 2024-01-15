@@ -796,6 +796,6 @@ class TypingHintArgSpecGuesser:
     @classmethod
     def _extract_item_type_from_list_type(cls, type_def) -> Optional[type]:
         args = get_args(type_def)
-        if args[0] in cls.BASIC_TYPES:
+        if args and (args[0] in cls.BASIC_TYPES):
             return args[0]
         return None
