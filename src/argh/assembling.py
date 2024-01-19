@@ -756,7 +756,7 @@ class TypingHintArgSpecGuesser:
             }
 
         # `list`
-        if type_def == list:
+        if type_def in (list, List):
             return {"nargs": ZERO_OR_MORE}
 
         # `Literal["a", "b"]`

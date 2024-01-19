@@ -34,6 +34,7 @@ def test_list():
     guess = TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params
 
     assert guess(list) == {"nargs": "*"}
+    assert guess(List) == {"nargs": "*"}
     assert guess(Optional[list]) == {"nargs": "*", "required": False}
 
     assert guess(List[str]) == {"nargs": "*", "type": str}
