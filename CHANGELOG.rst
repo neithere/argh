@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Version 0.31.1 (2024-01-19)
+---------------------------
+
+Bugs fixed:
+
+- broken support for type alias `List` (issue #216).
+
+Enhancements:
+
+- cleaned up the README, rearranged other documentation.
+
 Version 0.31.0 (2023-12-30)
 ---------------------------
 

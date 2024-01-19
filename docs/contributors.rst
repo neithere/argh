@@ -15,6 +15,8 @@ Contributors
     Also, please don't hesitate to file issues_ and create pull requests
     and *become a contributor*! ❤️
 
+    Here's how to contribute: :doc:`CONTRIBUTING`.
+
 .. _issues: https://github.com/neithere/argh/issues
 
 Historical List of Contributors
@@ -86,6 +88,8 @@ platform.
 
 Thanks to Github_ team for the place where Argh has been developed for over a
 decade.
+
+See also :doc:`similar`.
 
 .. _bitbucket: https://bitbucket.org
 .. _github: https://github.com

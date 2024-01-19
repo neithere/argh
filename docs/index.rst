@@ -1,4 +1,4 @@
-.. include:: ../../README.rst
+.. include:: ../README.rst
 
 Dependencies
 ------------
@@ -12,11 +12,6 @@ of Argh (the numeric puns were semi-intentional):
 * Python 2.6 — Argh 0.26.x.
 * Python 2.7 — Argh 0.27.x.
 
-Why this one?
--------------
-
-See :doc:`similar`.
-
 Details
 -------
 
@@ -25,6 +20,10 @@ Details
 
    quickstart
    tutorial
+
+.. toctree::
+   :maxdepth: 1
+
    reference
    cookbook
    the_story
@@ -32,6 +31,7 @@ Details
    projects
    subparsers
    contributors
+   CONTRIBUTING
    changes
 
 Indices and tables

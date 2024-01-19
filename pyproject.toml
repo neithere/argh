@@ -4,8 +4,8 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "argh"
-version = "0.31.0"
-description = "An unobtrusive argparse wrapper with natural syntax"
+version = "0.31.1"
+description = "Plain Python functions as CLI commands without boilerplate"
 readme = "README.rst"
 requires-python = ">=3.8"
 license = { file = "COPYING.LESSER" }
