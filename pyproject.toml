@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "argh"
-version = "0.31.1"
+version = "0.31.2"
 description = "Plain Python functions as CLI commands without boilerplate"
 readme = "README.rst"
 requires-python = ">=3.8"
@@ -59,10 +59,10 @@ test = [
   "pytest-cov >= 4.1",
 ]
 docs = [
-  "sphinx >= 6.1",
-  "sphinx-pyproject == 0.1.0",
-  "sphinx_rtd_theme >= 1.2.0",
-  "readthedocs-sphinx-search == 0.2.0",
+  "sphinx >= 7.2",
+  "sphinx-pyproject == 0.3",
+  "sphinx_rtd_theme >= 2.0",
+  "readthedocs-sphinx-search == 0.3.2",
 ]
 linters = [
   "pre-commit >= 3.4.0",

@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 0.31.2 (2024-01-24)
+---------------------------
+
+Bugs fixed:
+
+- broken support for `Optional[List]` (but not `Optional[list]`), a narrower
+  case of the problem fixed earlier (issue #216).
+
 Version 0.31.1 (2024-01-19)
 ---------------------------
 

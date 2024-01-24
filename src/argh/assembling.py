@@ -770,10 +770,10 @@ class TypingHintArgSpecGuesser:
             if first_subtype in cls.BASIC_TYPES:
                 retval["type"] = first_subtype
 
-            if first_subtype == list:
+            if first_subtype in (list, List):
                 retval["nargs"] = ZERO_OR_MORE
 
-            if get_origin(first_subtype) == list:
+            if first_subtype != List and get_origin(first_subtype) == list:
                 retval["nargs"] = ZERO_OR_MORE
                 item_type = cls._extract_item_type_from_list_type(first_subtype)
                 if item_type:
