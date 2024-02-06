@@ -153,6 +153,9 @@ def infer_argspecs_from_function(
     )
 
     def _make_cli_arg_names_options(arg_name) -> Tuple[List[str], List[str]]:
+        # str.removesuffix() can be used here starting with Python 3.9
+        if arg_name.endswith("_"):
+            arg_name = arg_name[:-1]
         cliified_arg_name = arg_name.replace("_", "-")
         positionals = [cliified_arg_name]
         can_have_short_opt = arg_name[0] not in conflicting_opts
@@ -405,6 +408,13 @@ def set_default_command(
 
        If the parser was created with ``add_help=True`` (which is by default),
        option name ``-h`` is silently removed from any argument.
+
+    .. note::
+
+       Function argument names ending with an underscore will have a single
+       trailing underscore removed before being converted to CLI arguments.
+       This allows CLI arguments to have names that would otherwise clash with
+       a reserved word or shadow a builtin.
 
     """
     func_signature = inspect.signature(function)

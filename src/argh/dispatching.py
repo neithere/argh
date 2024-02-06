@@ -373,7 +373,11 @@ def _execute_command(
         kwonly_names = [p.name for p in func_params if p.kind == p.KEYWORD_ONLY]
         varargs_names = [p.name for p in func_params if p.kind == p.VAR_POSITIONAL]
         positional_values = [values_by_arg_name[name] for name in positional_names]
-        values_by_name = dict((k, values_by_arg_name[k]) for k in kwonly_names)
+        # str.removesuffix() can be used from Python 3.9 onward
+        values_by_name = dict(
+            (k, values_by_arg_name[k[:-1] if k.endswith("_") else k])
+            for k in kwonly_names
+        )
 
         # *args
         if varargs_names:

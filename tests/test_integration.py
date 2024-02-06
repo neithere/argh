@@ -594,6 +594,18 @@ def test_normalized_keys():
     assert run(parser, "hello").out == "hello\n"
 
 
+def test_trailing_underscore_keys():
+    """One trailing underscore is ignored in function args."""
+
+    def cmd(*, a, b_, c__):
+        return f"a='{a}' b_='{b_}' c__='{c__}'"
+
+    parser = DebugArghParser()
+    parser.set_default_command(cmd)
+
+    assert run(parser, "--a x --b y --c- z").out == "a='x' b_='y' c__='z'\n"
+
+
 @mock.patch("argh.assembling.COMPLETION_ENABLED", True)
 def test_custom_argument_completer():
     "Issue #33: Enable custom per-argument shell completion"
