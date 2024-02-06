@@ -594,7 +594,6 @@ def test_normalized_keys():
     assert run(parser, "hello").out == "hello\n"
 
 
-@pytest.mark.xfail
 def test_trailing_underscore_keys():
     """One trailing underscore is ignored in function args."""
 
