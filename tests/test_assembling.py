@@ -669,6 +669,25 @@ def test_kwonlyargs__policy_modern():
     ]
 
 
+@pytest.mark.xfail()
+def test_trailing_underscore_in_argument_name():
+    "Stripping trailing underscores from named options"
+
+    def cmd(*, foo_="foo", bar_):
+        return (foo_, bar_)
+
+    parser = argh.ArghParser()
+    parser.add_argument = MagicMock()
+    parser.set_default_command(
+        cmd, name_mapping_policy=NameMappingPolicy.BY_NAME_IF_KWONLY
+    )
+    help_tmpl = argh.constants.DEFAULT_ARGUMENT_TEMPLATE
+    assert parser.add_argument.mock_calls == [
+        call("-f", "--foo", default="foo", type=str, help=help_tmpl),
+        call("-b", "--bar", required=True, help=help_tmpl),
+    ]
+
+
 @patch("argh.assembling.COMPLETION_ENABLED", True)
 def test_custom_argument_completer():
     "Issue #33: Enable custom per-argument shell completion"
