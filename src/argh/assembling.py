@@ -153,6 +153,9 @@ def infer_argspecs_from_function(
     )
 
     def _make_cli_arg_names_options(arg_name) -> Tuple[List[str], List[str]]:
+        # str.removesuffix() can be used here starting with Python 3.9
+        if arg_name.endswith("_"):
+            arg_name = arg_name[:-1]
         cliified_arg_name = arg_name.replace("_", "-")
         positionals = [cliified_arg_name]
         can_have_short_opt = arg_name[0] not in conflicting_opts

@@ -669,7 +669,6 @@ def test_kwonlyargs__policy_modern():
     ]
 
 
-@pytest.mark.xfail()
 def test_trailing_underscore_in_argument_name():
     "Stripping trailing underscores from named options"
 
