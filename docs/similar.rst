@@ -50,6 +50,10 @@ supports Python3.  Not every "yes" in this table would count as pro.
   questionable practice); it does not derive the CLI arguments from the
   function signature but entirely relies on additional decorators, while Argh
   strives for the opposite.
+* typer_ is a wrapper on top of `click`, which works with type hints instead
+  of decorators. This is very similar to argh's new 2024 design. Typer also
+  adds a lot of bells and whistles, and optional color support with `rich`,
+  so it is a full-featured package with several dependencies.
 
 .. _argdeclare: http://code.activestate.com/recipes/576935-argdeclare-declarative-interface-to-argparse/
 .. _argparse-cli: http://code.google.com/p/argparse-cli/
@@ -69,3 +73,4 @@ supports Python3.  Not every "yes" in this table would count as pro.
 .. _cement: http://builtoncement.com/2.0/
 .. _autocommand: https://pypi.python.org/pypi/autocommand/
 .. _click: https://click.palletsprojects.com
+.. _typer: https://typer.tiangolo.com
