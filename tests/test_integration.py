@@ -742,8 +742,7 @@ def test_default_arg_values_in_help():
     else:
         assert "-t, --task TASK 'hang the Moose'" in help_normalised
         assert (
-            "-r, --reason REASON 'there are creatures living in it'"
-            in help_normalised
+            "-r, --reason REASON 'there are creatures living in it'" in help_normalised
         )
 
         # explicit help message is not obscured by the implicit one
@@ -900,8 +899,7 @@ def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
         )
     else:
         arg_help_lines = (
-            "  -h, --help     show this help message and exit\n"
-            "  -f, --foo FOO  123"
+            "  -h, --help     show this help message and exit\n" "  -f, --foo FOO  123"
         )
 
     assert (
@@ -1041,8 +1039,7 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
         )
     else:
         arg_help_lines = (
-            "  -h, --help     show this help message and exit\n"
-            "  -f, --foo FOO  123"
+            "  -h, --help     show this help message and exit\n" "  -f, --foo FOO  123"
         )
 
     assert (
@@ -1135,8 +1132,7 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
         )
     else:
         arg_help_lines = (
-            "  -h, --help     show this help message and exit\n"
-            "  -f, --foo FOO  123"
+            "  -h, --help     show this help message and exit\n" "  -f, --foo FOO  123"
         )
 
     assert (
