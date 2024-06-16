@@ -2,6 +2,7 @@
 Integration Tests
 ~~~~~~~~~~~~~~~~~
 """
+
 import argparse
 import re
 import sys
@@ -831,8 +832,7 @@ def test_unknown_args():
 
 
 def test_add_commands_unknown_name_mapping_policy():
-    def func(foo):
-        ...
+    def func(foo): ...
 
     parser = argh.ArghParser(prog="myapp")
 

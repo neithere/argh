@@ -2,6 +2,7 @@
 Argh
 ~~~~
 """
+
 #
 #  Copyright © 2010—2023 Andrey Mikhaylenko and contributors
 #

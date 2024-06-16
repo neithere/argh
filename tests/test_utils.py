@@ -3,6 +3,7 @@ Unit Tests For Utility Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
+
 from argparse import ArgumentParser, _SubParsersAction
 
 import pytest

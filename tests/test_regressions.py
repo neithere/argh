@@ -2,6 +2,7 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
+
 import sys
 from typing import List, Optional, TextIO
 
@@ -166,8 +167,7 @@ def test_regression_issue204():
     We should avoid `deepcopy()` in standard operations.
     """
 
-    def func(*, x: TextIO = sys.stdout) -> None:
-        ...
+    def func(*, x: TextIO = sys.stdout) -> None: ...
 
     parser = DebugArghParser()
     parser.set_default_command(func)

@@ -2,6 +2,7 @@
 Common stuff for tests
 ~~~~~~~~~~~~~~~~~~~~~~
 """
+
 import io
 import os
 import sys

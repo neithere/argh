@@ -13,6 +13,7 @@ Assembling
 
 Functions and classes to properly assemble your commands in a parser.
 """
+
 import inspect
 import textwrap
 import warnings
@@ -517,9 +518,9 @@ def _merge_inferred_and_declared_args(
 
     # arguments inferred from function signature
     for parser_add_argument_spec in inferred_args:
-        specs_by_func_arg_name[
-            parser_add_argument_spec.func_arg_name
-        ] = parser_add_argument_spec
+        specs_by_func_arg_name[parser_add_argument_spec.func_arg_name] = (
+            parser_add_argument_spec
+        )
 
     # arguments declared via @arg decorator
     for declared_spec in declared_args:
@@ -734,8 +735,7 @@ def add_subcommands(
     add_commands(parser, functions, group_name=group_name, group_kwargs=group_kwargs)
 
 
-class ArgumentNameMappingError(AssemblingError):
-    ...
+class ArgumentNameMappingError(AssemblingError): ...
 
 
 class TypingHintArgSpecGuesser:
