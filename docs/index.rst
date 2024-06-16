@@ -4,7 +4,7 @@ Dependencies
 ------------
 
 The `argh` library is supported (and tested unless otherwise specified)
-on the following versions of Python: 3.8, 3.9, 3.10, 3.11, 3.12.
+on the following versions of Python: 3.8, 3.9, 3.10, 3.11, 3.12, .13.
 
 If you need support for ancient Pythons, please use the following versions
 of Argh (the numeric puns were semi-intentional):
