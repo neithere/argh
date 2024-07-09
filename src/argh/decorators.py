@@ -12,7 +12,8 @@ Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Type
+
 
 from argh.constants import (
     ATTR_ALIASES,
@@ -162,7 +163,7 @@ def arg(*args: str, **kwargs) -> Callable:
 
 
 def wrap_errors(
-    errors: Optional[List[Exception]] = None,
+    errors: Optional[List[Type[Exception]]] = None,
     processor: Optional[Callable] = None,
     *args,
 ) -> Callable:
