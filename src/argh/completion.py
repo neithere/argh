@@ -57,6 +57,7 @@ It is recommended to use the :func:`~argh.decorators.arg` decorator::
         ...
 
 """
+
 import logging
 import os
 from argparse import ArgumentParser

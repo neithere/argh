@@ -11,7 +11,9 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
+
 from typing import Callable, List, Optional, Type
+
 
 from argh.constants import (
     ATTR_ALIASES,

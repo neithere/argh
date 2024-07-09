@@ -2,6 +2,7 @@
 Dispatching tests
 ~~~~~~~~~~~~~~~~~
 """
+
 import argparse
 import io
 from unittest.mock import Mock, patch
@@ -198,8 +199,7 @@ def test_entrypoint(ap_cls_mock, add_commands_mock, dispatch_mock):
 def test_dispatch_command_naming_policy(
     parser_cls_mock, set_default_command_mock, dispatch_mock
 ):
-    def func():
-        ...
+    def func(): ...
 
     parser_mock = Mock()
     parser_cls_mock.return_value = parser_mock
@@ -234,8 +234,7 @@ def test_dispatch_command_naming_policy(
 def test_dispatch_commands_naming_policy(
     parser_cls_mock, add_commands_mock, dispatch_mock
 ):
-    def func():
-        ...
+    def func(): ...
 
     parser_mock = Mock()
     parser_cls_mock.return_value = parser_mock

@@ -2,12 +2,12 @@
 Unit Tests For the Argument DTO
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 from argh.dto import ParserAddArgumentSpec
 
 
 def test_update_empty_dto() -> None:
-    def stub_completer():
-        ...
+    def stub_completer(): ...
 
     dto = ParserAddArgumentSpec(
         func_arg_name="foo",
@@ -37,11 +37,9 @@ def test_update_empty_dto() -> None:
 
 
 def test_update_full_dto() -> None:
-    def stub_completer_one():
-        ...
+    def stub_completer_one(): ...
 
-    def stub_completer_two():
-        ...
+    def stub_completer_two(): ...
 
     dto = ParserAddArgumentSpec(
         func_arg_name="foo",
@@ -75,8 +73,7 @@ def test_update_full_dto() -> None:
     )
 
 
-class TestGetAllKwargs:
-    ...
+class TestGetAllKwargs: ...
 
 
 def test_make_from_kwargs_minimal() -> None:

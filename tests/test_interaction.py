@@ -2,6 +2,7 @@
 Interaction Tests
 ~~~~~~~~~~~~~~~~~
 """
+
 import unittest.mock as mock
 
 import argh

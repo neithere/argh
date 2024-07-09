@@ -11,6 +11,7 @@
 Utilities
 ~~~~~~~~~
 """
+
 import argparse
 import re
 from typing import Tuple
@@ -59,8 +60,7 @@ def unindent(text: str) -> str:
     return re.sub(rf"(^|\n) {{{depth}}}", "\\1", text)
 
 
-class SubparsersNotDefinedError(Exception):
-    ...
+class SubparsersNotDefinedError(Exception): ...
 
 
 def naive_guess_func_arg_name(option_strings: Tuple[str, ...]) -> str:
@@ -89,17 +89,13 @@ def naive_guess_func_arg_name(option_strings: Tuple[str, ...]) -> str:
     )
 
 
-class ArghError(Exception):
-    ...
+class ArghError(Exception): ...
 
 
-class CliArgToFuncArgGuessingError(ArghError):
-    ...
+class CliArgToFuncArgGuessingError(ArghError): ...
 
 
-class TooManyPositionalArgumentNames(CliArgToFuncArgGuessingError):
-    ...
+class TooManyPositionalArgumentNames(CliArgToFuncArgGuessingError): ...
 
 
-class MixedPositionalAndOptionalArgsError(CliArgToFuncArgGuessingError):
-    ...
+class MixedPositionalAndOptionalArgsError(CliArgToFuncArgGuessingError): ...

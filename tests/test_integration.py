@@ -2,6 +2,7 @@
 Integration Tests
 ~~~~~~~~~~~~~~~~~
 """
+
 import argparse
 import re
 import sys
@@ -724,18 +725,33 @@ def test_default_arg_values_in_help():
     help_normalised = re.sub(r"\s+", " ", parser.format_help())
 
     assert "name 'Basil'" in help_normalised
-    assert "-t TASK, --task TASK 'hang the Moose'" in help_normalised
-    assert (
-        "-r REASON, --reason REASON 'there are creatures living in it'"
-        in help_normalised
-    )
 
-    # explicit help message is not obscured by the implicit one
-    # but is still present
-    assert (
-        "-n NOTE, --note NOTE why is it a remarkable animal? "
-        "(default: 'it can speak English')"
-    ) in help_normalised
+    # argh#228 — argparse in Python before 3.13 duplicated the placeholder in help
+    if sys.version_info < (3, 13):
+        assert "-t TASK, --task TASK 'hang the Moose'" in help_normalised
+        assert (
+            "-r REASON, --reason REASON 'there are creatures living in it'"
+            in help_normalised
+        )
+
+        # explicit help message is not obscured by the implicit one
+        # but is still present
+        assert (
+            "-n NOTE, --note NOTE why is it a remarkable animal? "
+            "(default: 'it can speak English')"
+        ) in help_normalised
+    else:
+        assert "-t, --task TASK 'hang the Moose'" in help_normalised
+        assert (
+            "-r, --reason REASON 'there are creatures living in it'" in help_normalised
+        )
+
+        # explicit help message is not obscured by the implicit one
+        # but is still present
+        assert (
+            "-n, --note NOTE why is it a remarkable animal? "
+            "(default: 'it can speak English')"
+        ) in help_normalised
 
 
 def test_default_arg_values_in_help__regression():
@@ -750,9 +766,16 @@ def test_default_arg_values_in_help__regression():
     # doesn't break
     parser.format_help()
 
+    # argh#228 — argparse in Python before 3.13 duplicated the placeholder in help
+    if sys.version_info < (3, 13):
+        expected_line = "-b BAR, --bar BAR  ''"
+        # note the empty str repr         ^^^
+    else:
+        expected_line = "-b, --bar BAR  ''"
+        # note the empty str repr     ^^^
+
     # now check details
-    assert "-b BAR, --bar BAR  ''" in parser.format_help()
-    # note the empty str repr ^^^
+    assert expected_line in parser.format_help()
 
 
 def test_help_formatting_is_preserved():
@@ -809,8 +832,7 @@ def test_unknown_args():
 
 
 def test_add_commands_unknown_name_mapping_policy():
-    def func(foo):
-        ...
+    def func(foo): ...
 
     parser = argh.ArghParser(prog="myapp")
 
@@ -868,6 +890,18 @@ def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
 
     run(parser, "first-func --help", exit=True)
     captured = capsys.readouterr()
+
+    # argh#228 — argparse in Python before 3.13 duplicated the placeholder in help
+    if sys.version_info < (3, 13):
+        arg_help_lines = (
+            "  -h, --help         show this help message and exit\n"
+            "  -f FOO, --foo FOO  123"
+        )
+    else:
+        arg_help_lines = (
+            "  -h, --help     show this help message and exit\n" "  -f, --foo FOO  123"
+        )
+
     assert (
         captured.out
         == unindent(
@@ -877,8 +911,7 @@ def test_add_commands_no_overrides2(capsys: pytest.CaptureFixture[str]):
         Owl stretching time
 
         {HELP_OPTIONS_LABEL}:
-          -h, --help         show this help message and exit
-          -f FOO, --foo FOO  123
+        {arg_help_lines}
         """
         )[1:]
     )
@@ -997,6 +1030,18 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
 
     run(parser, "my-group first-func --help", exit=True)
     captured = capsys.readouterr()
+
+    # argh#228 — argparse in Python before 3.13 duplicated the placeholder in help
+    if sys.version_info < (3, 13):
+        arg_help_lines = (
+            "  -h, --help         show this help message and exit\n"
+            "  -f FOO, --foo FOO  123"
+        )
+    else:
+        arg_help_lines = (
+            "  -h, --help     show this help message and exit\n" "  -f, --foo FOO  123"
+        )
+
     assert (
         captured.out
         == unindent(
@@ -1006,8 +1051,7 @@ def test_add_commands_group_overrides3(capsys: pytest.CaptureFixture[str]):
         Owl stretching time
 
         {HELP_OPTIONS_LABEL}:
-          -h, --help         show this help message and exit
-          -f FOO, --foo FOO  123
+        {arg_help_lines}
         """
         )[1:]
     )
@@ -1079,6 +1123,18 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
 
     run(parser, "first-func --help", exit=True)
     captured = capsys.readouterr()
+
+    # argh#228 — argparse in Python before 3.13 duplicated the placeholder in help
+    if sys.version_info < (3, 13):
+        arg_help_lines = (
+            "  -h, --help         show this help message and exit\n"
+            "  -f FOO, --foo FOO  123"
+        )
+    else:
+        arg_help_lines = (
+            "  -h, --help     show this help message and exit\n" "  -f, --foo FOO  123"
+        )
+
     assert (
         captured.out
         == unindent(
@@ -1088,8 +1144,7 @@ def test_add_commands_func_overrides2(capsys: pytest.CaptureFixture[str]):
         func description override
 
         {HELP_OPTIONS_LABEL}:
-          -h, --help         show this help message and exit
-          -f FOO, --foo FOO  123
+        {arg_help_lines}
         """
         )[1:]
     )

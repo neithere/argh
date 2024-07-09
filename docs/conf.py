@@ -1,4 +1,5 @@
 """Configuration file for the Sphinx documentation builder."""
+
 import os
 import sys
 from datetime import date

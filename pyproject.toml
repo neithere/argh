@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "argh"
-version = "0.31.2"
+version = "0.31.3"
 description = "Plain Python functions as CLI commands without boilerplate"
 readme = "README.rst"
 requires-python = ">=3.8"
@@ -36,6 +36,7 @@ classifiers  = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Software Development :: User Interfaces",
@@ -70,13 +71,6 @@ linters = [
 
 [tool.distutils.bdist_wheel]
 universal = 1
-
-[tool.isort]
-multi_line_output = 3
-profile = "black"
-
-[tool.black]
-target-version = ["py38", "py39", "py310", "py311", "py312"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
