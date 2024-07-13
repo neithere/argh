@@ -2,6 +2,7 @@
 Unit Tests For Assembling Phase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
+
 import argparse
 from typing import Literal, Optional
 from unittest.mock import MagicMock, call, patch
@@ -85,8 +86,7 @@ def test_guess_action_from_default():
 
 
 def test_positional_with_default_int():
-    def func(pos_int_default=123):
-        ...
+    def func(pos_int_default=123): ...
 
     parser = argh.ArghParser(prog="test")
     parser.set_default_command(
@@ -97,8 +97,7 @@ def test_positional_with_default_int():
 
 
 def test_positional_with_default_bool():
-    def func(pos_bool_default=False):
-        ...
+    def func(pos_bool_default=False): ...
 
     parser = argh.ArghParser(prog="test")
     parser.set_default_command(
@@ -500,8 +499,7 @@ def test_set_default_command_docstring():
 
 
 def test_set_default_command__varkwargs_sharing_prefix():
-    def func(*, alpha: str = "Alpha", aleph: str = "Aleph"):
-        ...
+    def func(*, alpha: str = "Alpha", aleph: str = "Aleph"): ...
 
     parser = argh.ArghParser()
     parser.add_argument = MagicMock()
@@ -767,11 +765,9 @@ def test_is_positional():
 
 def test_typing_hints_only_used_when_arg_deco_not_used():
     @argh.arg("foo", type=int)
-    def func_decorated(foo: Optional[float]):
-        ...
+    def func_decorated(foo: Optional[float]): ...
 
-    def func_undecorated(bar: Optional[float]):
-        ...
+    def func_undecorated(bar: Optional[float]): ...
 
     parser = argparse.ArgumentParser()
     parser.add_argument = MagicMock()

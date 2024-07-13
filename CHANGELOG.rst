@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 0.31.3 (2024-07-13)
+---------------------------
+
+Bugs fixed:
+
+- wrong type annotation of `errors` in `wrap_errors` (PR #229 by @laazy)
+- tests were failing under Python 3.13 (issue #228 by @mgorny)
+- regression: can't set argument name with `dest` via decorator
+  (issue #224 by @mathieulongtin)
+
 Version 0.31.2 (2024-01-24)
 ---------------------------
 

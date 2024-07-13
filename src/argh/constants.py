@@ -11,6 +11,7 @@
 Constants
 ~~~~~~~~~
 """
+
 import argparse
 
 __all__ = (

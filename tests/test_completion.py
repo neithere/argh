@@ -3,6 +3,7 @@ Unit Tests For Autocompletion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
+
 from unittest.mock import patch
 
 import argh

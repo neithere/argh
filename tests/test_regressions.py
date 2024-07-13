@@ -2,6 +2,7 @@
 Regression tests
 ~~~~~~~~~~~~~~~~
 """
+
 import sys
 from typing import List, Optional, TextIO
 
@@ -166,8 +167,7 @@ def test_regression_issue204():
     We should avoid `deepcopy()` in standard operations.
     """
 
-    def func(*, x: TextIO = sys.stdout) -> None:
-        ...
+    def func(*, x: TextIO = sys.stdout) -> None: ...
 
     parser = DebugArghParser()
     parser.set_default_command(func)
@@ -242,3 +242,22 @@ def test_regression_issue212_funcsig_centric_named():
     assert run(parser, "").out == "['one', 'two']\n"
     assert run(parser, "--paths alpha").out == "['alpha']\n"
     assert run(parser, "--paths alpha beta gamma").out == "['alpha', 'beta', 'gamma']\n"
+
+
+def test_regression_issue224():
+    """
+    Issue #224: @arg param `dest` was ignored and Argh was unable to map the
+    declaration onto the function signature.
+
+    Use case: expose a function argument with a different name in the CLI.
+    """
+
+    @argh.arg("-l", dest="list_files")
+    def func(*, list_files=False):
+        return f"list_files={list_files}"
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
+
+    assert run(parser, "").out == "list_files=False\n"
+    assert run(parser, "-l").out == "list_files=True\n"

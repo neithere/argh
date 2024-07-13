@@ -11,6 +11,7 @@
 Interaction
 ~~~~~~~~~~~
 """
+
 from typing import Optional
 
 __all__ = ["confirm"]

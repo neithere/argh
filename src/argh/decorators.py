@@ -11,7 +11,9 @@
 Command decorators
 ~~~~~~~~~~~~~~~~~~
 """
-from typing import Callable, List, Optional
+
+from typing import Callable, List, Optional, Type
+
 
 from argh.constants import (
     ATTR_ALIASES,
@@ -138,7 +140,11 @@ def arg(*args: str, **kwargs) -> Callable:
         if not args:
             raise CliArgToFuncArgGuessingError("at least one CLI arg must be defined")
 
-        func_arg_name = naive_guess_func_arg_name(args)
+        if "dest" in kwargs:
+            func_arg_name = kwargs.pop("dest")
+        else:
+            func_arg_name = naive_guess_func_arg_name(args)
+
         cli_arg_names = [name.replace("_", "-") for name in args]
         completer = kwargs.pop("completer", None)
         spec = ParserAddArgumentSpec.make_from_kwargs(
@@ -161,7 +167,7 @@ def arg(*args: str, **kwargs) -> Callable:
 
 
 def wrap_errors(
-    errors: Optional[List[Exception]] = None,
+    errors: Optional[List[Type[Exception]]] = None,
     processor: Optional[Callable] = None,
     *args,
 ) -> Callable:

@@ -15,8 +15,7 @@ POLICIES = list(NameMappingPolicy) + [None]
 
 @pytest.mark.parametrize("name_mapping_policy", POLICIES)
 def test_no_args(name_mapping_policy) -> None:
-    def func() -> None:
-        ...
+    def func() -> None: ...
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
     assert_usage(parser, "usage: test [-h]")
