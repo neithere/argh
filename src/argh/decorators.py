@@ -52,7 +52,7 @@ def named(new_name: str) -> Callable:
     return wrapper
 
 
-def aliases(*names: List[str]) -> Callable:
+def aliases(*names: str) -> Callable:
     """
     Defines alternative command name(s) for given function (along with its
     original name). Usage::
