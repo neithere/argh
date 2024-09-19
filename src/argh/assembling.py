@@ -516,6 +516,16 @@ def _merge_inferred_and_declared_args(
     #
     specs_by_func_arg_name = OrderedDict()
 
+    # eliminate inferred options that conflict with declared ones
+    for inferred in inferred_args:
+        for declared in declared_args:
+            if inferred.func_arg_name == declared.func_arg_name:
+                continue
+            inferred.cli_arg_names = [
+                name for name in inferred.cli_arg_names
+                if name not in declared.cli_arg_names
+            ]
+
     # arguments inferred from function signature
     for parser_add_argument_spec in inferred_args:
         specs_by_func_arg_name[parser_add_argument_spec.func_arg_name] = (

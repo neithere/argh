@@ -261,3 +261,22 @@ def test_regression_issue224():
 
     assert run(parser, "").out == "list_files=False\n"
     assert run(parser, "-l").out == "list_files=True\n"
+
+
+def test_regression_issue233():
+    """
+    Issue #233: conflict when short option does not match first letter
+    of long option
+
+    Use case: assigning short names to options
+    """
+
+    @argh.arg("-n", "--user-name")
+    @argh.arg("-N", "--note")
+    def func(*, user_name="world", note=""):
+        return f"hello, {user_name}! {note}"
+
+    parser = DebugArghParser()
+    parser.set_default_command(func)
+
+    assert run(parser, "-n Sam -N Cheers").out == "hello, Sam! Cheers\n"
