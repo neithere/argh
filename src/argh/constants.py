@@ -13,6 +13,7 @@ Constants
 """
 
 import argparse
+import io
 
 __all__ = (
     "ATTR_NAME",
@@ -78,6 +79,10 @@ class CustomFormatter(
         Ideally this could be achieved by simply defining
         :attr:`DEFAULT_ARGUMENT_TEMPLATE` as ``{default!r}`` but unfortunately
         argparse only supports the old printf syntax.
+
+        If the default value is None or False, don't show it.
+        If the default value stdin or stdout, show the name not the repr.
+        If the default value is another file handle, show <class name>.
         """
         params = dict(vars(action), prog=self._prog)
         for name in list(params):
@@ -95,14 +100,20 @@ class CustomFormatter(
         #     an IndexError in _format_action)
         #
         if "default" in params:
-            if params["default"] is None:
-                params["default"] = "-"
+            if params["default"] in [None, False]:
+                action.default = argparse.SUPPRESS
+            elif isinstance(params["default"], io.IOBase):
+                if hasattr(params["default"], "name"):
+                    params["default"] = params["default"].name
+                else:
+                    params["default"] = f"<{params['default'].__class__.__name__}>"
             else:
                 params["default"] = repr(params["default"])
         #
         # /
 
-        return self._get_help_string(action) % params
+        string = self._get_help_string(action) % params
+        return string
 
 
 #: Default formatter (:class:`CustomFormatter`) to be used in implicitly
