@@ -7,7 +7,7 @@ name = "argh"
 version = "0.31.3"
 description = "Plain Python functions as CLI commands without boilerplate"
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { file = "COPYING.LESSER" }
 authors = [
   { name = "Andy Mikhaylenko", email = "neithere@gmail.com" },
@@ -31,7 +31,6 @@ classifiers  = [
   "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
