@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Version 0.31.3 (IN DEVELOPMENT)
+-------------------------------
+
+Backward incompatible changes:
+
+- Dropped support for Python 3.8.
+
+Enhancements:
+
+- Added support for Python 3.14.
+
 Version 0.31.3 (2024-07-13)
 ---------------------------
 

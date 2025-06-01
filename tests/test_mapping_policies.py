@@ -1,4 +1,3 @@
-import sys
 from argparse import ArgumentParser, Namespace
 from typing import Callable, List, Optional
 
@@ -74,11 +73,6 @@ def test_varargs(name_mapping_policy) -> None:
 
     parser = _make_parser_for_function(func, name_mapping_policy=name_mapping_policy)
     expected_usage = "usage: test [-h] [file-paths ...]"
-
-    # TODO: remove once we drop support for Python 3.8
-    if sys.version_info < (3, 9):
-        # https://github.com/python/cpython/issues/82619
-        expected_usage = "usage: test [-h] [file-paths [file-paths ...]]"
 
     assert_usage(parser, expected_usage)
 
