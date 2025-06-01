@@ -17,7 +17,7 @@ from argh.exceptions import AssemblingError
 from argh.utils import unindent
 
 from .base import CmdResult as R
-from .base import DebugArghParser, get_usage_string, run
+from .base import DebugArghParser, run
 
 if sys.version_info < (3, 10):
     HELP_OPTIONS_LABEL = "optional arguments"
@@ -796,11 +796,17 @@ def test_help_formatting_is_preserved():
     parser = DebugArghParser()
     parser.set_default_command(func)
 
-    assert unindent(func.__doc__) in parser.format_help()
+    docstring = func.__doc__
+    assert docstring
+    assert unindent(docstring) in parser.format_help()
 
 
 def test_prog(capsys: pytest.CaptureFixture[str]):
-    "Program name propagates from sys.argv[0]"
+    """
+    Program name propagates to the usage string.
+    It's not just sys.argv[0], the logic is a bit more complicated in argparse,
+    so we just reuse whatever it has produced.
+    """
 
     def cmd(*, foo=1):
         return foo
@@ -808,10 +814,12 @@ def test_prog(capsys: pytest.CaptureFixture[str]):
     parser = DebugArghParser()
     parser.add_commands([cmd])
 
-    usage = get_usage_string()
+    usage = f"usage: {parser.prog} [-h]"
 
-    assert run(parser, "-h", exit=True) == 0
+    exit_code = run(parser, "-h", exit=True)
     captured = capsys.readouterr()
+
+    assert exit_code == 0
     assert captured.out.startswith(usage)
 
 
@@ -821,8 +829,6 @@ def test_unknown_args():
 
     parser = DebugArghParser()
     parser.set_default_command(cmd)
-
-    get_usage_string("[-f FOO]")
 
     assert run(parser, "--foo 1") == R(out="1\n", err="")
     assert run(parser, "--bar 1", exit=True) == "unrecognized arguments: --bar 1"

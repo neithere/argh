@@ -4,8 +4,6 @@ Common stuff for tests
 """
 
 import io
-import os
-import sys
 from collections import namedtuple
 
 from argh import ArghParser
@@ -72,8 +70,3 @@ def run(parser, command_string, kwargs=None, exit=False):
             raise AssertionError("Did not exit")
         return result.exit_code
     return result
-
-
-def get_usage_string(definitions="{cmd} ..."):
-    prog = os.path.basename(sys.argv[0])
-    return "usage: " + prog + " [-h] " + definitions + "\n\n"

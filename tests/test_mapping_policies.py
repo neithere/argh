@@ -1,4 +1,3 @@
-import sys
 from argparse import ArgumentParser, Namespace
 from typing import Callable, List, Optional
 
