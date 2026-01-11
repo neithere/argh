@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Literal, Optional, Union
 
 import pytest
@@ -5,7 +6,11 @@ import pytest
 from argh.assembling import TypingHintArgSpecGuesser
 
 
-@pytest.mark.parametrize("arg_type", TypingHintArgSpecGuesser.BASIC_TYPES)
+class CustomSimpleType:
+    def __init__(self, string: str) -> None: ...
+
+
+@pytest.mark.parametrize("arg_type", (str, int, float, bool, Path, CustomSimpleType))
 def test_simple_types(arg_type):
     guess = TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params
 
@@ -46,6 +51,9 @@ def test_list():
     assert guess(List[list]) == {"nargs": "*"}
     assert guess(List[tuple]) == {"nargs": "*"}
 
+    assert guess(List[Path]) == {"nargs": "*", "type": Path}
+    assert guess(List[CustomSimpleType]) == {"nargs": "*", "type": CustomSimpleType}
+
 
 def test_literal():
     guess = TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params
@@ -55,8 +63,13 @@ def test_literal():
     assert guess(Literal[1]) == {"choices": (1,), "type": int}
 
 
-@pytest.mark.parametrize("arg_type", (dict, tuple))
-def test_unusable_types(arg_type):
+@pytest.mark.parametrize(
+    "arg_type, expected",
+    [
+        (dict, {"type": dict}),
+        (tuple, {"nargs": "*"}),
+    ],
+)
+def test_unusable_types(arg_type, expected):
     guess = TypingHintArgSpecGuesser.typing_hint_to_arg_spec_params
-
-    assert guess(arg_type) == {}
+    assert guess(arg_type) == expected
