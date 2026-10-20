@@ -17,7 +17,7 @@ Functions and classes to properly assemble your commands in a parser.
 import inspect
 import textwrap
 import warnings
-from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser
+from argparse import OPTIONAL, ZERO_OR_MORE, ArgumentParser, HelpFormatter
 from collections import OrderedDict
 from enum import Enum
 from typing import (
@@ -611,6 +611,8 @@ def add_commands(
         concerning function signatures. The command name is inferred from the
         function name. Note that the underscores in the name are replaced with
         hyphens, i.e. function name "foo_bar" becomes command name "foo-bar".
+        If the parser uses a custom formatter class, subparsers inherit it
+        unless overridden by `func_kwargs`.
 
     :param name_mapping_policy:
 
@@ -667,7 +669,9 @@ def add_commands(
         # Normally `title` is shown above the list of commands
         # in ``app.py my-group --help``.
         subsubparser = subparsers_action.add_parser(
-            group_name, help=group_kwargs.get("title")
+            group_name,
+            help=group_kwargs.get("title"),
+            formatter_class=parser.formatter_class,
         )
         subparsers_action = subsubparser.add_subparsers(**group_kwargs)
     else:
@@ -676,6 +680,8 @@ def add_commands(
 
     for func in functions:
         cmd_name, func_parser_kwargs = _extract_command_meta_from_func(func)
+        if parser.formatter_class is not HelpFormatter:
+            func_parser_kwargs["formatter_class"] = parser.formatter_class
 
         # override any computed kwargs by manually supplied ones
         if func_kwargs:

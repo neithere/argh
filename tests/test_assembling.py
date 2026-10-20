@@ -587,6 +587,68 @@ def test_add_command_with_group_kwargs_but_no_group_name():
         p.add_commands([one], group_kwargs={"help": "foo"})
 
 
+@pytest.mark.parametrize("parser_class", [argparse.ArgumentParser, argh.ArghParser])
+@pytest.mark.parametrize("group_name", [None, "group"])
+def test_add_commands_inherits_formatter(parser_class, group_name):
+    def command():
+        """First line.
+        Second line."""
+
+    parser = parser_class(formatter_class=argparse.RawTextHelpFormatter)
+    argh.add_commands(parser, [command], group_name=group_name)
+
+    commands = argh.utils.get_subparsers(parser).choices
+    if group_name:
+        group_parser = commands[group_name]
+        assert group_parser.formatter_class is argparse.RawTextHelpFormatter
+        commands = argh.utils.get_subparsers(group_parser).choices
+
+    command_parser = commands["command"]
+    assert command_parser.formatter_class is argparse.RawTextHelpFormatter
+    assert "First line.\nSecond line." in command_parser.format_help()
+
+
+@pytest.mark.parametrize("group_name", [None, "group"])
+def test_add_commands_formatter_override(group_name):
+    def command():
+        """First line.
+        Second line."""
+
+    parser = argh.ArghParser()
+    argh.add_commands(
+        parser,
+        [command],
+        group_name=group_name,
+        func_kwargs={"formatter_class": argparse.RawTextHelpFormatter},
+    )
+
+    commands = argh.utils.get_subparsers(parser).choices
+    if group_name:
+        commands = argh.utils.get_subparsers(commands[group_name]).choices
+
+    command_parser = commands["command"]
+    assert command_parser.formatter_class is argparse.RawTextHelpFormatter
+    assert "First line.\nSecond line." in command_parser.format_help()
+
+
+@pytest.mark.parametrize("parser_class", [argparse.ArgumentParser, argh.ArghParser])
+@pytest.mark.parametrize("group_name", [None, "group"])
+def test_add_commands_preserves_default_formatter(parser_class, group_name):
+    @argh.arg("--count", help="Number of items")
+    def command(*, count=3): ...
+
+    parser = parser_class()
+    argh.add_commands(parser, [command], group_name=group_name)
+
+    commands = argh.utils.get_subparsers(parser).choices
+    if group_name:
+        commands = argh.utils.get_subparsers(commands[group_name]).choices
+
+    command_parser = commands["command"]
+    assert command_parser.formatter_class is argh.constants.PARSER_FORMATTER
+    assert "(default: 3)" in command_parser.format_help()
+
+
 def test_set_default_command_varargs():
     def func(*file_paths):
         yield ", ".join(file_paths)
