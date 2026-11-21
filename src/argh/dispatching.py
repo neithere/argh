@@ -17,6 +17,7 @@ import inspect
 import io
 import sys
 import warnings
+from contextlib import suppress
 from types import GeneratorType
 from typing import IO, Any, Callable, Dict, Iterator, List, Optional, Tuple
 
@@ -116,6 +117,9 @@ def dispatch(
 
         A file-like object for output. If `None`, the resulting lines are
         collected and returned as a string. Default is ``sys.stdout``.
+        The stream is flushed when the command finishes. If a pipe closes
+        while writing or flushing output, the stream is closed and
+        dispatching returns without consuming further results.
 
     :param errors_file:
 
@@ -288,26 +292,37 @@ def _process_command_output(
 
     # this may raise user exceptions, or SystemExit for wrapped exceptions
     for line in lines:
+        text = str(line)
         # print the line as soon as it is generated to ensure that it is
         # displayed to the user before anything else happens, e.g.
         # raw_input() is called
-        out_io.write(str(line))
-        if not raw_output:
-            # in most cases user wants one message per line
-            out_io.write("\n")
+        try:
+            out_io.write(text)
+            if not raw_output:
+                # in most cases user wants one message per line
+                out_io.write("\n")
 
-        # If it's not a terminal (i.e. redirected to a file or another
-        # process), it's probably buffered.  In most cases it doesn't matter
-        # but if the output is generated with delays between the lines and we
-        # may want to monitor it (e.g. `my_app.py | grep something`), it's a
-        # good idea to force flushing.
-        if always_flush:
-            out_io.flush()
+            # Flush each line when dynamic output is needed in a pipeline.
+            if always_flush:
+                out_io.flush()
+        except BrokenPipeError:
+            # Closing prevents another failed flush at interpreter shutdown.
+            with suppress(BrokenPipeError):
+                out_io.close()
+            return None
 
     if output_file is None:
         # user wanted a string; return contents of our temporary file-like obj
         out_io.seek(0)
         return out_io.read()
+
+    if not always_flush:
+        # Small results may remain buffered until the command is finished.
+        try:
+            out_io.flush()
+        except BrokenPipeError:
+            with suppress(BrokenPipeError):
+                out_io.close()
 
     return None
 
