@@ -4,7 +4,11 @@ Dispatching tests
 """
 
 import argparse
+import errno
 import io
+import os
+import subprocess
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -73,7 +77,145 @@ def test_run_endpoint_function__always_flush(always_flush):
     if always_flush:
         assert out_io.flush.call_count == 2
     else:
-        out_io.flush.assert_not_called()
+        out_io.flush.assert_called_once_with()
+    out_io.close.assert_not_called()
+
+
+@pytest.mark.parametrize("close_fails", [False, True])
+@pytest.mark.parametrize(
+    "failure, raw_output",
+    [("write", False), ("write", True), ("newline", False), ("flush", False)],
+)
+def test_broken_output_pipe(failure, raw_output, close_fails):
+    produced = []
+
+    def func():
+        for line in ["first line", "second line"]:
+            produced.append(line)
+            yield line
+
+    output = Mock(spec=io.StringIO)
+    error = BrokenPipeError(errno.EPIPE, "Broken pipe")
+    if failure == "write":
+        output.write.side_effect = error
+    elif failure == "newline":
+        output.write.side_effect = [10, error]
+    else:
+        output.flush.side_effect = error
+    if close_fails:
+        output.close.side_effect = error
+    errors = io.StringIO()
+
+    assert (
+        argh.dispatching.run_endpoint_function(
+            func,
+            argparse.Namespace(),
+            output_file=output,
+            errors_file=errors,
+            raw_output=raw_output,
+            always_flush=True,
+        )
+        is None
+    )
+
+    assert produced == ["first line"]
+    assert errors.getvalue() == ""
+    output.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize("close_fails", [False, True])
+def test_broken_output_pipe_on_final_flush(close_fails):
+    output = Mock(spec=io.StringIO)
+    output.flush.side_effect = BrokenPipeError(errno.EPIPE, "Broken pipe")
+    if close_fails:
+        output.close.side_effect = BrokenPipeError(errno.EPIPE, "Broken pipe")
+
+    argh.dispatching.run_endpoint_function(
+        lambda: "buffered output", argparse.Namespace(), output_file=output
+    )
+
+    output.flush.assert_called_once_with()
+    output.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize("operation", ["write", "flush"])
+def test_other_output_errors_propagate(operation):
+    output = Mock(spec=io.StringIO)
+    error = OSError(errno.ENOSPC, "No space left on device")
+    getattr(output, operation).side_effect = error
+
+    with pytest.raises(OSError) as excinfo:
+        argh.dispatching.run_endpoint_function(
+            lambda: "output",
+            argparse.Namespace(),
+            output_file=output,
+            always_flush=True,
+        )
+
+    assert excinfo.value is error
+    output.close.assert_not_called()
+
+
+@pytest.mark.parametrize("during_iteration", [False, True])
+def test_command_broken_pipe_errors_propagate(during_iteration):
+    error = BrokenPipeError(errno.EPIPE, "Command's own pipe failed")
+
+    def func():
+        if during_iteration:
+            yield "first line"
+        raise error
+
+    output = io.StringIO()
+    with pytest.raises(BrokenPipeError) as excinfo:
+        argh.dispatching.run_endpoint_function(
+            func, argparse.Namespace(), output_file=output
+        )
+
+    assert excinfo.value is error
+    assert not output.closed
+
+
+def test_result_string_conversion_errors_propagate():
+    error = BrokenPipeError(errno.EPIPE, "Result conversion failed")
+
+    class Result:
+        def __str__(self):
+            raise error
+
+    with pytest.raises(BrokenPipeError) as excinfo:
+        argh.dispatching.run_endpoint_function(
+            Result, argparse.Namespace(), output_file=io.StringIO()
+        )
+
+    assert excinfo.value is error
+
+
+@pytest.mark.parametrize("always_flush", [False, True])
+@pytest.mark.parametrize("message_size", [1, 16384])
+def test_closed_pipe_subprocess(always_flush, message_size):
+    # A real closed pipe also checks that buffered data is not flushed again
+    # during interpreter shutdown, which would print an ignored exception.
+    read_fd, write_fd = os.pipe()
+    os.close(read_fd)
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import argh\n"
+                f"argh.dispatch_command(lambda: 'x' * {message_size}, "
+                f"always_flush={always_flush})\n",
+            ],
+            stdout=write_fd,
+            stderr=subprocess.PIPE,
+            timeout=10,
+            check=False,
+        )
+    finally:
+        os.close(write_fd)
+
+    assert result.returncode == 0, result.stderr.decode()
+    assert result.stderr == b""
 
 
 @patch("argh.dispatching.parse_and_resolve")

@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Bugs fixed:
+
+- stop quietly when an output pipe is closed by a consumer such as ``head``
+  (issue #52).
+
 Version 0.31.3 (2024-07-13)
 ---------------------------
 
